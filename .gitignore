@@ -55,3 +55,8 @@ debug/
 target/
 .gdb_history
 .gdbinit
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
