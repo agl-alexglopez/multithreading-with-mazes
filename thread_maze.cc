@@ -3,22 +3,22 @@
 #include <functional>
 #include <unordered_set>
 
-#define COLOR_RED "\033[31;1m"
-#define COLOR_GRN "\033[32;1m"
-#define COLOR_YEL "\033[93;1m"
-#define COLOR_BLU "\033[34;1m"
-#define COLOR_CYN "\033[36;1m"
-#define COLOR_WIT "\033[255;1m"
-#define COLOR_NIL "\033[0m"
+static constexpr const char *const color_red = "\033[31;1m";
+static constexpr const char *const color_grn = "\033[32;1m";
+static constexpr const char *const color_yel = "\033[93;1m";
+static constexpr const char *const color_blu = "\033[34;1m";
+static constexpr const char *const color_cyn = "\033[36;1m";
+static constexpr const char *const color_wit = "\033[255;1m";
+static constexpr const char *const color_nil = "\033[0m";
 
 const int Thread_maze::num_threads_ = 4;
 const int Thread_maze::starting_path_len_ = 4096;
-const std::vector<std::string> Thread_maze::thread_colors_ = {
-    COLOR_RED, COLOR_GRN, COLOR_BLU, COLOR_YEL, COLOR_WIT
+const std::vector<std::string_view> Thread_maze::thread_colors_ = {
+    color_red, color_grn, color_blu, color_yel, color_wit
 };
 const std::vector<char> Thread_maze::thread_chars_ = {'x', '^', '+', '*','#'};
-//                                                              n      e     s      w
-const std::vector<Point> Thread_maze::cardinal_directions_ = {{-1,0},{0,1},{1,0},{0,-1}};
+//                                                                           n      e     s      w
+const std::vector<Thread_maze::Point> Thread_maze::cardinal_directions_ = {{-1,0},{0,1},{1,0},{0,-1}};
 
 
 Thread_maze::Thread_maze(size_t odd_rows, size_t odd_cols)
@@ -49,7 +49,7 @@ void Thread_maze::solve_with_dfs_threads() {
         this->clear_paths();
     }
 
-    std::thread threads[cardinal_directions_.size()];
+    std::vector<std::thread> threads(cardinal_directions_.size());
     for (int i = 0; i < num_threads_; i++) {
         const Point& direction = cardinal_directions_[i];
         Point thread_start = {start_.row + direction.row, start_.col + direction.col};
@@ -67,7 +67,6 @@ void Thread_maze::solve_with_dfs_threads() {
     } else {
         std::cout << "NO ESCAPE! >:)" << std::endl;
     }
-
 }
 
 void Thread_maze::solve_with_bfs_threads() {
@@ -75,7 +74,7 @@ void Thread_maze::solve_with_bfs_threads() {
         this->clear_paths();
     }
 
-    std::thread threads[cardinal_directions_.size()];
+    std::vector<std::thread> threads(cardinal_directions_.size());
     for (int i = 0; i < num_threads_; i++) {
         const Point& direction = cardinal_directions_[i];
         Point thread_start = {start_.row + direction.row, start_.col + direction.col};
@@ -92,7 +91,6 @@ void Thread_maze::solve_with_bfs_threads() {
     } else {
         std::cout << "NO ESCAPE! >:)" << std::endl;
     }
-
 }
 
 bool Thread_maze::dfs_thread_search(Point prev, Point start, Thread_maze::Square thread_index) {
@@ -198,7 +196,6 @@ void Thread_maze::rebuild_path(const std::unordered_map<Point,Point>& parent_map
         escape_section_.unlock();
         cur = parent_map.at(cur);
     }
-
 }
 
 bool Thread_maze::is_valid_point(Point to_check) {
@@ -272,7 +269,7 @@ void Thread_maze::dfs_stack_generator() {
 
 }
 
-Point Thread_maze::pick_random_point(std::uniform_int_distribution<int>& row,
+Thread_maze::Point Thread_maze::pick_random_point(std::uniform_int_distribution<int>& row,
                                      std::uniform_int_distribution<int>& col) {
     Point choice = {row(generator_), col(generator_)};
     if (maze_[choice.row][choice.col] == Square::square) {
@@ -297,36 +294,36 @@ void Thread_maze::print_solution_path() {
     std::cout << "\n";
     print_maze();
     if (escape_path_index_ == 0) {
-        std::cout << thread_colors_[0] << thread_chars_[0] << " 0_thread won!" << COLOR_NIL << "\n";
+        std::cout << thread_colors_[0] << thread_chars_[0] << " 0_thread won!" << color_nil << "\n";
     } else if (escape_path_index_ == 1) {
-        std::cout << thread_colors_[1] <<thread_chars_[1] << " 1_thread won!" << COLOR_NIL << "\n";
+        std::cout << thread_colors_[1] <<thread_chars_[1] << " 1_thread won!" << color_nil << "\n";
     } else if (escape_path_index_ == 2) {
-        std::cout << thread_colors_[2] << thread_chars_[2] << " 2_thread won!" << COLOR_NIL << "\n";
+        std::cout << thread_colors_[2] << thread_chars_[2] << " 2_thread won!" << color_nil << "\n";
     } else if (escape_path_index_ == 3) {
-        std::cout << thread_colors_[3] << thread_chars_[3] << " 3_thread won!" << COLOR_NIL << "\n";
+        std::cout << thread_colors_[3] << thread_chars_[3] << " 3_thread won!" << color_nil << "\n";
     }
     std::cout << std::endl;
 }
 
 void Thread_maze::print_maze() const {
-    std::cout << thread_colors_[0] << thread_chars_[0] << " 0_THREAD, " << COLOR_NIL
-              << thread_colors_[1] << thread_chars_[1] << " 1_THREAD, " << COLOR_NIL
-              << thread_colors_[2] << thread_chars_[2] << " 2_THREAD, " << COLOR_NIL
-              << thread_colors_[3] << thread_chars_[3] << " 3_THREAD, " << COLOR_NIL
-              << thread_colors_[4] << thread_chars_[4] << " OVERLAP_THREADS" << COLOR_NIL << "\n";
+    std::cout << thread_colors_[0] << thread_chars_[0] << " 0_THREAD, " << color_nil
+              << thread_colors_[1] << thread_chars_[1] << " 1_THREAD, " << color_nil
+              << thread_colors_[2] << thread_chars_[2] << " 2_THREAD, " << color_nil
+              << thread_colors_[3] << thread_chars_[3] << " 3_THREAD, " << color_nil
+              << thread_colors_[4] << thread_chars_[4] << " OVERLAP_THREADS" << color_nil << "\n";
     for (const std::vector<Square>& row : maze_) {
         for (const Square& square : row) {
             if (square <= Square::overlap_threads) {
                 int index = static_cast<int>(square);
-                std::cout << thread_colors_[index] << thread_chars_[index] << COLOR_NIL;
+                std::cout << thread_colors_[index] << thread_chars_[index] << color_nil;
             } else if (square == Square::start) {
-                std::cout << COLOR_CYN << "S" << COLOR_NIL;
+                std::cout << color_cyn << "S" << color_nil;
             } else if (square == Square::wall) {
                 std::cout << "|";
             } else if (square == Square::square) {
                 std::cout << " ";
             } else if (square == Square::finish) {
-                std::cout << COLOR_CYN << "F" << COLOR_NIL;
+                std::cout << color_cyn << "F" << color_nil;
             }else {
                 std::cerr << "Dumped maze and a square was not categorized." << std::endl;
                 abort();
@@ -370,4 +367,8 @@ void Thread_maze::new_maze(size_t odd_rows, size_t odd_cols) {
         vec.reserve(starting_path_len_);
     }
     generate_randomized_dfs_maze(odd_rows, odd_cols);
+}
+
+bool operator==(const Thread_maze::Point& lhs, const Thread_maze::Point& rhs) {
+    return lhs.row == rhs.row && lhs.col == rhs.col;
 }

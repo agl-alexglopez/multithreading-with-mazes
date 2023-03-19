@@ -4,6 +4,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <string>
+#include <string_view>
 #include <stack>
 #include <queue>
 #include <functional>
@@ -16,28 +17,18 @@
 #include <algorithm>
 
 
-struct Point {
-    int row;
-    int col;
-    bool operator==(const Point& rhs) const {
-        return this->row == rhs.row && this->col == rhs.col;
-    }
-};
-
-namespace std {
-    template<>
-    struct hash<Point> {
-        inline size_t operator()(const Point& p) const {
-            std::hash<int>hasher;
-            return hasher(p.row) ^ hasher(p.col);
-        }
-    };
-}
-
 class Thread_maze {
 
 public:
 
+    enum class Builder_algorithm {
+        randomized_depth_first,
+    };
+
+    enum class Solver_algorithm {
+        depth_first_search,
+        breadth_first_search
+    };
 
     enum class Square {
         zero_thread=0,
@@ -49,6 +40,11 @@ public:
         wall,
         start,
         finish,
+    };
+
+    struct Point {
+        int row;
+        int col;
     };
 
     Thread_maze(size_t odd_rows, size_t odd_cols);
@@ -66,7 +62,7 @@ private:
 
     static const int num_threads_;
     static const int starting_path_len_;
-    static const std::vector<std::string> thread_colors_;
+    static const std::vector<std::string_view> thread_colors_;
     static const std::vector<char> thread_chars_;
     static const std::vector<Point> cardinal_directions_;
 
@@ -91,6 +87,18 @@ private:
     void print_solution_path();
     void print_maze() const;
     void set_squares(const std::vector<std::vector<Square>>& tiles);
-};
 
+}; // class Thread_maze
+
+bool operator==(const Thread_maze::Point& lhs, const Thread_maze::Point& rhs);
+
+namespace std {
+template<>
+struct hash<Thread_maze::Point> {
+    inline size_t operator()(const Thread_maze::Point& p) const {
+        std::hash<int>hasher;
+        return hasher(p.row) ^ hasher(p.col);
+    }
+};
+} // namespace std
 
