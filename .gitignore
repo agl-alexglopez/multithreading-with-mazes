@@ -37,6 +37,10 @@ Thumbs.db
 
 # Cmake files go in the build directory.
 build/
+obj/
+!obj/*.md
+bin/
+!bin/*.md
 # Clang for LSP makes this so I can use nvim and it recognizes project structure.
 .cache/
 
