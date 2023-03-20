@@ -93,7 +93,7 @@ void Thread_maze::solve_with_bfs_threads() {
             thread_start = start_;
         }
         threads[i] = std::thread([this, thread_start, i] {
-            dfs_thread_search(thread_start, static_cast<Square>(i));
+            bfs_thread_search(thread_start, static_cast<Square>(i));
         });
     }
 
@@ -170,19 +170,18 @@ bool Thread_maze::bfs_thread_search(Point start, Square thread) {
     // This will be how we rebuild the path because queue does not represent the current path.
     std::unordered_map<Point,Point> seen;
     seen[start] = {-1,-1};
-    std::queue<Point> dfs;
-    dfs.push(start);
+    std::queue<Point> bfs({start});
     bool result = false;
     Point cur = start;
     int thread_direction_index = static_cast<int>(thread);
-    while (!dfs.empty()) {
+    while (!bfs.empty()) {
         if (escape_path_index_ != -1) {
             result = false;
             break;
         }
 
-        cur = dfs.front();
-        dfs.pop();
+        cur = bfs.front();
+        bfs.pop();
 
         if (maze_[cur.row][cur.col] == Square::finish) {
             escape_section_.lock();
@@ -201,7 +200,7 @@ bool Thread_maze::bfs_thread_search(Point start, Square thread) {
             Point next = {cur.row + p.row, cur.col + p.col};
             if (!seen.count(next) && maze_[next.row][next.col] != Square::wall) {
                 seen[next] = cur;
-                dfs.push(next);
+                bfs.push(next);
             }
             ++direction_index %= cardinal_directions_.size();
         } while (direction_index != thread_direction_index);
