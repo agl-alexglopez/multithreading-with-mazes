@@ -28,7 +28,7 @@ public:
         two_thread,
         three_thread,
         overlap_threads,
-        square,
+        path,
         wall,
         start,
         finish,
