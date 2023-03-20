@@ -2,6 +2,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <random>
 #include <vector>
 #include <array>
@@ -13,6 +14,7 @@ public:
 
     enum class Builder_algorithm {
         randomized_depth_first,
+        randomized_loop_erased,
     };
 
     enum class Solver_algorithm {
@@ -58,17 +60,35 @@ public:
 
 private:
 
+    typedef uint8_t Wall_line;
+    static constexpr Wall_line north_wall_ = 0b1;
+    static constexpr Wall_line east_wall_ = 0b10;
+    static constexpr Wall_line south_wall_ = 0b100;
+    static constexpr Wall_line west_wall_ = 0b1000;
+    static constexpr Wall_line north_east_south_west_wall_ = north_wall_ | east_wall_ | south_wall_ | west_wall_;
+    static constexpr Wall_line north_east_south_wall_ = north_wall_ | east_wall_ | south_wall_;
+    static constexpr Wall_line north_west_south_wall_ = north_wall_ | west_wall_ | south_wall_;
+    static constexpr Wall_line south_west_east_wall_ = south_wall_ | west_wall_ | east_wall_;
+    static constexpr Wall_line north_west_east_wall_ = north_wall_ | west_wall_ | east_wall_;
+    static constexpr Wall_line north_east_wall_ = north_wall_ | east_wall_;
+    static constexpr Wall_line north_south_wall_ = north_wall_ | south_wall_;
+    static constexpr Wall_line north_west_wall_ = north_wall_ | west_wall_;
+    static constexpr Wall_line south_east_wall_ = south_wall_ | east_wall_;
+    static constexpr Wall_line south_west_wall_ = south_wall_ | west_wall_;
+    static constexpr Wall_line east_west_wall_ = east_wall_ | west_wall_;
     static constexpr int num_threads_ = 4;
     static constexpr int starting_path_len_ = 4096;
-    static constexpr const char *const ansi_red = "\033[31;1m";
-    static constexpr const char *const ansi_grn = "\033[32;1m";
-    static constexpr const char *const ansi_yel = "\033[93;1m";
-    static constexpr const char *const ansi_blu = "\033[34;1m";
-    static constexpr const char *const ansi_cyn = "\033[36;1m";
-    static constexpr const char *const ansi_wit = "\033[255;1m";
-    static constexpr const char *const ansi_nil = "\033[0m";
+    static constexpr const char *const ansi_red_ = "\033[31;1m";
+    static constexpr const char *const ansi_grn_ = "\033[32;1m";
+    static constexpr const char *const ansi_yel_ = "\033[93;1m";
+    static constexpr const char *const ansi_blu_ = "\033[34;1m";
+    static constexpr const char *const ansi_cyn_ = "\033[36;1m";
+    static constexpr const char *const ansi_wit_ = "\033[255;1m";
+    static constexpr const char *const ansi_nil_ = "\033[0m";
+
+    static const std::unordered_map<Wall_line,std::string> wall_lines_;
     static constexpr std::array<const char *const, 5> thread_colors_ = {
-        ansi_red, ansi_grn, ansi_blu, ansi_yel, ansi_wit
+        ansi_red_, ansi_grn_, ansi_blu_, ansi_yel_, ansi_wit_
     };
     static constexpr std::array<char,5> thread_chars_ = {'x', '^', '+', '*','@'};
     //                                                               n      e     s      w
@@ -90,18 +110,20 @@ private:
     std::mutex escape_section_;
     void generate_maze(Builder_algorithm algorithm, size_t odd_rows, size_t odd_cols);
     void generate_randomized_dfs_maze(size_t odd_rows, size_t odd_cols);
+    void generate_randomized_loop_erased_maze(size_t odd_rows, size_t odd_cols);
+    Point choose_arbitrary_point(const std::unordered_set<Point>& maze_paths) const;
     void solve_with_dfs_threads();
     void solve_with_bfs_threads();
-    bool dfs_thread_search(Point prev, Point start, Square thread_index);
-    bool bfs_thread_search(Point prev, Point start, Square thread_index);
-    void rebuild_path(const std::unordered_map<Point,Point>& parent_map,
-                      Point cur, int safe_thread_index_cast, Square thread_index);
+    bool dfs_thread_search(Point start, Square thread_index);
+    bool bfs_thread_search(Point start, Square thread_index);
     bool is_valid_point(Point to_check);
     Point pick_random_point(std::uniform_int_distribution<int>& row,
                             std::uniform_int_distribution<int>& col);
-    Point adjust_point(Point choice);
+    Point find_nearest_square(Point choice);
+    Point find_nearest_wall(Point choice);
     void print_solution_path();
     void print_maze() const;
+    void print_wall(int row, int col) const;
     void set_squares(const std::vector<std::vector<Square>>& tiles);
 
 }; // class Thread_maze

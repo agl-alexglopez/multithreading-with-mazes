@@ -52,6 +52,8 @@ void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
     } else if (flag == "-b") {
         if (arg == "random-df") {
             maze_args.builder = Thread_maze::Builder_algorithm::randomized_depth_first;
+        } else if (arg == "loop-erase"){
+            maze_args.builder = Thread_maze::Builder_algorithm::randomized_loop_erased;
         } else {
             std::cerr << "Invalid builder argument: " << arg << std::endl;
             std::abort();
