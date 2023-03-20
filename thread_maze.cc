@@ -34,7 +34,7 @@ Thread_maze::Thread_maze(const Thread_maze::Packaged_args& args)
       start_({0,0}),
       finish_({0,0}),
       escape_path_index_(-1) {
-      generate_maze(args.builder, args.odd_rows, args.odd_cols);
+    generate_maze(args.builder, args.odd_rows, args.odd_cols);
     // If threads need to rely on heap for thread safe resizing, we slow parallelism.
     for (std::vector<Point>& vec : thread_paths_) {
         vec.reserve(starting_path_len_);
