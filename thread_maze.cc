@@ -9,11 +9,11 @@
 #include <vector>
 
 const std::unordered_map<Thread_maze::Wall_line,std::string> Thread_maze::wall_lines_ = {
-    {north_wall_, "┃"},
-    {south_wall_, "┃"},
+    {north_wall_, "╹"},
+    {south_wall_, "╻"},
     {north_south_wall_, "┃"},
-    {east_wall_, "━"},
-    {west_wall_, "━"},
+    {east_wall_, "╺"},
+    {west_wall_, "╸"},
     {east_west_wall_, "━"},
     {north_east_south_west_wall_, "╋"},
     {north_east_south_wall_, "┣"},
@@ -514,6 +514,11 @@ void Thread_maze::print_maze() const {
         }
         std::cout << "\n";
     }
+    std::cout << thread_colors_[0] << thread_chars_[0] << " 0_THREAD, " << ansi_nil_
+              << thread_colors_[1] << thread_chars_[1] << " 1_THREAD, " << ansi_nil_
+              << thread_colors_[2] << thread_chars_[2] << " 2_THREAD, " << ansi_nil_
+              << thread_colors_[3] << thread_chars_[3] << " 3_THREAD, " << ansi_nil_
+              << thread_colors_[4] << thread_chars_[4] << " OVERLAP_THREADS" << ansi_nil_ << "\n";
     std::cout << std::endl;
 }
 
