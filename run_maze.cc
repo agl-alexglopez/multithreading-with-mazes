@@ -98,7 +98,7 @@ void print_usage() {
               << "│  -s - Solver flag. Set maze solving algorithm.       │\n"
               << "│      - dfs - Depth First Search                      │\n"
               << "│      - bfs - Breadth First Search                    │\n"
-              << "│  -h  - Help flag. Cause this prompt to appear.       │\n"
+              << "│  -h  - Help flag. Make this prompt appear.           │\n"
               << "│                                                      │\n"
               << "│  If any flags are omitted, defaults are used.        │\n"
               << "│                                                      │\n"

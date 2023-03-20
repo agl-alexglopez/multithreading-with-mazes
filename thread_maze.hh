@@ -116,7 +116,6 @@ private:
     void solve_with_bfs_threads();
     bool dfs_thread_search(Point start, Square thread_index);
     bool bfs_thread_search(Point start, Square thread_index);
-    bool is_valid_point(Point to_check);
     Point pick_random_point(std::uniform_int_distribution<int>& row,
                             std::uniform_int_distribution<int>& col);
     Point find_nearest_square(Point choice);

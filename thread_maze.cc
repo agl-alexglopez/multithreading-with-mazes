@@ -217,12 +217,6 @@ bool Thread_maze::bfs_thread_search(Point start, Square thread) {
     return result;
 }
 
-bool Thread_maze::is_valid_point(Point to_check) {
-    return to_check.row >= 0 && static_cast<size_t>(to_check.row) < maze_.size() - 1
-        && to_check.col >= 0 && static_cast<size_t>(to_check.col) < maze_[0].size() - 1
-            && maze_[to_check.row][to_check.col] != Square::wall;
-}
-
 void Thread_maze::generate_maze(Builder_algorithm algorithm, size_t odd_rows, size_t odd_cols) {
     if (odd_rows % 2 == 0) {
         odd_rows++;
