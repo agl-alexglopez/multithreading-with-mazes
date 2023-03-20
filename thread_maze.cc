@@ -9,21 +9,21 @@
 #include <vector>
 
 const std::unordered_map<Thread_maze::Wall_line,std::string> Thread_maze::wall_lines_ = {
-    {north_wall_, "╹"},
-    {south_wall_, "╻"},
-    {north_south_wall_, "┃"},
-    {east_wall_, "╺"},
-    {west_wall_, "╸"},
-    {east_west_wall_, "━"},
-    {north_east_south_west_wall_, "╋"},
-    {north_east_south_wall_, "┣"},
-    {north_west_south_wall_, "┫"},
-    {north_west_east_wall_, "┻"},
-    {south_west_east_wall_, "┳"},
-    {north_east_wall_, "┗"},
-    {north_west_wall_, "┛"},
-    {south_east_wall_, "┏"},
-    {south_west_wall_, "┓"},
+    {north_wall_, "╵"},
+    {south_wall_, "╷"},
+    {north_south_wall_, "│"},
+    {east_wall_, "╶"},
+    {west_wall_, "╴"},
+    {east_west_wall_, "─"},
+    {north_east_south_west_wall_, "┼"},
+    {north_east_south_wall_, "├"},
+    {north_west_south_wall_, "┤"},
+    {north_west_east_wall_, "┴"},
+    {south_west_east_wall_, "┬"},
+    {north_east_wall_, "└"},
+    {north_west_wall_, "┘"},
+    {south_east_wall_, "┌"},
+    {south_west_wall_, "┐"},
 };
 
 Thread_maze::Thread_maze(const Thread_maze::Packaged_args& args)
