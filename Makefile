@@ -1,6 +1,18 @@
 # CS111 threads lectures Makefile Hooks
-PROGS = run_maze
+SRCDIR = src
+BINDIR = bin
+OBJDIR = obj
+SRC := $(wildcard $(SRCDIR)/*.cc)
+OBJ := $(patsubst $(SRCDIR)/%.cc, $(OBJDIR)/%.o,$(SRC))
+DEPENDENCIES = $(SRCDIR)/thread_maze.cc $(SRCDIR)/thread_maze.hh
 # CXX = /usr/bin/clang++-10
+
+PROGS = run_maze
+
+# In this section, you list the files that are part of the project.
+MAZE_PROG = $(addprefix $(BINDIR)/,$(PROGS))
+
+all:: $(MAZE_PROG)
 
 # The CPPFLAGS variable sets compile flags for g++:
 #  -g          compile with debug information
@@ -17,13 +29,10 @@ CPPFLAGS = -g -Wall -pedantic -O0 -std=c++2a -D_GLIBCXX_USE_NANOSLEEP -D_GLIBCXX
 #  -lpthread link in libpthread (thread library) to back C++11 extensions
 LDFLAGS = -lm -lpthread
 
-# In this section, you list the files that are part of the project.
-SOURCES = $(PROGS:=.cc)
-OBJECTS = $(SOURCES:.cc=.o)
+$(OBJ): $(OBJDIR)/%.o: $(SRCDIR)/%.cc
+	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
-all:: $(PROGS)
-
-$(PROGS): %:%.o thread_maze.cc thread_maze.hh
+$(MAZE_PROG): $(BINDIR)/%:$(OBJDIR)/%.o $(DEPENDENCIES)
 	$(CXX) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 
 # Phony means not a "real" target, it doesn't build anything
@@ -31,7 +40,7 @@ $(PROGS): %:%.o thread_maze.cc thread_maze.hh
 # The phony target "spartan" is used to remove all compilation products and extra backup files.
 
 clean::
-	rm -f $(PROGS) $(OBJECTS)
+	rm -f $(MAZE_PROG) $(OBJ)
 
 spartan:: clean
 	\rm -fr *~
