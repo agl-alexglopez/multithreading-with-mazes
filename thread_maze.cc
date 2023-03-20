@@ -9,6 +9,7 @@
 #include <vector>
 
 const std::unordered_map<Thread_maze::Wall_line,std::string> Thread_maze::wall_lines_ = {
+    {default_wall_, "┼"},
     {north_wall_, "╵"},
     {south_wall_, "╷"},
     {north_south_wall_, "│"},
@@ -517,7 +518,7 @@ void Thread_maze::print_maze() const {
 }
 
 void Thread_maze::print_wall(int row, int col) const {
-    Wall_line wall = 0;
+    Wall_line wall = 0b0;
     // By hardcoding every possible wall configuration beforehand, we now simply build wall.
     if (row - 1 >= 0 && maze_[row - 1][col] == Square::wall) {
         wall |= north_wall_;

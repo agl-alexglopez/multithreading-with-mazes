@@ -61,6 +61,7 @@ public:
 private:
 
     typedef uint8_t Wall_line;
+    static constexpr Wall_line default_wall_ = 0b0;
     static constexpr Wall_line north_wall_ = 0b1;
     static constexpr Wall_line east_wall_ = 0b10;
     static constexpr Wall_line south_wall_ = 0b100;

@@ -23,7 +23,7 @@ OBJECTS = $(SOURCES:.cc=.o)
 
 all:: $(PROGS)
 
-$(PROGS): %:%.o thread_maze.cc
+$(PROGS): %:%.o thread_maze.cc thread_maze.hh
 	$(CXX) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 
 # Phony means not a "real" target, it doesn't build anything
