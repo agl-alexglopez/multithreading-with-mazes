@@ -6,7 +6,7 @@
 #include "thread_maze.hh"
 
 const std::unordered_set<std::string> argument_flags = {
-    "-r", "-c", "-b", "-s",
+    "-r", "-c", "-b", "-s","-h",
 };
 
 void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
@@ -37,6 +37,10 @@ int main(int argc, char **argv) {
                 process_current = true;
                 prev_flag = arg;
             }
+        }
+        if (prev_flag == "-h") {
+            print_usage();
+            return 0;
         }
         Thread_maze maze(maze_args);
         maze.solve_maze();
@@ -71,6 +75,9 @@ void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
             print_usage();
             std::abort();
         }
+    } else if (flag == "-h") {
+        print_usage();
+        std::abort();
     }
 }
 
@@ -91,13 +98,14 @@ void print_usage() {
               << "│  -s - Solver flag. Set maze solving algorithm.       │\n"
               << "│      - dfs - Depth First Search                      │\n"
               << "│      - bfs - Breadth First Search                    │\n"
+              << "│  -h  - Help flag. Cause this prompt to appear.       │\n"
               << "│                                                      │\n"
               << "│  If any flags are omitted, defaults are used.        │\n"
               << "│                                                      │\n"
               << "│  Examples:                                           │\n"
               << "│  ./run_maze                                          │\n"
               << "│  ./run_maze -r 51 -c 111 -b random-dfs -s bfs        │\n"
-              << "│  ./run_maze -r 51 -c 111 -s bfs                      │\n"
+              << "│  ./run_maze -c 111 -s bfs                            │\n"
               << "│                                                      │\n"
               << "└──────────────────────────────────────────────────────┘\n";
     std::cout << std::endl;
