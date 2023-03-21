@@ -100,11 +100,11 @@ private:
     static constexpr const char *const ansi_prp_ = "\033[38;5;183m";
     static constexpr const char *const ansi_mag_ = "\033[38;5;201m";
     static constexpr const char *const ansi_cyn_ = "\033[38;5;87m";
-    static constexpr const char *const ansi_wit_ = "\033[38;5;15m";
+    static constexpr const char *const ansi_wit_ = "\033[38;5;231m";
     static constexpr const char *const ansi_dark_red_ = "\033[38;5;52m";
     static constexpr const char *const ansi_blu_mag_ = "\033[38;5;105m";
     static constexpr const char *const ansi_red_grn_blu_ = "\033[38;5;121m";
-    static constexpr const char *const ansi_grn_prp_ = "\033[38;5;59m";
+    static constexpr const char *const ansi_grn_prp_ = "\033[38;5;106m";
     static constexpr const char *const ansi_grn_blu_prp_ = "\033[38;5;60m";
     static constexpr const char *const ansi_red_grn_prp_ = "\033[38;5;96m";
     static constexpr const char *const ansi_red_blu_prp_ = "\033[38;5;92m";

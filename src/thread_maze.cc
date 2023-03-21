@@ -510,7 +510,6 @@ void Thread_maze::print_maze() const {
         }
         std::cout << "\n";
     }
-    print_overlap_key();
     std::cout << std::endl;
 }
 
@@ -525,14 +524,40 @@ void Thread_maze::print_wall(Square square) const {
 }
 
 void Thread_maze::print_overlap_key() const {
-    for (const auto& key : thread_overlap_key_) {
-        std::cout << key.second;
-        for (size_t i = 0; i < 5; i++) {
-            std::cout << "█";
-        }
-        std::cout << ansi_nil_ << key.first << "\n";
-    }
-    std::cout << std::endl;
+    const std::string d = "█████████████";
+    const char *const n = ansi_nil_;
+    const char *const z = thread_colors_.at(zero_thread_);
+    const char *const o = thread_colors_.at(one_thread_);
+    const char *const t = thread_colors_.at(two_thread_);
+    const char *const th = thread_colors_.at(three_thread_);
+    const char *const z_o = thread_colors_.at(zero_thread_ | one_thread_);
+    const char *const z_t = thread_colors_.at(zero_thread_ | two_thread_);
+    const char *const z_th = thread_colors_.at(zero_thread_ | three_thread_);
+    const char *const o_t = thread_colors_.at(one_thread_ | two_thread_);
+    const char *const o_th = thread_colors_.at(one_thread_ | three_thread_);
+    const char *const t_th = thread_colors_.at(two_thread_ | three_thread_);
+    const char *const z_o_t = thread_colors_.at(zero_thread_ | one_thread_ | two_thread_);
+    const char *const z_o_th = thread_colors_.at(zero_thread_ | one_thread_ | three_thread_);
+    const char *const z_t_th = thread_colors_.at(zero_thread_ | two_thread_ | three_thread_);
+    const char *const o_t_th = thread_colors_.at(one_thread_ | two_thread_ | three_thread_);
+    const char *const z_o_tth = thread_colors_.at(zero_thread_ | one_thread_ | two_thread_ | three_thread_);
+
+    std:: cout << "┌─────────────────────────────────────────────────────────────────────┐\n"
+               << "│  Overlapping Color Key: 0_THREAD | 1_THREAD | 2_THREAD | 3_THREAD   │\n"
+               << "┠─────────────┬─────────────┬─────────────┬─────────────┬─────────────┤\n"
+               << "│     0       │      1      │     2       │     3       │     0|1     │\n"
+               << "┠─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
+               << "│"<<z<<d<<n<<"│"<<o<<d<<n<<"│"<<t<<d<<n<<"│"<<th<<d<<n<<"│"<<z_o<<d<<n<<"│\n"
+               << "┠─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
+               << "│    0|2      │    0|3      │    1|2      │    1|3      │     2|3     │\n"
+               << "┠─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
+               << "│"<<z_t<<d<<n<<"│"<<z_th<<d<<n<<"│"<<o_t<<d<<n<<"│"<<o_th<<d<<n<<"│"<<t_th<<d<<n<<"│\n"
+               << "┠─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
+               << "│   0|1|2     │   0|1|3     │   0|2|3     │   1|2|3     │   0|1|2|3   │\n"
+               << "┠─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
+               << "│"<<z_o_t<<d<<n<<"│"<<z_o_th<<d<<n<<"│"<<z_t_th<<d<<n<<"│"<<o_t_th<<d<<n<<"│"<<z_o_tth<<d<<n<<"│\n"
+               << "└─────────────┴─────────────┴─────────────┴─────────────┴─────────────┘\n"
+               << std::endl;
 }
 
 void Thread_maze::clear_paths() {
