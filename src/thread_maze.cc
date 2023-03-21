@@ -1,5 +1,6 @@
 #include "thread_maze.hh"
 #include <algorithm>
+#include <iomanip>
 #include <cstdint>
 #include <cstdlib>
 #include <stack>
@@ -9,7 +10,7 @@
 #include <vector>
 
 const std::unordered_map<Thread_maze::Wall_line,std::string> Thread_maze::wall_lines_ = {
-    {default_wall_, "┼"},
+    {floating_wall_, "┼"},
     {north_wall_, "╵"},
     {south_wall_, "╷"},
     {north_south_wall_, "│"},
@@ -25,6 +26,50 @@ const std::unordered_map<Thread_maze::Wall_line,std::string> Thread_maze::wall_l
     {north_west_wall_, "┘"},
     {south_east_wall_, "┌"},
     {south_west_wall_, "┐"},
+};
+
+const std::unordered_map<Thread_maze::Thread_tag, const char *const> Thread_maze::thread_colors_ = {
+    {Thread_maze::zero_thread_, Thread_maze::ansi_red_},
+    {Thread_maze::one_thread_, Thread_maze::ansi_grn_},
+    {Thread_maze::two_thread_, Thread_maze::ansi_blu_},
+    {Thread_maze::three_thread_, Thread_maze::ansi_prp_},
+    {Thread_maze::zero_one_overlap_, Thread_maze::ansi_yel_},
+    {Thread_maze::zero_two_overlap_, Thread_maze::ansi_mag_},
+    {Thread_maze::zero_three_overlap_, Thread_maze::ansi_dark_red_},
+    {Thread_maze::zero_one_two_overlap_, Thread_maze::ansi_red_grn_blu_},
+    {Thread_maze::zero_one_three_overlap_, Thread_maze::ansi_red_grn_prp_},
+    {Thread_maze::zero_two_three_overlap_, Thread_maze::ansi_red_blu_prp_},
+    {Thread_maze::zero_one_two_three_overlap_, Thread_maze::ansi_wit_},
+    {Thread_maze::one_two_overlap_, Thread_maze::ansi_cyn_},
+    {Thread_maze::one_three_overlap_, Thread_maze::ansi_grn_prp_},
+    {Thread_maze::one_two_three_overlap_, Thread_maze::ansi_grn_blu_prp_},
+    {Thread_maze::two_three_overlap_, Thread_maze::ansi_dark_blu_mag_},
+};
+
+const std::vector<std::pair<std::string,const char *const>> Thread_maze::thread_overlap_key_ = {
+    {"0_THREAD", thread_colors_.at(zero_thread_)},
+    {"1_THREAD", thread_colors_.at(one_thread_)},
+    {"2_THREAD", thread_colors_.at(two_thread_)},
+    {"3_THREAD", thread_colors_.at(three_thread_)},
+    {"0_THREAD + 1_THREAD", thread_colors_.at(zero_one_overlap_)},
+    {"0_THREAD + 2_THREAD", thread_colors_.at(zero_two_overlap_)},
+    {"0_THREAD + 3_THREAD", thread_colors_.at(zero_three_overlap_)},
+    {"1_THREAD + 2_THREAD", thread_colors_.at(one_two_overlap_)},
+    {"1_THREAD + 3_THREAD", thread_colors_.at(one_three_overlap_)},
+    {"2_THREAD + 3_THREAD", thread_colors_.at(two_three_overlap_)},
+    {"0_THREAD + 1_THREAD + 2_THREAD", thread_colors_.at(zero_one_two_overlap_)},
+    {"0_THREAD + 1_THREAD + 3_THREAD", thread_colors_.at(zero_one_three_overlap_)},
+    {"0_THREAD + 2_THREAD + 3_THREAD", thread_colors_.at(zero_two_three_overlap_)},
+    {"1_THREAD + 2_THREAD + 3_THREAD", thread_colors_.at(one_two_three_overlap_)},
+    {"0_THREAD + 1_THREAD + 2_THREAD + 3_THREAD", thread_colors_.at(zero_one_two_three_overlap_)},
+};
+
+
+const std::unordered_map<Thread_maze::Thread_tag, char> Thread_maze::thread_chars_ = {
+    {Thread_maze::zero_thread_, 'x'},
+    {Thread_maze::one_thread_, '^'},
+    {Thread_maze::two_thread_, '+'},
+    {Thread_maze::three_thread_, '@'},
 };
 
 Thread_maze::Thread_maze(const Thread_maze::Packaged_args& args)
@@ -66,11 +111,12 @@ void Thread_maze::solve_with_dfs_threads() {
     for (int i = 0; i < num_threads_; i++) {
         const Point& direction = cardinal_directions_[i];
         Point thread_start = {start_.row + direction.row, start_.col + direction.col};
-        if (maze_[thread_start.row][thread_start.col] == Square::wall) {
+        if (!(maze_[thread_start.row][thread_start.col] & path_bit_)) {
             thread_start = start_;
         }
-        threads[i] = std::thread([this, thread_start, i] {
-            dfs_thread_search(thread_start, static_cast<Square>(i));
+        const Thread_tag& thread_mask = thread_masks_[i];
+        threads[i] = std::thread([this, thread_start, i, thread_mask] {
+            dfs_thread_search(thread_start, i, thread_mask);
         });
 
     }
@@ -90,11 +136,12 @@ void Thread_maze::solve_with_bfs_threads() {
     for (int i = 0; i < num_threads_; i++) {
         const Point& direction = cardinal_directions_[i];
         Point thread_start = {start_.row + direction.row, start_.col + direction.col};
-        if (maze_[thread_start.row][thread_start.col] == Square::wall) {
+        if (!(maze_[thread_start.row][thread_start.col] & path_bit_)) {
             thread_start = start_;
         }
-        threads[i] = std::thread([this, thread_start, i] {
-            bfs_thread_search(thread_start, static_cast<Square>(i));
+        const Thread_tag& thread_mask = thread_masks_[i];
+        threads[i] = std::thread([this, thread_start, i, thread_mask] {
+            bfs_thread_search(thread_start, i, thread_mask);
         });
     }
 
@@ -104,14 +151,13 @@ void Thread_maze::solve_with_bfs_threads() {
     print_solution_path();
 }
 
-bool Thread_maze::dfs_thread_search(Point start, Thread_maze::Square thread) {
+bool Thread_maze::dfs_thread_search(Point start, size_t thread_index, Thread_tag thread_bit) {
     std::unordered_set<Point> seen;
     seen.insert(start);
     std::stack<Point> dfs;
     dfs.push(start);
     bool result = false;
     Point cur = start;
-    int thread_direction_index = static_cast<int>(thread);
     while (!dfs.empty()) {
         if (escape_path_index_ != -1) {
             result = false;
@@ -121,10 +167,10 @@ bool Thread_maze::dfs_thread_search(Point start, Thread_maze::Square thread) {
         // Don't pop() yet!
         cur = dfs.top();
 
-        if (maze_[cur.row][cur.col] == Square::finish) {
+        if (cur == finish_) {
             escape_section_.lock();
             if (escape_path_index_ == -1) {
-                escape_path_index_ = thread_direction_index;
+                escape_path_index_ = thread_index;
             }
             escape_section_.unlock();
             result = true;
@@ -134,16 +180,16 @@ bool Thread_maze::dfs_thread_search(Point start, Thread_maze::Square thread) {
 
         Point chosen = {};
         // Bias each thread's first choice towards orginal dispatch direction. More coverage.
-        int direction_index = thread_direction_index;
+        int direction_index = thread_index;
         do {
             const Point& p = cardinal_directions_[direction_index];
             Point next = {cur.row + p.row, cur.col + p.col};
-            if (!seen.count(next) && maze_[next.row][next.col] != Square::wall) {
+            if (!seen.count(next) && (maze_[next.row][next.col] & path_bit_)) {
                 chosen = next;
                 break;
             }
             ++direction_index %= cardinal_directions_.size();
-        } while (direction_index != thread_direction_index);
+        } while (direction_index != thread_index);
 
         // To emulate a true recursive dfs, we need to only push the current branch onto our stack.
         if (chosen.row) {
@@ -157,24 +203,22 @@ bool Thread_maze::dfs_thread_search(Point start, Thread_maze::Square thread) {
     while (!dfs.empty()) {
         cur = dfs.top();
         dfs.pop();
-        thread_paths_[thread_direction_index].push_back(cur);
+        thread_paths_[thread_index].push_back(cur);
         escape_section_.lock();
-        Square& square = maze_[cur.row][cur.col];
+        maze_[cur.row][cur.col] |= thread_bit;
         // A thread or threads have already arrived at this location. Mark as an overlap.
-        square <= Square::overlap_threads ? square = Square::overlap_threads : square = thread;
         escape_section_.unlock();
     }
     return result;
 }
 
-bool Thread_maze::bfs_thread_search(Point start, Square thread) {
+bool Thread_maze::bfs_thread_search(Point start, size_t thread_index, Thread_tag thread_bit) {
     // This will be how we rebuild the path because queue does not represent the current path.
     std::unordered_map<Point,Point> seen;
     seen[start] = {-1,-1};
     std::queue<Point> bfs({start});
     bool result = false;
     Point cur = start;
-    int thread_direction_index = static_cast<int>(thread);
     while (!bfs.empty()) {
         if (escape_path_index_ != -1) {
             result = false;
@@ -184,10 +228,10 @@ bool Thread_maze::bfs_thread_search(Point start, Square thread) {
         cur = bfs.front();
         bfs.pop();
 
-        if (maze_[cur.row][cur.col] == Square::finish) {
+        if (cur == finish_) {
             escape_section_.lock();
             if (escape_path_index_ == -1) {
-                escape_path_index_ = thread_direction_index;
+                escape_path_index_ = thread_index;
             }
             escape_section_.unlock();
             result = true;
@@ -195,24 +239,24 @@ bool Thread_maze::bfs_thread_search(Point start, Square thread) {
         }
 
         // Bias each thread towards the direction it was dispatched when we first sent it.
-        int direction_index = thread_direction_index;
+        int direction_index = thread_index;
         do {
             const Point& p = cardinal_directions_[direction_index];
             Point next = {cur.row + p.row, cur.col + p.col};
-            if (!seen.count(next) && maze_[next.row][next.col] != Square::wall) {
+            if (!seen.count(next) && (maze_[next.row][next.col] & path_bit_)) {
                 seen[next] = cur;
                 bfs.push(next);
+                // This creates a nice spread of mixed color for each searching thread.
+                escape_section_.lock();
+                maze_[next.row][next.col] |= thread_bit;
+                escape_section_.unlock();
             }
             ++direction_index %= cardinal_directions_.size();
-        } while (direction_index != thread_direction_index);
+        } while (direction_index != thread_index);
     }
     cur = seen.at(cur);
     while(cur.row > 0) {
-        thread_paths_[thread_direction_index].push_back(cur);
-        escape_section_.lock();
-        Square& square = maze_[cur.row][cur.col];
-        square <= Square::overlap_threads ? square = Square::overlap_threads : square = thread;
-        escape_section_.unlock();
+        thread_paths_[thread_index].push_back(cur);
         cur = seen.at(cur);
     }
     return result;
@@ -240,91 +284,8 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, size_t odd_rows, si
 }
 
 void Thread_maze::generate_randomized_loop_erased_maze(size_t odd_rows, size_t odd_cols) {
-    maze_ = std::vector<std::vector<Square>>(odd_rows, std::vector<Square>(odd_cols));
-    for (size_t row = 0; row < maze_.size(); row++) {
-        for (size_t col = 0; col < maze_[0].size(); col++) {
-            maze_[row][col] = Square::wall;
-        }
-    }
-    std::uniform_int_distribution<int> row(1, maze_.size() - 2);
-    std::uniform_int_distribution<int> col(1, maze_[0].size() - 2);
-    start_ = {row(generator_), col(generator_)};
-    Point path_start = {row(generator_), col(generator_)};
-    if (start_ == path_start) {
-        path_start = find_nearest_wall(path_start);
-    }
-    std::unordered_set<Point> maze_paths = {start_};
-    std::unordered_map<Point,Point> seen_path = {{path_start, path_start}};
-    std::vector<Point> random_walk({path_start});
-    std::vector<int> random_direction_indices(generate_directions_.size());
-    iota(begin(random_direction_indices), end(random_direction_indices), 0);
-
-    Point prev_direction = path_start;
-    while (!random_walk.empty()) {
-        Point cur = random_walk.back();
-
-        if (maze_paths.count(cur)) {
-            while (!random_walk.empty()) {
-                cur = random_walk.back();
-                maze_[cur.row][cur.col] = Square::path;
-                maze_paths.insert(cur);
-                random_walk.pop_back();
-            }
-            path_start = choose_arbitrary_point(maze_paths);
-            if (!path_start.row) {
-                return;
-            }
-            random_walk.push_back(path_start);
-        }
-
-
-        shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
-        Point random_neighbor = {};
-        for (const int& i : random_direction_indices) {
-            const Point& direction = generate_directions_[i];
-            Point next = {cur.row + direction.row, cur.col + direction.col};
-            if (next.row > 0 && static_cast<size_t>(next.row) < maze_.size() - 1
-                        && next.col > 0 && static_cast<size_t>(next.col) < maze_[0].size() - 1
-                            && next != prev_direction) {
-                random_neighbor = next;
-                break;
-            }
-        }
-
-        if (!random_neighbor.row) {
-            random_walk.pop_back();
-            continue;
-        }
-
-        if (seen_path.count(random_neighbor)) {
-            while (cur != random_neighbor) {
-                Point parent = seen_path.at(cur);
-                random_walk.pop_back();
-                seen_path.erase(cur);
-                cur = parent;
-            }
-            continue;
-        }
-
-
-        Point wall = random_neighbor;
-        if (random_neighbor.row < cur.row) {
-            wall.row++;
-        } else if (random_neighbor.row > cur.row) {
-            wall.row--;
-        } else if (random_neighbor.col < cur.col) {
-            wall.col++;
-        } else if (random_neighbor.col > cur.col) {
-            wall.col--;
-        } else {
-            std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
-        }
-        seen_path[wall] = cur;
-        seen_path[random_neighbor] = wall;
-        random_walk.push_back(wall);
-        random_walk.push_back(random_neighbor);
-        prev_direction = cur;
-    }
+    (void) odd_cols;
+    (void) odd_rows;
 }
 
 Thread_maze::Point
@@ -344,7 +305,7 @@ void Thread_maze::generate_randomized_dfs_maze(size_t odd_rows, size_t odd_cols)
     maze_ = std::vector<std::vector<Square>>(odd_rows, std::vector<Square>(odd_cols));
     for (size_t row = 0; row < maze_.size(); row++) {
         for (size_t col = 0; col < maze_[0].size(); col++) {
-            maze_[row][col] = Square::wall;
+            build_wall(row, col);
         }
     }
     std::uniform_int_distribution<int> row(1, maze_.size() - 2);
@@ -359,7 +320,7 @@ void Thread_maze::generate_randomized_dfs_maze(size_t odd_rows, size_t odd_cols)
     while (!dfs.empty()) {
         // Don't pop yet!
         Point cur = dfs.top();
-        maze_[cur.row][cur.col] = Square::path;
+        build_path(cur.row, cur.col);
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
 
         // The unvisited neighbor is guaranteed to be random because array is shuffled every time.
@@ -385,6 +346,7 @@ void Thread_maze::generate_randomized_dfs_maze(size_t odd_rows, size_t odd_cols)
         // We have a randomly chosen neighbor so let's connect and continue.
         seen.insert(random_neighbor);
         dfs.push(random_neighbor);
+        build_path(random_neighbor.row, random_neighbor.col);
         // Now we must break the wall between this two square jump.
         if (random_neighbor.row < cur.row) {
             random_neighbor.row++;
@@ -397,20 +359,58 @@ void Thread_maze::generate_randomized_dfs_maze(size_t odd_rows, size_t odd_cols)
         } else {
             std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
         }
-        maze_[random_neighbor.row][random_neighbor.col] = Square::path;
+        build_path(random_neighbor.row, random_neighbor.col);
         // Walls are just a simple value that a square can have so I need to mark as seen.
         seen.insert(random_neighbor);
     }
     start_ = pick_random_point(row, col);
     finish_ = pick_random_point(row, col);
-    maze_[start_.row][start_.col] = Square::start;
-    maze_[finish_.row][finish_.col] = Square::finish;
+    maze_[start_.row][start_.col] |= start_bit_;
+    maze_[finish_.row][finish_.col] |= finish_bit_;
+}
+
+void Thread_maze::build_wall(int row, int col) {
+    Wall_line wall = 0b0;
+    if (row - 1 >= 0) {
+        wall |= north_wall_;
+    }
+    if (row + 1 < maze_.size()) {
+        wall |= south_wall_;
+    }
+    if (col - 1 >= 0) {
+        wall |= west_wall_;
+    }
+    if (col + 1 < maze_[0].size()) {
+        wall |= east_wall_;
+    }
+    auto found_piece = wall_lines_.find(wall);
+    if (found_piece == wall_lines_.end()) {
+        std::cerr << "Error building the wall. Review construction of wall pieces." << std::endl;
+        std::abort();
+    }
+    maze_[row][col] |= wall;
+}
+
+void Thread_maze::build_path(int row, int col) {
+    if (row - 1 >= 0) {
+        maze_[row - 1][col] &= ~south_wall_;
+    }
+    if (row + 1 < maze_.size()) {
+        maze_[row + 1][col] &= ~north_wall_;
+    }
+    if (col - 1 >= 0) {
+        maze_[row][col - 1] &= ~east_wall_;
+    }
+    if (col + 1 < maze_[0].size()) {
+        maze_[row][col + 1] &= ~west_wall_;
+    }
+    maze_[row][col] |= path_bit_;
 }
 
 Thread_maze::Point Thread_maze::pick_random_point(std::uniform_int_distribution<int>& row,
                                                   std::uniform_int_distribution<int>& col) {
     Point choice = {row(generator_), col(generator_)};
-    if (maze_[choice.row][choice.col] == Square::path) {
+    if (maze_[choice.row][choice.col] & path_bit_) {
         return choice;
     }
     return find_nearest_square(choice);
@@ -421,7 +421,7 @@ Thread_maze::Point Thread_maze::find_nearest_square(Thread_maze::Point choice) {
         Point next = {choice.row + p.row, choice.col + p.col};
         if (next.row > 0 && static_cast<size_t>(next.row) < maze_.size() - 1
                 && next.col > 0 && static_cast<size_t>(next.col) < maze_[0].size() - 1
-                            && maze_[next.row][next.col] == Square::path) {
+                            && maze_[next.row][next.col] & path_bit_) {
             return next;
         }
     }
@@ -437,7 +437,7 @@ Thread_maze::Point Thread_maze::find_nearest_wall(Thread_maze::Point choice) {
          Point next = {choice.row + p.row, choice.col + p.col};
          if (next.row > 0 && static_cast<size_t>(next.row) < maze_.size() - 1
                  && next.col > 0 && static_cast<size_t>(next.col) < maze_[0].size() - 1
-                    && maze_[next.row][next.col] == Square::wall) {
+                    && !(maze_[next.row][next.col] & path_bit_)) {
              return next;
          }
     }
@@ -445,18 +445,18 @@ Thread_maze::Point Thread_maze::find_nearest_wall(Thread_maze::Point choice) {
 }
 
 void Thread_maze::print_solution_path() {
-    maze_[start_.row][start_.col] = Square::start;
-    maze_[finish_.row][finish_.col] = Square::finish;
+    maze_[start_.row][start_.col] |= start_bit_;
+    maze_[finish_.row][finish_.col] |= finish_bit_;
     std::cout << "\n";
     print_maze();
     if (escape_path_index_ == 0) {
-        std::cout << thread_colors_[0] << thread_chars_[0] << " 0_thread won!" << ansi_nil_ << "\n";
+        std::cout << thread_colors_.at(thread_masks_[0]) << "█" << " 0_thread won!" << ansi_nil_ << "\n";
     } else if (escape_path_index_ == 1) {
-        std::cout << thread_colors_[1] <<thread_chars_[1] << " 1_thread won!" << ansi_nil_ << "\n";
+        std::cout << thread_colors_.at(thread_masks_[1]) << "█" << " 1_thread won!" << ansi_nil_ << "\n";
     } else if (escape_path_index_ == 2) {
-        std::cout << thread_colors_[2] << thread_chars_[2] << " 2_thread won!" << ansi_nil_ << "\n";
+        std::cout << thread_colors_.at(thread_masks_[2]) << "█" << " 2_thread won!" << ansi_nil_ << "\n";
     } else if (escape_path_index_ == 3) {
-        std::cout << thread_colors_[3] << thread_chars_[3] << " 3_thread won!" << ansi_nil_ << "\n";
+        std::cout << thread_colors_.at(thread_masks_[3]) << "█" << " 3_thread won!" << ansi_nil_ << "\n";
     } else {
         std::cout << "NO ESCAPE! >:)\n";
     }
@@ -483,25 +483,26 @@ void Thread_maze::print_solution_path() {
 }
 
 void Thread_maze::print_maze() const {
-    std::cout << thread_colors_[0] << thread_chars_[0] << " 0_THREAD, " << ansi_nil_
-              << thread_colors_[1] << thread_chars_[1] << " 1_THREAD, " << ansi_nil_
-              << thread_colors_[2] << thread_chars_[2] << " 2_THREAD, " << ansi_nil_
-              << thread_colors_[3] << thread_chars_[3] << " 3_THREAD, " << ansi_nil_
-              << thread_colors_[4] << thread_chars_[4] << " OVERLAP_THREADS" << ansi_nil_ << "\n";
+    print_overlap_key();
     for (size_t row = 0; row < maze_.size(); row++) {
         for (size_t col = 0; col < maze_[0].size(); col++) {
             const Square& square = maze_[row][col];
-            if (square <= Square::overlap_threads) {
-                int index = static_cast<int>(square);
-                std::cout << thread_colors_[index] << thread_chars_[index] << ansi_nil_;
-            } else if (square == Square::start) {
+            if (square & start_bit_) {
                 std::cout << ansi_cyn_ << "S" << ansi_nil_;
-            } else if (square == Square::wall) {
-                print_wall(row, col);
-            } else if (square == Square::path) {
-                std::cout << " ";
-            } else if (square == Square::finish) {
+            } else if (square & finish_bit_) {
                 std::cout << ansi_cyn_ << "F" << ansi_nil_;
+            } else if (square & thread_mask_) {
+                Square thread_color = square & thread_mask_;
+                auto found_color = thread_colors_.find(thread_color);
+                if (found_color == thread_colors_.end()) {
+                    std::cerr << "Could not find this color in the table: " << thread_color << std::endl;
+                    std::abort();
+                }
+                std::cout << found_color->second << "█" << ansi_nil_;
+            } else if (!(square & path_bit_)) {
+                print_wall(square);
+            } else if (square & path_bit_) {
+                std::cout << " ";
             }else {
                 std::cerr << "Printed maze and a square was not categorized." << std::endl;
                 abort();
@@ -509,35 +510,29 @@ void Thread_maze::print_maze() const {
         }
         std::cout << "\n";
     }
-    std::cout << thread_colors_[0] << thread_chars_[0] << " 0_THREAD, " << ansi_nil_
-              << thread_colors_[1] << thread_chars_[1] << " 1_THREAD, " << ansi_nil_
-              << thread_colors_[2] << thread_chars_[2] << " 2_THREAD, " << ansi_nil_
-              << thread_colors_[3] << thread_chars_[3] << " 3_THREAD, " << ansi_nil_
-              << thread_colors_[4] << thread_chars_[4] << " OVERLAP_THREADS" << ansi_nil_ << "\n";
+    print_overlap_key();
     std::cout << std::endl;
 }
 
-void Thread_maze::print_wall(int row, int col) const {
-    Wall_line wall = 0b0;
-    // By hardcoding every possible wall configuration beforehand, we now simply build wall.
-    if (row - 1 >= 0 && maze_[row - 1][col] == Square::wall) {
-        wall |= north_wall_;
-    }
-    if (row + 1 < maze_.size() && maze_[row + 1][col] == Square::wall) {
-        wall |= south_wall_;
-    }
-    if (col - 1 >= 0 && maze_[row][col - 1] == Square::wall) {
-        wall |= west_wall_;
-    }
-    if (col + 1 < maze_[0].size() && maze_[row][col + 1] == Square::wall) {
-        wall |= east_wall_;
-    }
+void Thread_maze::print_wall(Square square) const {
+    Wall_line wall = square & wall_mask_;
     auto found_piece = wall_lines_.find(wall);
     if (found_piece == wall_lines_.end()) {
         std::cerr << "Error building the wall. Review construction of wall pieces." << std::endl;
         std::abort();
     }
     std::cout << found_piece->second;
+}
+
+void Thread_maze::print_overlap_key() const {
+    for (const auto& key : thread_overlap_key_) {
+        std::cout << key.second;
+        for (size_t i = 0; i < 5; i++) {
+            std::cout << "█";
+        }
+        std::cout << ansi_nil_ << key.first << "\n";
+    }
+    std::cout << std::endl;
 }
 
 void Thread_maze::clear_paths() {
@@ -548,9 +543,7 @@ void Thread_maze::clear_paths() {
     }
     for (std::vector<Square>& row : maze_) {
         for (Square& square : row) {
-            if (square <= Square::overlap_threads) {
-                square = Square::path;
-            }
+            square &= ~thread_mask_;
         }
     }
 }
