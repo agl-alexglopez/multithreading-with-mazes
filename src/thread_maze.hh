@@ -73,17 +73,6 @@ private:
     static constexpr Wall_line east_wall_ =     0b0010;
     static constexpr Wall_line south_wall_ =    0b0100;
     static constexpr Wall_line west_wall_ =     0b1000;
-    static constexpr Wall_line north_east_south_west_wall_ = north_wall_ | east_wall_ | south_wall_ | west_wall_;
-    static constexpr Wall_line north_east_south_wall_ = north_wall_ | east_wall_ | south_wall_;
-    static constexpr Wall_line north_west_south_wall_ = north_wall_ | west_wall_ | south_wall_;
-    static constexpr Wall_line south_west_east_wall_ = south_wall_ | west_wall_ | east_wall_;
-    static constexpr Wall_line north_west_east_wall_ = north_wall_ | west_wall_ | east_wall_;
-    static constexpr Wall_line north_east_wall_ = north_wall_ | east_wall_;
-    static constexpr Wall_line north_south_wall_ = north_wall_ | south_wall_;
-    static constexpr Wall_line north_west_wall_ = north_wall_ | west_wall_;
-    static constexpr Wall_line south_east_wall_ = south_wall_ | east_wall_;
-    static constexpr Wall_line south_west_wall_ = south_wall_ | west_wall_;
-    static constexpr Wall_line east_west_wall_ = east_wall_ | west_wall_;
 
     static constexpr Square path_bit_ =     0b000'0001'0000;
     static constexpr Square start_bit_ =    0b010'0000'0000;
@@ -95,17 +84,6 @@ private:
     static constexpr Thread_tag one_thread_ =   0b000'0100'0000;
     static constexpr Thread_tag two_thread_ =   0b000'1000'0000;
     static constexpr Thread_tag three_thread_ = 0b001'0000'0000;
-    static constexpr Thread_tag zero_one_overlap_ = zero_thread_ | one_thread_;
-    static constexpr Thread_tag zero_two_overlap_ = zero_thread_ | two_thread_;
-    static constexpr Thread_tag zero_three_overlap_ = zero_thread_ | three_thread_;
-    static constexpr Thread_tag zero_one_two_overlap_ = zero_thread_ | one_thread_ | two_thread_;
-    static constexpr Thread_tag zero_one_three_overlap_ = zero_thread_ | one_thread_ | three_thread_;
-    static constexpr Thread_tag zero_two_three_overlap_ = zero_thread_ | two_thread_ | three_thread_;
-    static constexpr Thread_tag zero_one_two_three_overlap_ = zero_thread_ | one_thread_ | two_thread_ | three_thread_;
-    static constexpr Thread_tag one_two_overlap_ = one_thread_ | two_thread_;
-    static constexpr Thread_tag one_three_overlap_ = one_thread_ | three_thread_;
-    static constexpr Thread_tag one_two_three_overlap_ = one_thread_ | two_thread_ | three_thread_;
-    static constexpr Thread_tag two_three_overlap_ = two_thread_ | three_thread_;
     static constexpr std::array<Thread_tag,4> thread_masks_ = {
         zero_thread_, one_thread_, two_thread_, three_thread_
     };
@@ -123,13 +101,13 @@ private:
     static constexpr const char *const ansi_mag_ = "\033[38;5;201m";
     static constexpr const char *const ansi_cyn_ = "\033[38;5;87m";
     static constexpr const char *const ansi_wit_ = "\033[38;5;15m";
-    static constexpr const char *const ansi_dark_red_ = "\033[38;5;160m";
+    static constexpr const char *const ansi_dark_red_ = "\033[38;5;52m";
     static constexpr const char *const ansi_blu_mag_ = "\033[38;5;105m";
     static constexpr const char *const ansi_red_grn_blu_ = "\033[38;5;121m";
     static constexpr const char *const ansi_grn_prp_ = "\033[38;5;59m";
     static constexpr const char *const ansi_grn_blu_prp_ = "\033[38;5;60m";
     static constexpr const char *const ansi_red_grn_prp_ = "\033[38;5;96m";
-    static constexpr const char *const ansi_red_blu_prp_ = "\033[38;5;53m";
+    static constexpr const char *const ansi_red_blu_prp_ = "\033[38;5;92m";
     static constexpr const char *const ansi_dark_blu_mag_ = "\033[38;5;57m";
     static constexpr const char *const ansi_nil_ = "\033[0m";
     static const std::unordered_map<Wall_line,std::string> wall_lines_;
