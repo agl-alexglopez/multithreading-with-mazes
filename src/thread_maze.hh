@@ -73,6 +73,14 @@ private:
     static constexpr Wall_line east_wall_ =     0b0010;
     static constexpr Wall_line south_wall_ =    0b0100;
     static constexpr Wall_line west_wall_ =     0b1000;
+    static constexpr std::array<const char *const,16> wall_lines_ = {
+        // Walls are drawn in relation to neighboring walls that they have in cardinal directions.
+        // 0bWSEN
+        // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
+            "┼",    "╵",     "╶",    "└",    "╷",    "│",    "┌",    "├",
+        // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
+            "╴",    "┘",     "─",    "┴",    "┐",    "┤",    "┬",    "┼"
+    };
 
     static constexpr Square path_bit_ =     0b000'0001'0000;
     static constexpr Square start_bit_ =    0b010'0000'0000;
@@ -87,8 +95,6 @@ private:
     static constexpr std::array<Thread_tag,4> thread_masks_ = {
         zero_thread_ , one_thread_ , two_thread_ , three_thread_
     };
-    static const std::vector<std::pair<std::string,const char *const>> thread_overlap_key_;
-    static const std::unordered_map<Thread_tag, char> thread_chars_;
 
     static constexpr int num_threads_ = 4;
     static constexpr int starting_path_len_ = 4096;
@@ -105,21 +111,20 @@ private:
     static constexpr const char *const ansi_red_grn_blu_ = "\033[38;5;121m";
     static constexpr const char *const ansi_grn_prp_ = "\033[38;5;106m";
     static constexpr const char *const ansi_grn_blu_prp_ = "\033[38;5;60m";
-    static constexpr const char *const ansi_red_grn_prp_ = "\033[38;5;96m";
-    static constexpr const char *const ansi_red_blu_prp_ = "\033[38;5;92m";
+    static constexpr const char *const ansi_red_grn_prp_ = "\033[38;5;105m";
+    static constexpr const char *const ansi_red_blu_prp_ = "\033[38;5;89m";
     static constexpr const char *const ansi_dark_blu_mag_ = "\033[38;5;57m";
     static constexpr const char *const ansi_nil_ = "\033[0m";
     static constexpr std::array<const char *const,16> thread_colors_ = {
         // Threads Overlaps. The zero thread is the zero index bit. The 1 bit!
-           nullptr,
-        // 0b0001     0b0010     0b0011     0b0100     0b0101     0b0110        0b0111
-           ansi_red_, ansi_grn_, ansi_yel_, ansi_blu_, ansi_mag_, ansi_cyn_, ansi_red_grn_blu_,
-        // 0b1000     0b1001          0b1010           0b1011            0b1100
-           ansi_prp_, ansi_dark_red_, ansi_grn_prp_, ansi_red_grn_prp_, ansi_dark_blu_mag_,
-        // 0b1101                 0b1110          0b1111
-           ansi_red_blu_prp_, ansi_grn_blu_prp_, ansi_wit_,
+        nullptr,
+        // 0b0001   0b0010     0b0011     0b0100     0b0101     0b0110        0b0111
+        ansi_red_, ansi_grn_, ansi_yel_, ansi_blu_, ansi_mag_, ansi_cyn_, ansi_red_grn_blu_,
+        // 0b1000    0b1001          0b1010           0b1011            0b1100
+        ansi_prp_, ansi_dark_red_, ansi_grn_prp_, ansi_red_grn_prp_, ansi_dark_blu_mag_,
+        // 0b1101              0b1110          0b1111
+        ansi_red_blu_prp_, ansi_grn_blu_prp_, ansi_wit_,
     };
-    static const std::unordered_map<Wall_line,std::string> wall_lines_;
     //                                                               n      e     s      w
     static constexpr std::array<Point,4> cardinal_directions_ = { {{-1,0},{0,1},{1,0},{0,-1}} };
     static constexpr std::array<Point,4> generate_directions_ = { {{-2,0},{0,2},{2,0},{0,-2}} };
@@ -154,7 +159,6 @@ private:
     void print_solution_path();
     void print_maze() const;
     void print_overlap_key() const;
-    void print_wall(Square square) const;
     void set_squares(const std::vector<std::vector<Square>>& tiles);
 
 }; // class Thread_maze

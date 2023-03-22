@@ -9,31 +9,6 @@
 #include <thread>
 #include <vector>
 
-const std::unordered_map<Thread_maze::Wall_line,std::string> Thread_maze::wall_lines_ = {
-    {floating_wall_, "┼"},
-    {north_wall_, "╵"},
-    {south_wall_, "╷"},
-    {north_wall_ | south_wall_, "│"},
-    {east_wall_, "╶"},
-    {west_wall_, "╴"},
-    {east_wall_ | west_wall_, "─"},
-    {north_wall_ | east_wall_ | south_wall_ | west_wall_, "┼"},
-    {north_wall_ | east_wall_ | south_wall_, "├"},
-    {north_wall_ | west_wall_ | south_wall_, "┤"},
-    {north_wall_ | west_wall_ | east_wall_, "┴"},
-    {south_wall_ | west_wall_ | east_wall_, "┬"},
-    {north_wall_ | east_wall_, "└"},
-    {north_wall_ | west_wall_, "┘"},
-    {south_wall_ | east_wall_, "┌"},
-    {south_wall_ | west_wall_, "┐"},
-};
-
-const std::unordered_map<Thread_maze::Thread_tag, char> Thread_maze::thread_chars_ = {
-    {Thread_maze::zero_thread_, 'x'},
-    {Thread_maze::one_thread_, '^'},
-    {Thread_maze::two_thread_, '+'},
-    {Thread_maze::three_thread_, '@'},
-};
 
 Thread_maze::Thread_maze(const Thread_maze::Packaged_args& args)
     : builder_(args.builder),
@@ -346,11 +321,6 @@ void Thread_maze::build_wall(int row, int col) {
     if (col + 1 < maze_[0].size()) {
         wall |= east_wall_;
     }
-    auto found_piece = wall_lines_.find(wall);
-    if (found_piece == wall_lines_.end()) {
-        std::cerr << "Error building the wall. Review construction of wall pieces." << std::endl;
-        std::abort();
-    }
     maze_[row][col] |= wall;
 }
 
@@ -455,10 +425,10 @@ void Thread_maze::print_maze() const {
             } else if (square & finish_bit_) {
                 std::cout << ansi_cyn_ << "F" << ansi_nil_;
             } else if (square & thread_mask_) {
-                Square thread_color = (square & thread_mask_) >> thread_tag_offset_;
+                Thread_tag thread_color = (square & thread_mask_) >> thread_tag_offset_;
                 std::cout << thread_colors_[thread_color] << "█" << ansi_nil_;
             } else if (!(square & path_bit_)) {
-                print_wall(square);
+                std::cout << wall_lines_[square & wall_mask_];
             } else if (square & path_bit_) {
                 std::cout << " ";
             }else {
@@ -469,16 +439,6 @@ void Thread_maze::print_maze() const {
         std::cout << "\n";
     }
     std::cout << std::endl;
-}
-
-void Thread_maze::print_wall(Square square) const {
-    Wall_line wall = square & wall_mask_;
-    auto found_piece = wall_lines_.find(wall);
-    if (found_piece == wall_lines_.end()) {
-        std::cerr << "Error building the wall. Review construction of wall pieces." << std::endl;
-        std::abort();
-    }
-    std::cout << found_piece->second;
 }
 
 void Thread_maze::print_overlap_key() const {
