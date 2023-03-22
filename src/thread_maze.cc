@@ -14,6 +14,7 @@ Thread_maze::Thread_maze(const Thread_maze::Packaged_args& args)
     : builder_(args.builder),
       solver_(args.solver),
       generator_(std::random_device{}()),
+      maze_(args.odd_rows, std::vector<Square>(args.odd_cols)),
       thread_paths_(num_threads_),
       start_({0,0}),
       finish_({0,0}),
@@ -52,7 +53,7 @@ void Thread_maze::solve_with_dfs_threads() {
         if (!(maze_[thread_start.row][thread_start.col] & path_bit_)) {
             thread_start = start_;
         }
-        const Thread_tag& thread_mask = thread_masks_[i];
+        const Thread_paint& thread_mask = thread_masks_[i];
         threads[i] = std::thread([this, thread_start, i, thread_mask] {
             dfs_thread_search(thread_start, i, thread_mask);
         });
@@ -77,7 +78,7 @@ void Thread_maze::solve_with_bfs_threads() {
         if (!(maze_[thread_start.row][thread_start.col] & path_bit_)) {
             thread_start = start_;
         }
-        const Thread_tag& thread_mask = thread_masks_[i];
+        const Thread_paint& thread_mask = thread_masks_[i];
         threads[i] = std::thread([this, thread_start, i, thread_mask] {
             bfs_thread_search(thread_start, i, thread_mask);
         });
@@ -89,11 +90,17 @@ void Thread_maze::solve_with_bfs_threads() {
     print_solution_path();
 }
 
-bool Thread_maze::dfs_thread_search(Point start, size_t thread_index, Thread_tag thread_bit) {
-    std::unordered_set<Point> seen;
-    seen.insert(start);
-    std::stack<Point> dfs;
-    dfs.push(start);
+bool Thread_maze::dfs_thread_search(Point start, size_t thread_index, Thread_paint thread_bit) {
+    /* We have useful bits in a square. Each square can use a unique bit to track seen threads.
+     * Each thread could maintain its own hashset, but this is much more space efficient. Use
+     * the space the maze already occupies and provides.
+     */
+    Thread_cache seen = thread_bit << thread_tag_offset_;
+    maze_mutex_.lock();
+    maze_[start.row][start.col] |= seen;
+    maze_mutex_.unlock();
+    // Each thread only needs enough space for an O(current path length) stack.
+    std::stack<Point> dfs({start});
     bool result = false;
     Point cur = start;
     while (!dfs.empty()) {
@@ -106,11 +113,11 @@ bool Thread_maze::dfs_thread_search(Point start, size_t thread_index, Thread_tag
         cur = dfs.top();
 
         if (cur == finish_) {
-            escape_section_.lock();
+            maze_mutex_.lock();
             if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
-            escape_section_.unlock();
+            maze_mutex_.unlock();
             result = true;
             dfs.pop();
             break;
@@ -122,35 +129,40 @@ bool Thread_maze::dfs_thread_search(Point start, size_t thread_index, Thread_tag
         do {
             const Point& p = cardinal_directions_[direction_index];
             Point next = {cur.row + p.row, cur.col + p.col};
-            if (!seen.count(next) && (maze_[next.row][next.col] & path_bit_)) {
+            maze_mutex_.lock();
+            if (!(maze_[next.row][next.col] & seen) && (maze_[next.row][next.col] & path_bit_)) {
+                maze_mutex_.unlock();
                 chosen = next;
                 break;
             }
+            maze_mutex_.unlock();
             ++direction_index %= cardinal_directions_.size();
         } while (direction_index != thread_index);
 
-        // To emulate a true recursive dfs, we need to only push the current branch onto our stack.
+        // Emulate a true recursive dfs. Only push the current branch onto our stack.
         if (chosen.row) {
             dfs.push(chosen);
-            seen.insert(chosen);
+            maze_mutex_.lock();
+            maze_[chosen.row][chosen.col] |= seen;
+            maze_mutex_.unlock();
         } else {
             dfs.pop();
         }
     }
-    // Another benefit of true depth first search is our stack always holds our exact path.
+    // Another benefit of true depth first search is our stack holds path to exact location.
     while (!dfs.empty()) {
         cur = dfs.top();
         dfs.pop();
         thread_paths_[thread_index].push_back(cur);
-        escape_section_.lock();
+        maze_mutex_.lock();
         maze_[cur.row][cur.col] |= thread_bit;
         // A thread or threads have already arrived at this location. Mark as an overlap.
-        escape_section_.unlock();
+        maze_mutex_.unlock();
     }
     return result;
 }
 
-bool Thread_maze::bfs_thread_search(Point start, size_t thread_index, Thread_tag thread_bit) {
+bool Thread_maze::bfs_thread_search(Point start, size_t thread_index, Thread_paint thread_bit) {
     // This will be how we rebuild the path because queue does not represent the current path.
     std::unordered_map<Point,Point> seen;
     seen[start] = {-1,-1};
@@ -167,11 +179,11 @@ bool Thread_maze::bfs_thread_search(Point start, size_t thread_index, Thread_tag
         bfs.pop();
 
         if (cur == finish_) {
-            escape_section_.lock();
+            maze_mutex_.lock();
             if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
-            escape_section_.unlock();
+            maze_mutex_.unlock();
             result = true;
             break;
         }
@@ -185,9 +197,9 @@ bool Thread_maze::bfs_thread_search(Point start, size_t thread_index, Thread_tag
                 seen[next] = cur;
                 bfs.push(next);
                 // This creates a nice spread of mixed color for each searching thread.
-                escape_section_.lock();
+                maze_mutex_.lock();
                 maze_[next.row][next.col] |= thread_bit;
-                escape_section_.unlock();
+                maze_mutex_.unlock();
             }
             ++direction_index %= cardinal_directions_.size();
         } while (direction_index != thread_index);
@@ -222,6 +234,7 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, size_t odd_rows, si
 }
 
 void Thread_maze::generate_randomized_loop_erased_maze(size_t odd_rows, size_t odd_cols) {
+    // Having trouble with this implementation. Still needs work.
     (void) odd_cols;
     (void) odd_rows;
 }
@@ -240,7 +253,6 @@ Thread_maze::choose_arbitrary_point(const std::unordered_set<Thread_maze::Point>
 }
 
 void Thread_maze::generate_randomized_dfs_maze(size_t odd_rows, size_t odd_cols) {
-    maze_ = std::vector<std::vector<Square>>(odd_rows, std::vector<Square>(odd_cols));
     for (size_t row = 0; row < maze_.size(); row++) {
         for (size_t col = 0; col < maze_[0].size(); col++) {
             build_wall(row, col);
@@ -342,11 +354,15 @@ void Thread_maze::build_path(int row, int col) {
 
 Thread_maze::Point Thread_maze::pick_random_point(std::uniform_int_distribution<int>& row,
                                                   std::uniform_int_distribution<int>& col) {
-    Point choice = {row(generator_), col(generator_)};
-    if (maze_[choice.row][choice.col] & path_bit_) {
-        return choice;
+    const int trouble_limit = 19;
+    for (int attempt = 0; attempt < trouble_limit; attempt++) {
+        Point choice = {row(generator_), col(generator_)};
+        if (maze_[choice.row][choice.col] & path_bit_) {
+            return choice;
+        }
     }
-    return find_nearest_square(choice);
+    std::cerr << "Could not place point. Maze error or insanely bad rng. Run again." << std::endl;
+    std::abort();
 }
 
 Thread_maze::Point Thread_maze::find_nearest_square(Thread_maze::Point choice) {
@@ -420,18 +436,18 @@ void Thread_maze::print_maze() const {
     for (size_t row = 0; row < maze_.size(); row++) {
         for (size_t col = 0; col < maze_[0].size(); col++) {
             const Square& square = maze_[row][col];
-            if (square & start_bit_) {
-                std::cout << ansi_cyn_ << "S" << ansi_nil_;
-            } else if (square & finish_bit_) {
+            if (square & finish_bit_) {
                 std::cout << ansi_cyn_ << "F" << ansi_nil_;
+            } else if (square & start_bit_) {
+                std::cout << ansi_cyn_ << "S" << ansi_nil_;
             } else if (square & thread_mask_) {
-                Thread_tag thread_color = (square & thread_mask_) >> thread_tag_offset_;
+                Thread_paint thread_color = (square & thread_mask_) >> thread_tag_offset_;
                 std::cout << thread_colors_[thread_color] << "█" << ansi_nil_;
             } else if (!(square & path_bit_)) {
                 std::cout << wall_lines_[square & wall_mask_];
             } else if (square & path_bit_) {
                 std::cout << " ";
-            }else {
+            } else {
                 std::cerr << "Printed maze and a square was not categorized." << std::endl;
                 abort();
             }
@@ -470,7 +486,7 @@ void Thread_maze::clear_paths() {
     }
     for (std::vector<Square>& row : maze_) {
         for (Square& square : row) {
-            square &= ~thread_mask_;
+            square &= ~clr_threads_;
         }
     }
 }

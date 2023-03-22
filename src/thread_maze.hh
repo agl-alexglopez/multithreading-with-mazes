@@ -25,21 +25,26 @@ public:
 
     /* Here is the scheme we will use to store tons of data in a square.
      *
-     * wall structure-------------------|
-     * path bit---------------------|   |
-     * 0 thread------------------|  |   |
-     * 1 thread-----------------||  |   |
-     * 2 thread----------------|||  |   |
-     * 3 thread --------------||||  |   |
-     * start bit-----------|  ||||  |   |
-     * finish bit---------||  ||||  | |----|
-     *                  0b00  0000  0  0000
+     * wall structure-----------------------|
+     * 0 thread paint--------------------|  |
+     * 1 thread paint-------------------||  |
+     * 2 thread paint------------------|||  |
+     * 3 thread paint-----------------||||  |
+     * 0 thread cache---------------| ||||  |
+     * 1 thread cache--------------|| ||||  |
+     * 2 thread cache-------------||| ||||  |
+     * 3 thread cache------------|||| ||||  |
+     * maze paths bit----------| |||| ||||  |
+     * maze start bit---------|| |||| ||||  |
+     * maze goals bit--------||| |||| |||| ||||
+     *                     0b000 0000 0000 0000
      *
-     * More uses for the upper bits could arise in the future.
+     * We have one bit to spare and I don't have any good use for it now.
      */
     using Square = uint16_t;
-    using Thread_tag = uint16_t;
     using Wall_line = uint8_t;
+    using Thread_paint = uint16_t;
+    using Thread_cache = uint16_t;
 
     struct Packaged_args {
         size_t odd_rows = 31;
@@ -74,29 +79,37 @@ private:
     static constexpr Wall_line south_wall_ =    0b0100;
     static constexpr Wall_line west_wall_ =     0b1000;
     static constexpr std::array<const char *const,16> wall_lines_ = {
-        // Walls are drawn in relation to neighboring walls that they have in cardinal directions.
-        // 0bWSEN
+        // Walls are drawn in relation to neighboring walls in cardinal directions.
+        // 0bWestSouthEastNorth
         // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
             "┼",    "╵",     "╶",    "└",    "╷",    "│",    "┌",    "├",
         // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
             "╴",    "┘",     "─",    "┴",    "┐",    "┤",    "┬",    "┼"
     };
 
-    static constexpr Square path_bit_ =     0b000'0001'0000;
-    static constexpr Square start_bit_ =    0b010'0000'0000;
-    static constexpr Square finish_bit_ =   0b100'0000'0000;
+    static constexpr Square path_bit_ =   0b001'0000'0000'0000;
+    static constexpr Square start_bit_ =  0b010'0000'0000'0000;
+    static constexpr Square finish_bit_ = 0b100'0000'0000'0000;
 
-    static constexpr Thread_tag thread_tag_offset_ = 5;
-    static constexpr Thread_tag thread_mask_ =  0b001'1110'0000;
-    static constexpr Thread_tag zero_thread_ =  0b000'0010'0000;
-    static constexpr Thread_tag one_thread_ =   0b000'0100'0000;
-    static constexpr Thread_tag two_thread_ =   0b000'1000'0000;
-    static constexpr Thread_tag three_thread_ = 0b001'0000'0000;
-    static constexpr std::array<Thread_tag,4> thread_masks_ = {
+    static constexpr Thread_paint thread_tag_offset_ = 4;
+    static constexpr int num_threads_ = 4;
+    static constexpr Thread_paint thread_mask_ =  0b1111'0000;
+    static constexpr Thread_paint zero_thread_ =  0b0001'0000;
+    static constexpr Thread_paint one_thread_ =   0b0010'0000;
+    static constexpr Thread_paint two_thread_ =   0b0100'0000;
+    static constexpr Thread_paint three_thread_ = 0b1000'0000;
+    static constexpr std::array<Thread_paint,4> thread_masks_ = {
         zero_thread_ , one_thread_ , two_thread_ , three_thread_
     };
 
-    static constexpr int num_threads_ = 4;
+    static constexpr Square clr_threads_ = 0b0000'1111'1111'0000;
+
+    static constexpr Thread_cache chache_mask = 0b1111'0000'0000;
+    static constexpr Thread_cache zero_seen =   0b0001'0000'0000;
+    static constexpr Thread_cache one_seen =    0b0001'0000'0000;
+    static constexpr Thread_cache two_seen =    0b0001'0000'0000;
+    static constexpr Thread_cache three_seen =  0b0001'0000'0000;
+
     static constexpr int starting_path_len_ = 4096;
     static constexpr const char *const ansi_red_ = "\033[38;5;1m";
     static constexpr const char *const ansi_grn_ = "\033[38;5;2m";
@@ -116,8 +129,8 @@ private:
     static constexpr const char *const ansi_dark_blu_mag_ = "\033[38;5;57m";
     static constexpr const char *const ansi_nil_ = "\033[0m";
     static constexpr std::array<const char *const,16> thread_colors_ = {
-        // Threads Overlaps. The zero thread is the zero index bit. The 1 bit!
         nullptr,
+        // Threads Overlaps. The zero thread is the zero index bit with a value of 1.
         // 0b0001   0b0010     0b0011     0b0100     0b0101     0b0110        0b0111
         ansi_red_, ansi_grn_, ansi_yel_, ansi_blu_, ansi_mag_, ansi_cyn_, ansi_red_grn_blu_,
         // 0b1000    0b1001          0b1010           0b1011            0b1100
@@ -132,7 +145,6 @@ private:
         { {1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1} }
     };
 
-
     Builder_algorithm builder_;
     Solver_algorithm solver_;
     std::mt19937 generator_;
@@ -141,7 +153,8 @@ private:
     Point start_;
     Point finish_;
     int escape_path_index_;
-    std::mutex escape_section_;
+    // I would rather have a maze of atomic ints, but I can't construct atomics at runtime.
+    std::mutex maze_mutex_;
     void generate_maze(Builder_algorithm algorithm, size_t odd_rows, size_t odd_cols);
     void generate_randomized_dfs_maze(size_t odd_rows, size_t odd_cols);
     void generate_randomized_loop_erased_maze(size_t odd_rows, size_t odd_cols);
@@ -150,8 +163,8 @@ private:
     Point choose_arbitrary_point(const std::unordered_set<Point>& maze_paths) const;
     void solve_with_dfs_threads();
     void solve_with_bfs_threads();
-    bool bfs_thread_search(Point start, size_t thread_index, Thread_maze::Thread_tag thread_bit);
-    bool dfs_thread_search(Point start, size_t thread_index, Thread_maze::Thread_tag thread_bit);
+    bool bfs_thread_search(Point start, size_t thread_index, Thread_maze::Thread_paint thread_bit);
+    bool dfs_thread_search(Point start, size_t thread_index, Thread_maze::Thread_paint thread_bit);
     Point pick_random_point(std::uniform_int_distribution<int>& row,
                             std::uniform_int_distribution<int>& col);
     Point find_nearest_square(Point choice);
