@@ -127,6 +127,7 @@ private:
     static constexpr const char *const ansi_red_grn_prp_ = "\033[38;5;105m";
     static constexpr const char *const ansi_red_blu_prp_ = "\033[38;5;89m";
     static constexpr const char *const ansi_dark_blu_mag_ = "\033[38;5;57m";
+    static constexpr const char *const ansi_bold_ = "\033[1m";
     static constexpr const char *const ansi_nil_ = "\033[0m";
     static constexpr std::array<const char *const,16> thread_colors_ = {
         nullptr,

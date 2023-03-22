@@ -170,6 +170,7 @@ bool Thread_maze::bfs_thread_search(Point start, size_t thread_index, Thread_pai
     bool result = false;
     Point cur = start;
     while (!bfs.empty()) {
+        // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
         if (escape_path_index_ != -1) {
             result = false;
             break;
@@ -187,6 +188,10 @@ bool Thread_maze::bfs_thread_search(Point start, size_t thread_index, Thread_pai
             result = true;
             break;
         }
+        // This creates a nice fanning out of mixed color for each searching thread.
+        maze_mutex_.lock();
+        maze_[cur.row][cur.col] |= thread_bit;
+        maze_mutex_.unlock();
 
         // Bias each thread towards the direction it was dispatched when we first sent it.
         int direction_index = thread_index;
@@ -196,10 +201,6 @@ bool Thread_maze::bfs_thread_search(Point start, size_t thread_index, Thread_pai
             if (!seen.count(next) && (maze_[next.row][next.col] & path_bit_)) {
                 seen[next] = cur;
                 bfs.push(next);
-                // This creates a nice spread of mixed color for each searching thread.
-                maze_mutex_.lock();
-                maze_[next.row][next.col] |= thread_bit;
-                maze_mutex_.unlock();
             }
             ++direction_index %= cardinal_directions_.size();
         } while (direction_index != thread_index);
@@ -437,9 +438,9 @@ void Thread_maze::print_maze() const {
         for (size_t col = 0; col < maze_[0].size(); col++) {
             const Square& square = maze_[row][col];
             if (square & finish_bit_) {
-                std::cout << ansi_cyn_ << "F" << ansi_nil_;
+                std::cout << ansi_bold_ << ansi_cyn_ << "F" << ansi_nil_;
             } else if (square & start_bit_) {
-                std::cout << ansi_cyn_ << "S" << ansi_nil_;
+                std::cout << ansi_bold_ << ansi_cyn_ << "S" << ansi_nil_;
             } else if (square & thread_mask_) {
                 Thread_paint thread_color = (square & thread_mask_) >> thread_tag_offset_;
                 std::cout << thread_colors_[thread_color] << "█" << ansi_nil_;
