@@ -85,9 +85,8 @@ private:
     static constexpr Thread_tag two_thread_ =   0b000'1000'0000;
     static constexpr Thread_tag three_thread_ = 0b001'0000'0000;
     static constexpr std::array<Thread_tag,4> thread_masks_ = {
-        zero_thread_, one_thread_, two_thread_, three_thread_
+        zero_thread_ , one_thread_ , two_thread_ , three_thread_
     };
-    static const std::unordered_map<Thread_tag, const char *const> thread_colors_;
     static const std::vector<std::pair<std::string,const char *const>> thread_overlap_key_;
     static const std::unordered_map<Thread_tag, char> thread_chars_;
 
@@ -110,6 +109,16 @@ private:
     static constexpr const char *const ansi_red_blu_prp_ = "\033[38;5;92m";
     static constexpr const char *const ansi_dark_blu_mag_ = "\033[38;5;57m";
     static constexpr const char *const ansi_nil_ = "\033[0m";
+    static constexpr std::array<const char *const,16> thread_colors_ = {
+        // Threads Overlaps. The zero thread is the zero index bit. The 1 bit!
+           nullptr,
+        // 0b0001     0b0010     0b0011     0b0100     0b0101     0b0110        0b0111
+           ansi_red_, ansi_grn_, ansi_yel_, ansi_blu_, ansi_mag_, ansi_cyn_, ansi_red_grn_blu_,
+        // 0b1000     0b1001          0b1010           0b1011            0b1100
+           ansi_prp_, ansi_dark_red_, ansi_grn_prp_, ansi_red_grn_prp_, ansi_dark_blu_mag_,
+        // 0b1101                 0b1110          0b1111
+           ansi_red_blu_prp_, ansi_grn_blu_prp_, ansi_wit_,
+    };
     static const std::unordered_map<Wall_line,std::string> wall_lines_;
     //                                                               n      e     s      w
     static constexpr std::array<Point,4> cardinal_directions_ = { {{-1,0},{0,1},{1,0},{0,-1}} };

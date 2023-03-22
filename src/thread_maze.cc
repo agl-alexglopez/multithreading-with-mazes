@@ -28,43 +28,6 @@ const std::unordered_map<Thread_maze::Wall_line,std::string> Thread_maze::wall_l
     {south_wall_ | west_wall_, "┐"},
 };
 
-const std::unordered_map<Thread_maze::Thread_tag, const char *const> Thread_maze::thread_colors_ = {
-    {zero_thread_, ansi_red_},
-    {one_thread_, ansi_grn_},
-    {two_thread_, ansi_blu_},
-    {three_thread_, ansi_prp_},
-    {zero_thread_ | one_thread_, ansi_yel_},
-    {zero_thread_ | two_thread_, ansi_mag_},
-    {zero_thread_ | three_thread_, ansi_dark_red_},
-    {zero_thread_ | one_thread_ | two_thread_, ansi_red_grn_blu_},
-    {zero_thread_ | one_thread_ | three_thread_, ansi_red_grn_prp_},
-    {zero_thread_ | two_thread_ | three_thread_, ansi_red_blu_prp_},
-    {zero_thread_ | one_thread_ | two_thread_ | three_thread_, ansi_wit_},
-    {one_thread_ | two_thread_, ansi_cyn_},
-    {one_thread_ | three_thread_, ansi_grn_prp_},
-    {one_thread_ | two_thread_ | three_thread_, ansi_grn_blu_prp_},
-    {two_thread_ | three_thread_, ansi_dark_blu_mag_},
-};
-
-const std::vector<std::pair<std::string,const char *const>> Thread_maze::thread_overlap_key_ = {
-    {"0_THREAD", thread_colors_.at(zero_thread_)},
-    {"1_THREAD", thread_colors_.at(one_thread_)},
-    {"2_THREAD", thread_colors_.at(two_thread_)},
-    {"3_THREAD", thread_colors_.at(three_thread_)},
-    {"0_THREAD + 1_THREAD", thread_colors_.at(zero_thread_ | one_thread_)},
-    {"0_THREAD + 2_THREAD", thread_colors_.at(zero_thread_ | two_thread_)},
-    {"0_THREAD + 3_THREAD", thread_colors_.at(zero_thread_ | three_thread_)},
-    {"1_THREAD + 2_THREAD", thread_colors_.at(one_thread_ | two_thread_)},
-    {"1_THREAD + 3_THREAD", thread_colors_.at(one_thread_ | three_thread_)},
-    {"2_THREAD + 3_THREAD", thread_colors_.at(two_thread_ | three_thread_)},
-    {"0_THREAD + 1_THREAD + 2_THREAD", thread_colors_.at(zero_thread_ | one_thread_ | two_thread_)},
-    {"0_THREAD + 1_THREAD + 3_THREAD", thread_colors_.at(zero_thread_ | one_thread_ | three_thread_)},
-    {"0_THREAD + 2_THREAD + 3_THREAD", thread_colors_.at(zero_thread_ | two_thread_ | three_thread_)},
-    {"1_THREAD + 2_THREAD + 3_THREAD", thread_colors_.at(one_thread_ | two_thread_ | three_thread_)},
-    {"0_THREAD + 1_THREAD + 2_THREAD + 3_THREAD", thread_colors_.at(zero_thread_ | one_thread_ | two_thread_ | three_thread_)},
-};
-
-
 const std::unordered_map<Thread_maze::Thread_tag, char> Thread_maze::thread_chars_ = {
     {Thread_maze::zero_thread_, 'x'},
     {Thread_maze::one_thread_, '^'},
@@ -421,7 +384,7 @@ Thread_maze::Point Thread_maze::find_nearest_square(Thread_maze::Point choice) {
         Point next = {choice.row + p.row, choice.col + p.col};
         if (next.row > 0 && static_cast<size_t>(next.row) < maze_.size() - 1
                 && next.col > 0 && static_cast<size_t>(next.col) < maze_[0].size() - 1
-                            && maze_[next.row][next.col] & path_bit_) {
+                            && (maze_[next.row][next.col] & path_bit_)) {
             return next;
         }
     }
@@ -450,13 +413,13 @@ void Thread_maze::print_solution_path() {
     std::cout << "\n";
     print_maze();
     if (escape_path_index_ == 0) {
-        std::cout << thread_colors_.at(thread_masks_[0]) << "█" << " 0_thread won!" << ansi_nil_ << "\n";
+        std::cout << thread_colors_.at(thread_masks_[0] >> thread_tag_offset_) << "█" << " 0_thread won!" << ansi_nil_ << "\n";
     } else if (escape_path_index_ == 1) {
-        std::cout << thread_colors_.at(thread_masks_[1]) << "█" << " 1_thread won!" << ansi_nil_ << "\n";
+        std::cout << thread_colors_.at(thread_masks_[1] >> thread_tag_offset_) << "█" << " 1_thread won!" << ansi_nil_ << "\n";
     } else if (escape_path_index_ == 2) {
-        std::cout << thread_colors_.at(thread_masks_[2]) << "█" << " 2_thread won!" << ansi_nil_ << "\n";
+        std::cout << thread_colors_.at(thread_masks_[2] >> thread_tag_offset_) << "█" << " 2_thread won!" << ansi_nil_ << "\n";
     } else if (escape_path_index_ == 3) {
-        std::cout << thread_colors_.at(thread_masks_[3]) << "█" << " 3_thread won!" << ansi_nil_ << "\n";
+        std::cout << thread_colors_.at(thread_masks_[3] >> thread_tag_offset_) << "█" << " 3_thread won!" << ansi_nil_ << "\n";
     } else {
         std::cout << "NO ESCAPE! >:)\n";
     }
@@ -492,13 +455,8 @@ void Thread_maze::print_maze() const {
             } else if (square & finish_bit_) {
                 std::cout << ansi_cyn_ << "F" << ansi_nil_;
             } else if (square & thread_mask_) {
-                Square thread_color = square & thread_mask_;
-                auto found_color = thread_colors_.find(thread_color);
-                if (found_color == thread_colors_.end()) {
-                    std::cerr << "Could not find this color in the table: " << thread_color << std::endl;
-                    std::abort();
-                }
-                std::cout << found_color->second << "█" << ansi_nil_;
+                Square thread_color = (square & thread_mask_) >> thread_tag_offset_;
+                std::cout << thread_colors_[thread_color] << "█" << ansi_nil_;
             } else if (!(square & path_bit_)) {
                 print_wall(square);
             } else if (square & path_bit_) {
@@ -526,36 +484,20 @@ void Thread_maze::print_wall(Square square) const {
 void Thread_maze::print_overlap_key() const {
     const std::string d = "█████████████";
     const char *const n = ansi_nil_;
-    const char *const z = thread_colors_.at(zero_thread_);
-    const char *const o = thread_colors_.at(one_thread_);
-    const char *const t = thread_colors_.at(two_thread_);
-    const char *const th = thread_colors_.at(three_thread_);
-    const char *const z_o = thread_colors_.at(zero_thread_ | one_thread_);
-    const char *const z_t = thread_colors_.at(zero_thread_ | two_thread_);
-    const char *const z_th = thread_colors_.at(zero_thread_ | three_thread_);
-    const char *const o_t = thread_colors_.at(one_thread_ | two_thread_);
-    const char *const o_th = thread_colors_.at(one_thread_ | three_thread_);
-    const char *const t_th = thread_colors_.at(two_thread_ | three_thread_);
-    const char *const z_o_t = thread_colors_.at(zero_thread_ | one_thread_ | two_thread_);
-    const char *const z_o_th = thread_colors_.at(zero_thread_ | one_thread_ | three_thread_);
-    const char *const z_t_th = thread_colors_.at(zero_thread_ | two_thread_ | three_thread_);
-    const char *const o_t_th = thread_colors_.at(one_thread_ | two_thread_ | three_thread_);
-    const char *const z_o_tth = thread_colors_.at(zero_thread_ | one_thread_ | two_thread_ | three_thread_);
-
     std:: cout << "┌─────────────────────────────────────────────────────────────────────┐\n"
-               << "│  Overlapping Color Key: 0_THREAD | 1_THREAD | 2_THREAD | 3_THREAD   │\n"
+               << "│  Overlapping Color Key: 3_THREAD | 2_THREAD | 1_THREAD | 0_THREAD   │\n"
                << "┠─────────────┬─────────────┬─────────────┬─────────────┬─────────────┤\n"
-               << "│     0       │      1      │     2       │     3       │     0|1     │\n"
+               << "│     0       │     1       │    1|0      │     2       │     2|0     │\n"
                << "┠─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
-               << "│"<<z<<d<<n<<"│"<<o<<d<<n<<"│"<<t<<d<<n<<"│"<<th<<d<<n<<"│"<<z_o<<d<<n<<"│\n"
+               << "│"<<thread_colors_[1]<<d<<n<<"│"<<thread_colors_[2]<<d<<n<<"│"<<thread_colors_[3]<<d<<n<<"│"<<thread_colors_[4]<<d<<n<<"│"<<thread_colors_[5]<<d<<n<<"│\n"
                << "┠─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
-               << "│    0|2      │    0|3      │    1|2      │    1|3      │     2|3     │\n"
+               << "│    2|1      │   2|1|0     │    2|1      │      3      │     3|0     │\n"
                << "┠─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
-               << "│"<<z_t<<d<<n<<"│"<<z_th<<d<<n<<"│"<<o_t<<d<<n<<"│"<<o_th<<d<<n<<"│"<<t_th<<d<<n<<"│\n"
+               << "│"<<thread_colors_[6]<<d<<n<<"│"<<thread_colors_[7]<<d<<n<<"│"<<thread_colors_[8]<<d<<n<<"│"<<thread_colors_[9]<<d<<n<<"│"<<thread_colors_[10]<<d<<n<<"│\n"
                << "┠─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
-               << "│   0|1|2     │   0|1|3     │   0|2|3     │   1|2|3     │   0|1|2|3   │\n"
+               << "│    3|1      │   3|1|0     │    3|2      │   3|2|0     │   3|2|1|0   │\n"
                << "┠─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
-               << "│"<<z_o_t<<d<<n<<"│"<<z_o_th<<d<<n<<"│"<<z_t_th<<d<<n<<"│"<<o_t_th<<d<<n<<"│"<<z_o_tth<<d<<n<<"│\n"
+               << "│"<<thread_colors_[11]<<d<<n<<"│"<<thread_colors_[12]<<d<<n<<"│"<<thread_colors_[13]<<d<<n<<"│"<<thread_colors_[14]<<d<<n<<"│"<<thread_colors_[15]<<d<<n<<"│\n"
                << "└─────────────┴─────────────┴─────────────┴─────────────┴─────────────┘\n"
                << std::endl;
 }
