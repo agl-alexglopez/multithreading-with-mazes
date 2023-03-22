@@ -106,9 +106,9 @@ private:
 
     static constexpr Thread_cache chache_mask = 0b1111'0000'0000;
     static constexpr Thread_cache zero_seen =   0b0001'0000'0000;
-    static constexpr Thread_cache one_seen =    0b0001'0000'0000;
-    static constexpr Thread_cache two_seen =    0b0001'0000'0000;
-    static constexpr Thread_cache three_seen =  0b0001'0000'0000;
+    static constexpr Thread_cache one_seen =    0b0010'0000'0000;
+    static constexpr Thread_cache two_seen =    0b0100'0000'0000;
+    static constexpr Thread_cache three_seen =  0b1000'0000'0000;
 
     static constexpr int starting_path_len_ = 4096;
     static constexpr const char *const ansi_red_ = "\033[38;5;1m";
