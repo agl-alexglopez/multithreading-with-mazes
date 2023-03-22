@@ -25,17 +25,17 @@ public:
 
     /* Here is the scheme we will use to store tons of data in a square.
      *
-     * wall structure-----------------------|
-     * 0 thread paint--------------------|  |
-     * 1 thread paint-------------------||  |
-     * 2 thread paint------------------|||  |
-     * 3 thread paint-----------------||||  |
-     * 0 thread cache---------------| ||||  |
-     * 1 thread cache--------------|| ||||  |
-     * 2 thread cache-------------||| ||||  |
-     * 3 thread cache------------|||| ||||  |
-     * maze paths bit----------| |||| ||||  |
-     * maze start bit---------|| |||| ||||  |
+     * wall structure----------------------||||
+     * 0 thread paint--------------------| ||||
+     * 1 thread paint-------------------|| ||||
+     * 2 thread paint------------------||| ||||
+     * 3 thread paint-----------------|||| ||||
+     * 0 thread cache---------------| |||| ||||
+     * 1 thread cache--------------|| |||| ||||
+     * 2 thread cache-------------||| |||| ||||
+     * 3 thread cache------------|||| |||| ||||
+     * maze paths bit----------| |||| |||| ||||
+     * maze start bit---------|| |||| |||| ||||
      * maze goals bit--------||| |||| |||| ||||
      *                     0b000 0000 0000 0000
      *
