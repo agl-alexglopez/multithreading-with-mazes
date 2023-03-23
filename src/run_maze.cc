@@ -6,7 +6,7 @@
 #include "thread_maze.hh"
 
 const std::unordered_set<std::string> argument_flags = {
-    "-r", "-c", "-b", "-s","-h",
+    "-r", "-c", "-b", "-s", "-h", "-hunt", "-gather"
 };
 
 void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
@@ -33,14 +33,18 @@ int main(int argc, char **argv) {
                     std::cerr << "Invalid argument parameter: " << arg << std::endl;
                     print_usage();
                     std::abort();
+                } else if (*found_arg == "-hunt") {
+                    maze_args.game = Thread_maze::Thread_game::hunt;
+                } else if (*found_arg == "-gather") {
+                    maze_args.game = Thread_maze::Thread_game::gather;
+                } else if (*found_arg == "-h") {
+                    print_usage();
+                    return 0;
+                } else {
+                    process_current = true;
+                    prev_flag = arg;
                 }
-                process_current = true;
-                prev_flag = arg;
             }
-        }
-        if (prev_flag == "-h") {
-            print_usage();
-            return 0;
         }
         Thread_maze maze(maze_args);
         maze.solve_maze();
@@ -98,14 +102,19 @@ void print_usage() {
               << "│  -s - Solver flag. Set maze solving algorithm.       │\n"
               << "│      - dfs - Depth First Search                      │\n"
               << "│      - bfs - Breadth First Search                    │\n"
+              << "│  -hunt - 4 threads compete to find one finish.       │\n"
+              << "│      - No arguments.                                 │\n"
+              << "│  -gather - 4 threads gather 4 finish squares.        │\n"
+              << "│      - No arguments.                                 │\n"
               << "│  -h  - Help flag. Make this prompt appear.           │\n"
+              << "│      - No arguments.                                 │\n"
               << "│                                                      │\n"
               << "│  If any flags are omitted, defaults are used.        │\n"
               << "│                                                      │\n"
               << "│  Examples:                                           │\n"
               << "│  ./run_maze                                          │\n"
-              << "│  ./run_maze -r 51 -c 111 -b random-dfs -s bfs        │\n"
-              << "│  ./run_maze -c 111 -s bfs                            │\n"
+              << "│  ./run_maze -r 51 -c 111 -b random-dfs -s bfs -hunt  │\n"
+              << "│  ./run_maze -c 111 -s bfs -gather                    │\n"
               << "│                                                      │\n"
               << "└──────────────────────────────────────────────────────┘\n";
     std::cout << std::endl;

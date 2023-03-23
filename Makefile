@@ -4,7 +4,7 @@ BINDIR = bin
 OBJDIR = obj
 SRC := $(wildcard $(SRCDIR)/*.cc)
 OBJ := $(patsubst $(SRCDIR)/%.cc, $(OBJDIR)/%.o,$(SRC))
-DEPENDENCIES = $(SRCDIR)/thread_maze.cc
+DEPENDENCIES = $(SRCDIR)/thread_maze.hh
 # CXX = /usr/bin/clang++-10
 
 PROGS = run_maze
@@ -29,10 +29,10 @@ CPPFLAGS = -g -Wall -pedantic -O0 -std=c++2a -D_GLIBCXX_USE_NANOSLEEP -D_GLIBCXX
 #  -lpthread link in libpthread (thread library) to back C++11 extensions
 LDFLAGS = -lm -lpthread
 
-$(OBJ): $(OBJDIR)/%.o: $(SRCDIR)/%.cc
+$(OBJ): $(OBJDIR)/%.o:$(SRCDIR)/%.cc $(DEPENDENCIES)
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
-$(MAZE_PROG): $(BINDIR)/%:$(OBJDIR)/%.o $(DEPENDENCIES)
+$(MAZE_PROG): $(BINDIR)/%:$(OBJ)
 	$(CXX) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 
 # Phony means not a "real" target, it doesn't build anything

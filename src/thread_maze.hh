@@ -20,20 +20,44 @@ public:
 
     enum class Solver_algorithm {
         depth_first_search,
-        breadth_first_search
+        breadth_first_search,
+    };
+
+    /* -hunt - 4 threads compete from one starting point to find the finish.
+     * -gather - 4 threads work together, communicating to gather 4 finish squares.
+     */
+    enum class Thread_game {
+        hunt,
+        gather,
+    };
+
+    struct Packaged_args {
+        size_t odd_rows = 31;
+        size_t odd_cols = 111;
+        Builder_algorithm builder = Builder_algorithm::randomized_depth_first;
+        Solver_algorithm solver = Solver_algorithm::depth_first_search;
+        Thread_game game = Thread_game::hunt;
+    };
+
+    struct Point {
+        int row;
+        int col;
     };
 
     /* Here is the scheme we will use to store tons of data in a square.
      *
      * wall structure----------------------||||
+     * ------------------------------------||||
      * 0 thread paint--------------------| ||||
      * 1 thread paint-------------------|| ||||
      * 2 thread paint------------------||| ||||
      * 3 thread paint-----------------|||| ||||
+     * -------------------------------|||| ||||
      * 0 thread cache---------------| |||| ||||
      * 1 thread cache--------------|| |||| ||||
      * 2 thread cache-------------||| |||| ||||
      * 3 thread cache------------|||| |||| ||||
+     * --------------------------|||| |||| ||||
      * maze paths bit----------| |||| |||| ||||
      * maze start bit---------|| |||| |||| ||||
      * maze goals bit--------||| |||| |||| ||||
@@ -46,18 +70,6 @@ public:
     using Thread_paint = uint16_t;
     using Thread_cache = uint16_t;
 
-    struct Packaged_args {
-        size_t odd_rows = 31;
-        size_t odd_cols = 111;
-        Builder_algorithm builder = Builder_algorithm::randomized_depth_first;
-        Solver_algorithm solver = Solver_algorithm::depth_first_search;
-    };
-
-    struct Point {
-        int row;
-        int col;
-    };
-
     Thread_maze(const Packaged_args& args);
 
     void solve_maze(Solver_algorithm solver);
@@ -65,7 +77,7 @@ public:
 
     void clear_paths();
     void new_maze();
-    void new_maze(Builder_algorithm builder, size_t odd_rows, size_t odd_cols);
+    void new_maze(Builder_algorithm builder, Thread_game game, size_t odd_rows, size_t odd_cols);
     size_t size() const;
     std::vector<Square>& operator[](size_t index);
     const std::vector<Square>& operator[](size_t index) const;
@@ -91,8 +103,8 @@ private:
     static constexpr Square start_bit_ =  0b010'0000'0000'0000;
     static constexpr Square finish_bit_ = 0b100'0000'0000'0000;
 
-    static constexpr Thread_paint thread_tag_offset_ = 4;
     static constexpr int num_threads_ = 4;
+    static constexpr Thread_paint thread_tag_offset_ = 4;
     static constexpr Thread_paint thread_mask_ =  0b1111'0000;
     static constexpr Thread_paint zero_thread_ =  0b0001'0000;
     static constexpr Thread_paint one_thread_ =   0b0010'0000;
@@ -104,11 +116,11 @@ private:
 
     static constexpr Square clr_threads_ = 0b0000'1111'1111'0000;
 
-    static constexpr Thread_cache chache_mask = 0b1111'0000'0000;
-    static constexpr Thread_cache zero_seen =   0b0001'0000'0000;
-    static constexpr Thread_cache one_seen =    0b0010'0000'0000;
-    static constexpr Thread_cache two_seen =    0b0100'0000'0000;
-    static constexpr Thread_cache three_seen =  0b1000'0000'0000;
+    static constexpr Thread_cache cache_mask_ =  0b1111'0000'0000;
+    static constexpr Thread_cache zero_seen_ =   0b0001'0000'0000;
+    static constexpr Thread_cache one_seen_ =    0b0010'0000'0000;
+    static constexpr Thread_cache two_seen_ =    0b0100'0000'0000;
+    static constexpr Thread_cache three_seen_ =  0b1000'0000'0000;
 
     static constexpr int starting_path_len_ = 4096;
     static constexpr const char *const ansi_red_ = "\033[38;5;1m";
@@ -148,6 +160,7 @@ private:
 
     Builder_algorithm builder_;
     Solver_algorithm solver_;
+    Thread_game game_;
     std::mt19937 generator_;
     std::vector<std::vector<Square>> maze_;
     std::vector<std::vector<Point>> thread_paths_;
@@ -156,16 +169,18 @@ private:
     int escape_path_index_;
     // I would rather have a maze of atomic ints, but I can't construct atomics at runtime.
     std::mutex maze_mutex_;
-    void generate_maze(Builder_algorithm algorithm, size_t odd_rows, size_t odd_cols);
-    void generate_randomized_dfs_maze(size_t odd_rows, size_t odd_cols);
-    void generate_randomized_loop_erased_maze(size_t odd_rows, size_t odd_cols);
+    void generate_maze(Builder_algorithm algorithm, Thread_game game, size_t odd_rows, size_t odd_cols);
+    void generate_randomized_dfs_maze(Thread_game game, size_t odd_rows, size_t odd_cols);
+    void generate_randomized_loop_erased_maze(Thread_game game, size_t odd_rows, size_t odd_cols);
     void build_path(int row, int col);
     void build_wall(int row, int col);
     Point choose_arbitrary_point(const std::unordered_set<Point>& maze_paths) const;
     void solve_with_dfs_threads();
     void solve_with_bfs_threads();
-    bool bfs_thread_search(Point start, size_t thread_index, Thread_maze::Thread_paint thread_bit);
-    bool dfs_thread_search(Point start, size_t thread_index, Thread_maze::Thread_paint thread_bit);
+    bool dfs_thread_hunt(Point start, size_t thread_index, Thread_maze::Thread_paint thread_bit);
+    bool dfs_thread_gather(Point start, size_t thread_index, Thread_maze::Thread_paint thread_bit);
+    bool bfs_thread_hunt(Point start, size_t thread_index, Thread_maze::Thread_paint thread_bit);
+    bool bfs_thread_gather(Point start, size_t thread_index, Thread_maze::Thread_paint thread_bit);
     Point pick_random_point(std::uniform_int_distribution<int>& row,
                             std::uniform_int_distribution<int>& col);
     Point find_nearest_square(Point choice);
