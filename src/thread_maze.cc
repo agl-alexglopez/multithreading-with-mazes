@@ -1,5 +1,6 @@
 #include "thread_maze.hh"
 #include <algorithm>
+#include <cstddef>
 #include <iomanip>
 #include <cstdint>
 #include <cstdlib>
@@ -601,7 +602,7 @@ void Thread_maze::print_solution_path() {
 
 void Thread_maze::print_maze() const {
     print_overlap_key();
-    const std::array<const char *const,16>& lines = style_ == Maze_style::rounded ? rounded_wall_lines_ : wall_lines_;
+    const std::array<const char *const,16>& lines = wall_styles_[static_cast<size_t>(style_)];
     for (size_t row = 0; row < maze_.size(); row++) {
         for (size_t col = 0; col < maze_[0].size(); col++) {
             const Square& square = maze_[row][col];

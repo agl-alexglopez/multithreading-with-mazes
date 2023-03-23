@@ -32,7 +32,7 @@ public:
     };
 
     enum class Maze_style {
-        standard,
+        standard=0,
         rounded,
     };
 
@@ -95,21 +95,24 @@ private:
     static constexpr Wall_line east_wall_ =     0b0010;
     static constexpr Wall_line south_wall_ =    0b0100;
     static constexpr Wall_line west_wall_ =     0b1000;
-    static constexpr std::array<const char *const,16> wall_lines_ = {
-        // Walls are drawn in relation to neighboring walls in cardinal directions.
-        // 0bWestSouthEastNorth
-        // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
-            "┼",    "╵",     "╶",    "└",    "╷",    "│",    "┌",    "├",
-        // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
-            "╴",    "┘",     "─",    "┴",    "┐",    "┤",    "┬",    "┼"
-    };
-    static constexpr std::array<const char *const,16> rounded_wall_lines_ = {
+
+    static constexpr std::array<const std::array<const char *const,16>,2> wall_styles_ = {
+        {{
+            // Walls are drawn in relation to neighboring walls in cardinal directions.
+            // 0bWestSouthEastNorth
+            // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
+                "┼",    "╵",     "╶",    "└",    "╷",    "│",    "┌",    "├",
+            // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
+                "╴",    "┘",     "─",    "┴",    "┐",    "┤",    "┬",    "┼"
+        },
+        {
         // Walls are drawn in relation to neighboring walls in cardinal directions.
         // 0bWestSouthEastNorth
         // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
             "┼",    "╵",     "╶",    "╰",    "╷",    "│",    "╭",    "├",
         // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
             "╴",    "╯",     "─",    "┴",    "╮",    "┤",    "┬",    "┼"
+        }}
     };
 
     static constexpr Square builder_bit_ = 0b0001'0000'0000'0000;
