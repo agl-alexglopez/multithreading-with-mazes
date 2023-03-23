@@ -6,7 +6,7 @@
 #include "thread_maze.hh"
 
 const std::unordered_set<std::string> argument_flags = {
-    "-r", "-c", "-b", "-s", "-h", "-hunt", "-gather"
+    "-r", "-c", "-b", "-s", "-h", "-g", "-d"
 };
 
 void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
@@ -33,11 +33,8 @@ int main(int argc, char **argv) {
                     std::cerr << "Invalid argument parameter: " << arg << std::endl;
                     print_usage();
                     std::abort();
-                } else if (*found_arg == "-hunt") {
-                    maze_args.game = Thread_maze::Thread_game::hunt;
-                } else if (*found_arg == "-gather") {
-                    maze_args.game = Thread_maze::Thread_game::gather;
-                } else if (*found_arg == "-h") {
+                }
+                if (*found_arg == "-h") {
                     print_usage();
                     return 0;
                 } else {
@@ -79,9 +76,26 @@ void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
             print_usage();
             std::abort();
         }
-    } else if (flag == "-h") {
-        print_usage();
-        std::abort();
+    } else if (flag == "-g") {
+        if (arg == "hunt") {
+            maze_args.game = Thread_maze::Maze_game::hunt;
+        } else if (arg == "gather") {
+            maze_args.game = Thread_maze::Maze_game::gather;
+        } else {
+            std::cerr << "Invalid solver argument: " << arg << std::endl;
+            print_usage();
+            std::abort();
+        }
+    } else if (flag == "-d") {
+        if (arg == "standard") {
+            maze_args.style = Thread_maze::Maze_style::standard;
+        } else if (arg == "round") {
+            maze_args.style = Thread_maze::Maze_style::rounded;
+        } else {
+            std::cerr << "Invalid solver argument: " << arg << std::endl;
+            print_usage();
+            std::abort();
+        }
     }
 }
 
@@ -93,21 +107,23 @@ void print_usage() {
               << "│  Use flags, followed by arguments, in any order:     │\n"
               << "│                                                      │\n"
               << "│  -r Rows flag. Set rows for the maze.                │\n"
-              << "│      - Any number > 5. Zoom out for larger mazes!    │\n"
+              << "│      Any number > 5. Zoom out for larger mazes!      │\n"
               << "│  -c Columns flag. Set columns for the maze.          │\n"
-              << "│      - Any number > 7. Zoom out for larger mazes!    │\n"
+              << "│      Any number > 7. Zoom out for larger mazes!      │\n"
               << "│  -b Builder flag. Set maze building algorithm.       │\n"
-              << "│      - random-dfs - Randomized Depth First Search    │\n"
-              << "│      - loop-erase - Loop-Erased Random Walk          │\n"
+              << "│      random-dfs - Randomized Depth First Search      │\n"
+              << "│      loop-erase - Loop-Erased Random Walk            │\n"
               << "│  -s Solver flag. Set maze solving algorithm.         │\n"
-              << "│      - dfs - Depth First Search                      │\n"
-              << "│      - bfs - Breadth First Search                    │\n"
-              << "│  -hunt 4 threads compete to find one finish.         │\n"
-              << "│      - No arguments.                                 │\n"
-              << "│  -gather 4 threads gather 4 finish squares.          │\n"
-              << "│      - No arguments.                                 │\n"
+              << "│      dfs - Depth First Search                        │\n"
+              << "│      bfs - Breadth First Search                      │\n"
+              << "│  -g Game flag. Set the game for the threads to play. │\n"
+              << "│      hunt - 4 threads race to find one finish.       │\n"
+              << "│      gather - 4 threads gather 4 finish squares.     │\n"
+              << "│  -d Draw flag. Set the line style for the maze.      │\n"
+              << "│      standard - The default straight lines.          │\n"
+              << "│      round - Rounded corners.                        │\n"
               << "│  -h Help flag. Make this prompt appear.              │\n"
-              << "│      - No arguments.                                 │\n"
+              << "│      No arguments.                                   │\n"
               << "│                                                      │\n"
               << "│  If any flags are omitted, defaults are used.        │\n"
               << "│                                                      │\n"
