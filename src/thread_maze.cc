@@ -168,11 +168,6 @@ bool Thread_maze::dfs_thread_gather(Point start, size_t thread_index, Thread_pai
     bool result = false;
     Point cur = start;
     while (!dfs.empty()) {
-        if (escape_path_index_ != -1) {
-            result = false;
-            break;
-        }
-
         cur = dfs.top();
 
         maze_mutex_.lock();
@@ -276,11 +271,6 @@ bool Thread_maze::bfs_thread_gather(Point start, size_t thread_index, Thread_pai
     bool result = false;
     Point cur = start;
     while (!bfs.empty()) {
-        if (escape_path_index_ != -1) {
-            result = false;
-            break;
-        }
-
         cur = bfs.front();
         bfs.pop();
 
