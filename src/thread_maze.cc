@@ -13,6 +13,7 @@
 
 Thread_maze::Thread_maze(const Thread_maze::Packaged_args& args)
     : builder_(args.builder),
+      modification_(args.modification),
       solver_(args.solver),
       game_(args.game),
       style_(args.style),
@@ -22,9 +23,11 @@ Thread_maze::Thread_maze(const Thread_maze::Packaged_args& args)
       start_({0,0}),
       finish_({0,0}),
       escape_path_index_(-1) {
+
     for (size_t row = 0; row < maze_.size(); row++) {
         for (size_t col = 0; col < maze_[0].size(); col++) {
             build_wall(row, col);
+            add_modification(row, col);
         }
     }
     // If threads need to rely on heap for thread safe resizing, we slow parallelism.
@@ -32,6 +35,61 @@ Thread_maze::Thread_maze(const Thread_maze::Packaged_args& args)
         vec.reserve(starting_path_len_);
     }
     generate_maze(args.builder, args.game, args.odd_rows, args.odd_cols);
+}
+
+void Thread_maze::add_modification(size_t row, size_t col) {
+    if (modification_ == Maze_modification::add_cross) {
+        if ((row == maze_.size() / 2 && col > 1 && col < maze_[0].size() - 2)
+                || (col == maze_[0].size() / 2 && row > 1 && row < maze_.size() - 2)) {
+            build_path(row, col);
+        }
+    } else if (modification_ == Maze_modification::add_x) {
+        float row_size = maze_.size() - 2.0;
+        float col_size = maze_[0].size() - 2.0;
+        float cur_row = row;
+        // y = mx + b. We will get the negative slope. This line goes top left to bottom right.
+        float slope = (2.0 - row_size) / (2.0 - col_size);
+        float b = 2.0 - (2.0 * slope);
+        int nearest_neg_point = (cur_row - b) / slope;
+        if (col == nearest_neg_point && col < maze_[0].size() - 2 && col > 1) {
+            // An X is hard to notice and might miss lines so make it wider.
+            build_path(row, col);
+            if (col + 1 < maze_[0].size()) {
+                build_path(row, col + 1);
+            }
+            if (col - 1 > 1) {
+                build_path(row, col - 1);
+            }
+            if (col + 2 < maze_[0].size()) {
+                build_path(row, col + 2);
+            }
+            if (col - 2 > 1) {
+                build_path(row, col - 2);
+            }
+        }
+        // This line is drawn from top right to bottom left.
+        slope = (2.0 - row_size) / (col_size - 2.0);
+        b = row_size - (2.0 * slope);
+        int nearest_pos_point = (cur_row - b) / slope;
+        if (col == nearest_pos_point
+                && row < maze_.size() - 2
+                    && col < maze_[0].size() - 2
+                        && col > 1) {
+            build_path(row, col);
+            if (col + 1 < maze_[0].size()) {
+                build_path(row, col + 1);
+            }
+            if (col - 1 > 1) {
+                build_path(row, col - 1);
+            }
+            if (col + 2 < maze_[0].size()) {
+                build_path(row, col + 2);
+            }
+            if (col - 2 > 1) {
+                build_path(row, col - 2);
+            }
+        }
+    }
 }
 
 void Thread_maze::solve_maze(Thread_maze::Solver_algorithm solver) {
@@ -307,17 +365,8 @@ bool Thread_maze::bfs_thread_gather(Point start, size_t thread_index, Thread_pai
 
 void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game,
                                 size_t odd_rows, size_t odd_cols) {
-    if (odd_rows % 2 == 0) {
-        odd_rows++;
-    }
-    if (odd_cols % 2 == 0) {
-        odd_cols++;
-    }
-    if (odd_rows < 3 || odd_cols < 7) {
-        std::cerr << "Smallest maze possible is 3x7" << std::endl;
-        std::abort();
-    }
-    if (algorithm == Builder_algorithm::randomized_depth_first) {
+    if (algorithm == Builder_algorithm::randomized_depth_first
+            || algorithm == Builder_algorithm::randomized_depth_first_cross) {
         generate_randomized_dfs_maze(game, odd_rows, odd_cols);
     } else if (algorithm == Builder_algorithm::randomized_loop_erased) {
         generate_randomized_loop_erased_maze(game, odd_rows, odd_cols);

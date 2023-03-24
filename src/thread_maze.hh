@@ -15,7 +15,14 @@ public:
 
     enum class Builder_algorithm {
         randomized_depth_first,
+        randomized_depth_first_cross,
         randomized_loop_erased,
+    };
+
+    enum class Maze_modification {
+        none,
+        add_cross,
+        add_x
     };
 
     enum class Solver_algorithm {
@@ -40,6 +47,7 @@ public:
         size_t odd_rows = 31;
         size_t odd_cols = 111;
         Builder_algorithm builder = Builder_algorithm::randomized_depth_first;
+        Maze_modification modification = Maze_modification::none;
         Solver_algorithm solver = Solver_algorithm::depth_first_search;
         Maze_game game = Maze_game::hunt;
         Maze_style style = Maze_style::standard;
@@ -174,6 +182,7 @@ private:
     };
 
     Builder_algorithm builder_;
+    Maze_modification modification_;
     Solver_algorithm solver_;
     Maze_game game_;
     Maze_style style_;
@@ -190,6 +199,7 @@ private:
     void generate_randomized_loop_erased_maze(Maze_game game, size_t odd_rows, size_t odd_cols);
     void build_path(int row, int col);
     void build_wall(int row, int col);
+    void add_modification(size_t row, size_t col);
     Point choose_arbitrary_point() const;
     void solve_with_dfs_threads();
     void solve_with_bfs_threads();

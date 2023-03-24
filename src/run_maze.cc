@@ -6,7 +6,7 @@
 #include "thread_maze.hh"
 
 const std::unordered_set<std::string> argument_flags = {
-    "-r", "-c", "-b", "-s", "-h", "-g", "-d"
+    "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m",
 };
 
 void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
@@ -54,15 +54,41 @@ void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
                       std::string_view arg) {
     if (flag == "-r") {
         maze_args.odd_rows = std::stoull(arg.data());
+        if (maze_args.odd_rows % 2 == 0) {
+            maze_args.odd_rows++;
+        }
+        if (maze_args.odd_rows < 3) {
+            std::cerr << "Smallest maze possible is 3x7" << std::endl;
+            std::abort();
+        }
     } else if (flag == "-c") {
         maze_args.odd_cols = std::stoull(arg.data());
+        if (maze_args.odd_cols % 2 == 0) {
+            maze_args.odd_cols++;
+        }
+        if (maze_args.odd_cols < 7) {
+            std::cerr << "Smallest maze possible is 3x7" << std::endl;
+            std::abort();
+        }
     } else if (flag == "-b") {
         if (arg == "random-df") {
             maze_args.builder = Thread_maze::Builder_algorithm::randomized_depth_first;
         } else if (arg == "loop-erase"){
             maze_args.builder = Thread_maze::Builder_algorithm::randomized_loop_erased;
+        } else if (arg == "random-df-cross") {
+            maze_args.builder = Thread_maze::Builder_algorithm::randomized_depth_first_cross;
         } else {
             std::cerr << "Invalid builder argument: " << arg << std::endl;
+            print_usage();
+            std::abort();
+        }
+    } else if (flag == "-m") {
+        if (arg == "cross") {
+            maze_args.modification = Thread_maze::Maze_modification::add_cross;
+        } else if (arg == "x") {
+            maze_args.modification = Thread_maze::Maze_modification::add_x;
+        } else {
+            std::cerr << "Invalid modification argument: " << arg << std::endl;
             print_usage();
             std::abort();
         }
@@ -113,6 +139,9 @@ void print_usage() {
               << "│  -b Builder flag. Set maze building algorithm.       │\n"
               << "│      random-dfs - Randomized Depth First Search      │\n"
               << "│      loop-erase - Loop-Erased Random Walk            │\n"
+              << "│  -m Modification flag. Add shortcuts to the maze.    │\n"
+              << "│      cross - Add crossroads through the center.      │\n"
+              << "│      x - Add an x of crossing paths through center.  │\n"
               << "│  -s Solver flag. Set maze solving algorithm.         │\n"
               << "│      dfs - Depth First Search                        │\n"
               << "│      bfs - Breadth First Search                      │\n"
