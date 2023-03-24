@@ -92,6 +92,10 @@ void Thread_maze::add_modification(size_t row, size_t col) {
                 build_path(row, col - 2);
             }
         }
+    } else if (builder_ == Builder_algorithm::arena) {
+        if (row > 1 && col > 1 && row < maze_.size() - 2 && col < maze_[0].size() - 2) {
+            build_path(row, col);
+        }
     }
 }
 
@@ -368,11 +372,25 @@ bool Thread_maze::bfs_thread_gather(Point start, size_t thread_index, Thread_pai
 
 void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game,
                                 size_t odd_rows, size_t odd_cols) {
-    if (algorithm == Builder_algorithm::randomized_depth_first
-            || algorithm == Builder_algorithm::randomized_depth_first_cross) {
+    if (algorithm == Builder_algorithm::randomized_depth_first) {
         generate_randomized_dfs_maze(game, odd_rows, odd_cols);
     } else if (algorithm == Builder_algorithm::randomized_loop_erased) {
         generate_randomized_loop_erased_maze(game, odd_rows, odd_cols);
+    } else if (algorithm == Builder_algorithm::arena) {
+        std::uniform_int_distribution<int> row_gen(1, maze_.size() - 2);
+        std::uniform_int_distribution<int> col_gen(1, maze_[0].size() - 2);
+        start_ = pick_random_point(row_gen, col_gen);
+        finish_ = pick_random_point(row_gen, col_gen);
+        maze_[start_.row][start_.col] |= start_bit_;
+        maze_[finish_.row][finish_.col] |= finish_bit_;
+        if (game == Maze_game::gather) {
+            finish_ = pick_random_point(row_gen, col_gen);
+            maze_[finish_.row][finish_.col] |= finish_bit_;
+            finish_ = pick_random_point(row_gen, col_gen);
+            maze_[finish_.row][finish_.col] |= finish_bit_;
+            finish_ = pick_random_point(row_gen, col_gen);
+            maze_[finish_.row][finish_.col] |= finish_bit_;
+        }
     } else {
         std::cerr << "Invalid builder arg, somehow?" << std::endl;
         std::abort();
@@ -625,6 +643,8 @@ void Thread_maze::print_solution_path() {
         std::cout << "Randomized Depth First Search\n";
     } else if (builder_ == Builder_algorithm::randomized_loop_erased) {
         std::cout << "Loop-Erased Random Walk\n";
+    } else if (builder_ == Builder_algorithm::arena) {
+        std::cout << "Arena\n";
     } else {
         std::cerr << "Maze builder is unset. ERROR." << std::endl;
         std::abort();

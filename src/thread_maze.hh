@@ -15,8 +15,8 @@ public:
 
     enum class Builder_algorithm {
         randomized_depth_first,
-        randomized_depth_first_cross,
         randomized_loop_erased,
+        arena,
     };
 
     enum class Maze_modification {
