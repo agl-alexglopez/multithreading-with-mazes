@@ -54,13 +54,13 @@ void Thread_maze::add_modification(size_t row, size_t col) {
         if (col == nearest_neg_point && col < maze_[0].size() - 2 && col > 1) {
             // An X is hard to notice and might miss lines so make it wider.
             build_path(row, col);
-            if (col + 1 < maze_[0].size()) {
+            if (col + 1 < maze_[0].size() - 2) {
                 build_path(row, col + 1);
             }
             if (col - 1 > 1) {
                 build_path(row, col - 1);
             }
-            if (col + 2 < maze_[0].size()) {
+            if (col + 2 < maze_[0].size() - 2) {
                 build_path(row, col + 2);
             }
             if (col - 2 > 1) {
@@ -76,13 +76,13 @@ void Thread_maze::add_modification(size_t row, size_t col) {
                     && col < maze_[0].size() - 2
                         && col > 1) {
             build_path(row, col);
-            if (col + 1 < maze_[0].size()) {
+            if (col + 1 < maze_[0].size() - 2) {
                 build_path(row, col + 1);
             }
             if (col - 1 > 1) {
                 build_path(row, col - 1);
             }
-            if (col + 2 < maze_[0].size()) {
+            if (col + 2 < maze_[0].size() - 2) {
                 build_path(row, col + 2);
             }
             if (col - 2 > 1) {
