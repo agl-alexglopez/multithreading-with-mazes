@@ -42,6 +42,9 @@ void Thread_maze::add_modification(size_t row, size_t col) {
         if ((row == maze_.size() / 2 && col > 1 && col < maze_[0].size() - 2)
                 || (col == maze_[0].size() / 2 && row > 1 && row < maze_.size() - 2)) {
             build_path(row, col);
+            if (col + 1 < maze_[0].size() - 2) {
+                build_path(row, col + 1);
+            }
         }
     } else if (modification_ == Maze_modification::add_x) {
         float row_size = maze_.size() - 2.0;
@@ -52,7 +55,7 @@ void Thread_maze::add_modification(size_t row, size_t col) {
         float b = 2.0 - (2.0 * slope);
         int nearest_neg_point = (cur_row - b) / slope;
         if (col == nearest_neg_point && col < maze_[0].size() - 2 && col > 1) {
-            // An X is hard to notice and might miss lines so make it wider.
+            // An X is hard to notice and might miss breaking wall lines so make it wider.
             build_path(row, col);
             if (col + 1 < maze_[0].size() - 2) {
                 build_path(row, col + 1);
