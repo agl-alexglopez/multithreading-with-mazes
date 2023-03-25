@@ -57,8 +57,8 @@ void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
         if (maze_args.odd_rows % 2 == 0) {
             maze_args.odd_rows++;
         }
-        if (maze_args.odd_rows < 3) {
-            std::cerr << "Smallest maze possible is 3x7" << std::endl;
+        if (maze_args.odd_rows < 7 || maze_args.odd_cols < 7) {
+            std::cerr << "Smallest maze possible is 7x7" << std::endl;
             std::abort();
         }
     } else if (flag == "-c") {
@@ -139,7 +139,7 @@ void print_usage() {
               << "│  -c Columns flag. Set columns for the maze.          │\n"
               << "│      Any number > 7. Zoom out for larger mazes!      │\n"
               << "│  -b Builder flag. Set maze building algorithm.       │\n"
-              << "│      random-dfs - Randomized Depth First Search.     │\n"
+              << "│      random-df - Randomized Depth First Search.      │\n"
               << "│      loop-erase - Loop-Erased Random Walk.           │\n"
               << "│      arena - Open floor with no walls.               │\n"
               << "│  -m Modification flag. Add shortcuts to the maze.    │\n"
