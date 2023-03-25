@@ -102,6 +102,8 @@ void Thread_maze::add_modification(size_t row, size_t col) {
 void Thread_maze::solve_maze(Thread_maze::Solver_algorithm solver) {
     if (solver == Solver_algorithm::depth_first_search) {
         solve_with_dfs_threads();
+    } else if (solver == Solver_algorithm::randomized_depth_first_search) {
+        solve_with_randomized_dfs_threads();
     } else if (solver == Solver_algorithm::breadth_first_search) {
         solve_with_bfs_threads();
     } else {
@@ -128,6 +130,29 @@ void Thread_maze::solve_with_dfs_threads() {
         } else {
             threads[i] = std::thread([this, i, thread_mask] {
                 dfs_thread_gather(start_, i, thread_mask);
+            });
+        }
+    }
+    for (std::thread& t : threads) {
+        t.join();
+    }
+    print_solution_path();
+}
+
+void Thread_maze::solve_with_randomized_dfs_threads() {
+    if (escape_path_index_ != -1) {
+        clear_paths();
+    }
+    std::vector<std::thread> threads(cardinal_directions_.size());
+    for (int i = 0; i < num_threads_; i++) {
+        const Thread_paint& thread_mask = thread_masks_[i];
+        if (game_ == Maze_game::hunt) {
+            threads[i] = std::thread([this, i, thread_mask] {
+                randomized_dfs_thread_hunt(start_, i, thread_mask);
+            });
+        } else {
+            threads[i] = std::thread([this, i, thread_mask] {
+                randomized_dfs_thread_gather(start_, i, thread_mask);
             });
         }
     }
@@ -221,7 +246,65 @@ bool Thread_maze::dfs_thread_hunt(Point start, size_t thread_index, Thread_paint
         thread_paths_[thread_index].push_back(cur);
         maze_mutex_.lock();
         maze_[cur.row][cur.col] |= thread_bit;
-        // A thread or threads have already arrived at this location. Mark as an overlap.
+        maze_mutex_.unlock();
+    }
+    return result;
+}
+
+bool Thread_maze::randomized_dfs_thread_hunt(Point start, size_t thread_index, Thread_paint thread_bit) {
+    Thread_cache seen = thread_bit << thread_tag_offset_;
+    std::stack<Point> dfs({start});
+    bool result = false;
+    Point cur = start;
+    std::vector<int> random_direction_indices(generate_directions_.size());
+    iota(begin(random_direction_indices), end(random_direction_indices), 0);
+    while (!dfs.empty()) {
+        if (escape_path_index_ != -1) {
+            result = false;
+            break;
+        }
+
+        // Don't pop() yet!
+        cur = dfs.top();
+
+        if (maze_[cur.row][cur.col] & finish_bit_) {
+            maze_mutex_.lock();
+            bool tie_break = escape_path_index_ == -1;
+            if (tie_break) {
+                escape_path_index_ = thread_index;
+            }
+            maze_mutex_.unlock();
+            result = tie_break;
+            dfs.pop();
+            break;
+        }
+        maze_mutex_.lock();
+        maze_[cur.row][cur.col] |= seen;
+        maze_mutex_.unlock();
+
+        Point chosen = {};
+        shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
+        for (const int& i : random_direction_indices) {
+            const Point& p = cardinal_directions_[i];
+            Point next = {cur.row + p.row, cur.col + p.col};
+            maze_mutex_.lock();
+            if (!(maze_[next.row][next.col] & seen) && (maze_[next.row][next.col] & path_bit_)) {
+                maze_mutex_.unlock();
+                chosen = next;
+                break;
+            }
+            maze_mutex_.unlock();
+        }
+        // Emulate a true recursive dfs. Only push the current branch onto our stack.
+        chosen.row ? dfs.push(chosen) : dfs.pop();
+    }
+    // Another benefit of true depth first search is our stack holds path to exact location.
+    while (!dfs.empty()) {
+        cur = dfs.top();
+        dfs.pop();
+        thread_paths_[thread_index].push_back(cur);
+        maze_mutex_.lock();
+        maze_[cur.row][cur.col] |= thread_bit;
         maze_mutex_.unlock();
     }
     return result;
@@ -263,6 +346,57 @@ bool Thread_maze::dfs_thread_gather(Point start, size_t thread_index, Thread_pai
             maze_mutex_.unlock();
             ++direction_index %= cardinal_directions_.size();
         } while (direction_index != thread_index);
+        chosen.row ? dfs.push(chosen) : dfs.pop();
+    }
+    while (!dfs.empty()) {
+        cur = dfs.top();
+        dfs.pop();
+        thread_paths_[thread_index].push_back(cur);
+        maze_mutex_.lock();
+        maze_[cur.row][cur.col] |= thread_bit;
+        maze_mutex_.unlock();
+    }
+    return result;
+}
+
+bool Thread_maze::randomized_dfs_thread_gather(Point start, size_t thread_index, Thread_paint thread_bit) {
+
+    Thread_cache seen = thread_bit << thread_tag_offset_;
+    std::stack<Point> dfs({start});
+    bool result = false;
+    Point cur = start;
+    std::vector<int> random_direction_indices(generate_directions_.size());
+    iota(begin(random_direction_indices), end(random_direction_indices), 0);
+    while (!dfs.empty()) {
+        cur = dfs.top();
+
+        maze_mutex_.lock();
+        // We are the first thread to this finish! Claim it!
+        if (maze_[cur.row][cur.col] & finish_bit_
+                && !(maze_[cur.row][cur.col] & cache_mask_)){
+            maze_[cur.row][cur.col] |= seen;
+            maze_mutex_.unlock();
+            dfs.pop();
+            break;
+        }
+        // Shoot, another thread beat us here. Mark and move on to another finish.
+        maze_[cur.row][cur.col] |= seen;
+        maze_mutex_.unlock();
+
+        Point chosen = {};
+        // Bias each thread's first choice towards orginal dispatch direction. More coverage.
+        shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
+        for (const int& i : random_direction_indices) {
+            const Point& p = cardinal_directions_[i];
+            Point next = {cur.row + p.row, cur.col + p.col};
+            maze_mutex_.lock();
+            if (!(maze_[next.row][next.col] & seen) && (maze_[next.row][next.col] & path_bit_)) {
+                maze_mutex_.unlock();
+                chosen = next;
+                break;
+            }
+            maze_mutex_.unlock();
+        };
         chosen.row ? dfs.push(chosen) : dfs.pop();
     }
     while (!dfs.empty()) {

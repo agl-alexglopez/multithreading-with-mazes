@@ -95,6 +95,8 @@ void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
     } else if (flag == "-s") {
         if (arg == "dfs") {
             maze_args.solver = Thread_maze::Solver_algorithm::depth_first_search;
+        } else if (arg == "dfs-random") {
+            maze_args.solver = Thread_maze::Solver_algorithm::randomized_depth_first_search;
         } else if (arg == "bfs") {
             maze_args.solver = Thread_maze::Solver_algorithm::breadth_first_search;
         } else {
@@ -145,6 +147,7 @@ void print_usage() {
               << "│      x - Add an x of crossing paths through center.  │\n"
               << "│  -s Solver flag. Set maze solving algorithm.         │\n"
               << "│      dfs - Depth First Search                        │\n"
+              << "│      dfs-random - Randomized Breadth First Search    │\n"
               << "│      bfs - Breadth First Search                      │\n"
               << "│  -g Game flag. Set the game for the threads to play. │\n"
               << "│      hunt - 4 threads race to find one finish.       │\n"

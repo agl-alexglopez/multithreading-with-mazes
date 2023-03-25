@@ -27,6 +27,7 @@ public:
 
     enum class Solver_algorithm {
         depth_first_search,
+        randomized_depth_first_search,
         breadth_first_search,
     };
 
@@ -202,9 +203,12 @@ private:
     void add_modification(size_t row, size_t col);
     Point choose_arbitrary_point() const;
     void solve_with_dfs_threads();
+    void solve_with_randomized_dfs_threads();
     void solve_with_bfs_threads();
     bool dfs_thread_hunt(Point start, size_t thread_index, Thread_maze::Thread_paint thread_bit);
+    bool randomized_dfs_thread_hunt(Point start, size_t thread_index, Thread_paint thread_bit);
     bool dfs_thread_gather(Point start, size_t thread_index, Thread_maze::Thread_paint thread_bit);
+    bool randomized_dfs_thread_gather(Point start, size_t thread_index, Thread_paint thread_bit);
     bool bfs_thread_hunt(Point start, size_t thread_index, Thread_maze::Thread_paint thread_bit);
     bool bfs_thread_gather(Point start, size_t thread_index, Thread_maze::Thread_paint thread_bit);
     Point pick_random_point(std::uniform_int_distribution<int>& row,
