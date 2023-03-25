@@ -66,8 +66,8 @@ void Thread_maze::add_modification(int row, int col) {
         // y = mx + b. We will get the negative slope. This line goes top left to bottom right.
         float slope = (2.0 - row_size) / (2.0 - col_size);
         float b = 2.0 - (2.0 * slope);
-        int nearest_neg_point = (cur_row - b) / slope;
-        if (col == nearest_neg_point && col < maze_col_size_ - 2 && col > 1) {
+        int on_line = (cur_row - b) / slope;
+        if (col == on_line && col < maze_col_size_ - 2 && col > 1) {
             // An X is hard to notice and might miss breaking wall lines so make it wider.
             build_path(row, col);
             if (col + 1 < maze_col_size_ - 2) {
@@ -86,11 +86,8 @@ void Thread_maze::add_modification(int row, int col) {
         // This line is drawn from top right to bottom left.
         slope = (2.0 - row_size) / (col_size - 2.0);
         b = row_size - (2.0 * slope);
-        int nearest_pos_point = (cur_row - b) / slope;
-        if (col == nearest_pos_point
-                && row < maze_row_size_ - 2
-                    && col < maze_col_size_ - 2
-                        && col > 1) {
+        on_line = (cur_row - b) / slope;
+        if (col == on_line && col > 1 && col < maze_col_size_ - 2 && row < maze_row_size_ - 2) {
             build_path(row, col);
             if (col + 1 < maze_col_size_ - 2) {
                 build_path(row, col + 1);
