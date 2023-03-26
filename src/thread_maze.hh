@@ -16,6 +16,7 @@ public:
     enum class Builder_algorithm {
         randomized_depth_first,
         randomized_loop_erased,
+        grid,
         arena,
     };
 
@@ -202,6 +203,8 @@ private:
     void generate_maze(Builder_algorithm algorithm, Maze_game game);
     void generate_randomized_dfs_maze(Maze_game game);
     void generate_randomized_loop_erased_maze(Maze_game game);
+    void generate_arena(Maze_game game);
+    void generate_grid(Maze_game game);
     void build_path(int row, int col);
     void build_wall(int row, int col);
     void add_modification(int row, int col);

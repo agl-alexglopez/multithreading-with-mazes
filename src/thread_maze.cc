@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <cstdint>
 #include <cstdlib>
+#include <random>
 #include <stack>
 #include <queue>
 #include <iostream>
@@ -38,16 +39,7 @@ Thread_maze::Thread_maze(const Thread_maze::Packaged_args& args)
     for (std::vector<Point>& vec : thread_paths_) {
         vec.reserve(starting_path_len_);
     }
-    if (builder_ == Builder_algorithm::arena) {
-        for (int row = 2; row < maze_row_size_ - 2; row++) {
-            for (int col = 2; col < maze_col_size_ - 2; col++) {
-                build_path(row, col);
-            }
-        }
-        place_start_finish();
-    } else {
-        generate_maze(args.builder, args.game);
-    }
+    generate_maze(args.builder, args.game);
 }
 
 void Thread_maze::add_modification(int row, int col) {
@@ -515,6 +507,10 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game) {
         generate_randomized_dfs_maze(game);
     } else if (algorithm == Builder_algorithm::randomized_loop_erased) {
         generate_randomized_loop_erased_maze(game);
+    } else if (algorithm == Builder_algorithm::arena) {
+        generate_arena(game);
+    } else if (algorithm == Builder_algorithm::grid) {
+        generate_grid(game);
     } else {
         std::cerr << "Invalid builder arg, somehow?" << std::endl;
         std::abort();
@@ -522,51 +518,55 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game) {
 }
 
 void Thread_maze::generate_randomized_loop_erased_maze(Maze_game game) {
-    int total_squares = (maze_row_size_ - 2) * (maze_col_size_ - 2);
     start_ = {row_random_(generator_), col_random_(generator_)};
     build_path(start_.row, start_.col);
+    maze_[start_.row][start_.col] |= builder_bit_;
     Point maze_start = {row_random_(generator_), col_random_(generator_)};
     std::stack<Point> dfs({maze_start});
     std::vector<int> random_direction_indices(generate_directions_.size());
     iota(begin(random_direction_indices), end(random_direction_indices), 0);
-    Point prev = {};
-    while (total_squares > 0 && !dfs.empty()) {
+    Point prev_dir = {};
+    while (!dfs.empty()) {
         Point cur = dfs.top();
         if (maze_[cur.row][cur.col] & builder_bit_) {
             while (!dfs.empty()) {
                 cur = dfs.top();
                 maze_[cur.row][cur.col] |= builder_bit_;
                 build_path(cur.row, cur.col);
-                total_squares--;
                 dfs.pop();
             }
             cur = choose_arbitrary_point();
             dfs.push(cur);
-            prev = {};
+            prev_dir = {};
         } else if (maze_[cur.row][cur.col] & zero_seen_) {
             dfs.pop();
             Point back = dfs.top();
             while (back != cur) {
                 maze_[back.row][back.col] &= ~zero_seen_;
                 dfs.pop();
+                back = dfs.top();
             }
-            prev = {};
+            prev_dir = {};
         }
         maze_[cur.row][cur.col] |= zero_seen_;
 
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         Point chose = {};
+        Point cur_dir = {};
         for (const int& i : random_direction_indices) {
             const Point& p = cardinal_directions_[i];
             Point next = {cur.row + p.row, cur.col + p.col};
             if (next.row > 0 && next.row < maze_row_size_ - 1
                         && next.col > 0 && next.col < maze_col_size_ - 1
-                            && p.row + prev.row != 0 && p.col + prev.col != 0) {
+                            && (p.row + prev_dir.row != 0 || p.col + prev_dir.col != 0)) {
+                cur_dir = p;
                 chose = next;
                 break;
             }
         }
-        prev = cur;
+        if (cur_dir.row || cur_dir.col) {
+            prev_dir = cur_dir;
+        }
         chose.row ? dfs.push(chose) : dfs.pop();
     }
     for (std::vector<Square>& row : maze_) {
@@ -592,7 +592,7 @@ Thread_maze::Point Thread_maze::choose_arbitrary_point() const {
         for (int col = 1; col < maze_col_size_ - 1; col++) {
             Point cur = {row, col};
             if (!(maze_[cur.row][cur.col] & builder_bit_)
-                    && maze_[cur.row][cur.col] & path_bit_) {
+                    && !(maze_[cur.row][cur.col] & path_bit_)) {
                 return cur;
             }
         }
@@ -632,7 +632,7 @@ void Thread_maze::generate_randomized_dfs_maze(Maze_game game) {
             continue;
         }
 
-        // We have a randomly chosen neighbor so let's connect and continue.
+        // The maze generator leaves behind the builder bit to mark seen squares.
         maze_[random_neighbor.row][random_neighbor.col] |= builder_bit_;
         dfs.push(random_neighbor);
         build_path(random_neighbor.row, random_neighbor.col);
@@ -649,8 +649,35 @@ void Thread_maze::generate_randomized_dfs_maze(Maze_game game) {
             std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
         }
         build_path(random_neighbor.row, random_neighbor.col);
-        // Walls are just a simple value that a square can have so I need to mark as seen.
         maze_[random_neighbor.row][random_neighbor.col] |= builder_bit_;
+    }
+    place_start_finish();
+}
+
+void Thread_maze::generate_arena(Thread_maze::Maze_game game) {
+    for (int row = 2; row < maze_row_size_ - 2; row++) {
+        for (int col = 2; col < maze_col_size_ - 2; col++) {
+            build_path(row, col);
+        }
+    }
+    place_start_finish();
+}
+
+void Thread_maze::generate_grid(Thread_maze::Maze_game game) {
+    std::uniform_int_distribution<int> coin(0,1);
+    for (int row = 2; row < maze_row_size_ - 2; row++) {
+        for (int col = 2; col < maze_col_size_ - 2; col++) {
+            if (col == maze_col_size_ / 2) {
+                build_path(row, col);
+            } else {
+                if (row % 2 == 0) {
+                    build_path(row, col);
+                }
+                if (coin(generator_)) {
+                    build_path(row, col);
+                }
+            }
+        }
     }
     place_start_finish();
 }
@@ -747,6 +774,8 @@ void Thread_maze::print_solution_path() {
         std::cout << "Randomized Depth First Search\n";
     } else if (builder_ == Builder_algorithm::randomized_loop_erased) {
         std::cout << "Loop-Erased Random Walk\n";
+    } else if (builder_ == Builder_algorithm::grid) {
+        std::cout << "Grid\n";
     } else if (builder_ == Builder_algorithm::arena) {
         std::cout << "Arena\n";
     } else {
