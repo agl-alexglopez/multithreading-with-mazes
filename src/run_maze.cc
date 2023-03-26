@@ -75,8 +75,8 @@ void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
             maze_args.builder = Thread_maze::Builder_algorithm::randomized_depth_first;
         } else if (arg == "loop-erase"){
             maze_args.builder = Thread_maze::Builder_algorithm::randomized_loop_erased;
-        } else if (arg == "grid"){
-            maze_args.builder = Thread_maze::Builder_algorithm::grid;
+        } else if (arg == "random-grid"){
+            maze_args.builder = Thread_maze::Builder_algorithm::randomized_grid;
         } else if (arg == "arena") {
             maze_args.builder = Thread_maze::Builder_algorithm::arena;
         } else {
@@ -143,7 +143,7 @@ void print_usage() {
               << "│  -b Builder flag. Set maze building algorithm.       │\n"
               << "│      random-df - Randomized Depth First Search.      │\n"
               << "│      loop-erase - Loop-Erased Random Walk.           │\n"
-              << "│      grid - A consistent grid pattern.               │\n"
+              << "│      random-grid - A random grid pattern.            │\n"
               << "│      arena - Open floor with no walls.               │\n"
               << "│  -m Modification flag. Add shortcuts to the maze.    │\n"
               << "│      cross - Add crossroads through the center.      │\n"

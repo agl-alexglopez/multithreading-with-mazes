@@ -16,7 +16,7 @@ public:
     enum class Builder_algorithm {
         randomized_depth_first,
         randomized_loop_erased,
-        grid,
+        randomized_grid,
         arena,
     };
 
@@ -106,18 +106,20 @@ private:
     static constexpr Wall_line south_wall_ =    0b0100;
     static constexpr Wall_line west_wall_ =     0b1000;
 
+    /* Walls are constructed in terms of other walls they need to connect to. For example, read
+     * 0b0011 as, "this is a wall square that must connect to other walls to the East and North."
+     */
     static constexpr std::array<const std::array<const char *const,16>,2> wall_styles_ = {
         {{
-            // Walls are drawn in relation to neighboring walls in cardinal directions.
-            // 0bWestSouthEastNorth
+            // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall with no walls around.
             // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
-                "┼",    "╵",     "╶",    "└",    "╷",    "│",    "┌",    "├",
+                "■",    "╵",     "╶",    "└",    "╷",    "│",    "┌",    "├",
             // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
                 "╴",    "┘",     "─",    "┴",    "┐",    "┤",    "┬",    "┼"
         },
         {
             // Same but with rounded corners.
-            "┼",    "╵",     "╶",    "╰",    "╷",    "│",    "╭",    "├",
+            "●",    "╵",     "╶",    "╰",    "╷",    "│",    "╭",    "├",
             "╴",    "╯",     "─",    "┴",    "╮",    "┤",    "┬",    "┼"
         }}
     };
@@ -201,10 +203,10 @@ private:
     // I would rather have a maze of atomic ints, but I can't construct atomics at runtime.
     std::mutex maze_mutex_;
     void generate_maze(Builder_algorithm algorithm, Maze_game game);
-    void generate_randomized_dfs_maze(Maze_game game);
-    void generate_randomized_loop_erased_maze(Maze_game game);
-    void generate_arena(Maze_game game);
-    void generate_grid(Maze_game game);
+    void generate_randomized_dfs_maze();
+    void generate_randomized_loop_erased_maze();
+    void generate_randomized_grid();
+    void generate_arena();
     void build_path(int row, int col);
     void build_wall(int row, int col);
     void add_modification(int row, int col);
