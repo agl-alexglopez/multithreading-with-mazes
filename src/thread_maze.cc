@@ -672,8 +672,7 @@ void Thread_maze::generate_grid(Thread_maze::Maze_game game) {
             } else {
                 if (row % 2 == 0) {
                     build_path(row, col);
-                }
-                if (coin(generator_)) {
+                } else if (coin(generator_)) {
                     build_path(row, col);
                 }
             }
