@@ -39,6 +39,7 @@ Thumbs.db
 build/
 # Clang for LSP makes this so I can use nvim and it recognizes project structure.
 .cache/
+compile_flags.txt
 
 # Add below lines to exclude OS settings and caches
 /.trash/

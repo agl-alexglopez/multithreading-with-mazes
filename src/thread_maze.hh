@@ -223,7 +223,6 @@ private:
     void place_start_finish();
     Point pick_random_point();
     Point find_nearest_square(Point choice);
-    Point find_nearest_wall(Point choice);
     void print_solution_path();
     void print_maze() const;
     void print_overlap_key() const;

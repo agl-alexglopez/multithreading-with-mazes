@@ -129,9 +129,10 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
     std::stack<Point> dfs({maze_start});
     std::vector<int> random_direction_indices(generate_directions_.size());
     iota(begin(random_direction_indices), end(random_direction_indices), 0);
-    Point prev_dir = {};
+    Point previous_square = {};
     while (!dfs.empty()) {
         Point cur = dfs.top();
+        // The builder bit is only given to squares that are established as part of maze paths.
         if (maze_[cur.row][cur.col] & builder_bit_) {
             dfs.pop();
             while (!dfs.empty()) {
@@ -154,41 +155,46 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
             }
             cur = choose_arbitrary_point();
             dfs.push(cur);
-            prev_dir = {};
-        } else if (maze_[cur.row][cur.col] & zero_seen_) {
+            previous_square = {};
+        } else if (maze_[cur.row][cur.col] & start_bit_) {
             dfs.pop();
             Point back = dfs.top();
             while (back != cur) {
-                maze_[back.row][back.col] &= ~zero_seen_;
+                maze_[back.row][back.col] &= ~start_bit_;
                 dfs.pop();
                 back = dfs.top();
             }
-            prev_dir = {};
+            // Manage this detail so we don't accidentally walk backwards and do this again.
+            previous_square = {};
+            dfs.pop();
+            if (!dfs.empty()) {
+                previous_square = dfs.top();
+            }
+            dfs.push(cur);
         }
-        maze_[cur.row][cur.col] |= zero_seen_;
+        // Mark our progress on our current random walk. If we see this again we have looped.
+        maze_[cur.row][cur.col] |= start_bit_;
 
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         Point chose = {};
-        Point cur_dir = {};
         for (const int& i : random_direction_indices) {
             const Point& p = generate_directions_[i];
             Point next = {cur.row + p.row, cur.col + p.col};
-            // To eliminate bias we can only prevent ourselves from walking back the way we came.
+            // Eliminate bias. Do not check for seen squares, only the direction we just came from.
             if (next.row > 0 && next.row < maze_row_size_ - 1
                         && next.col > 0 && next.col < maze_col_size_ - 1
-                            && (p.row + prev_dir.row != 0 || p.col + prev_dir.col != 0)) {
+                            && next != previous_square) {
+                previous_square = cur;
                 chose = next;
                 break;
             }
         }
-        if (cur_dir.row || cur_dir.col) {
-            prev_dir = cur_dir;
-        }
         chose.row ? dfs.push(chose) : dfs.pop();
     }
+    // We needed to use an extra bit for this algorithm's logic, so we should clean up after.
     for (std::vector<Square>& row : maze_) {
         for (Square& square : row) {
-            square &= ~clear_cache_;
+            square &= ~start_bit_;
         }
     }
     place_start_finish();
@@ -411,19 +417,6 @@ Thread_maze::Point Thread_maze::find_nearest_square(Thread_maze::Point choice) {
               << "{" << choice.row << "," << choice.col << "}" << std::endl;
     std::abort();
     print_maze();
-}
-
-Thread_maze::Point Thread_maze::find_nearest_wall(Thread_maze::Point choice) {
-    // s    se     e     sw     w      nw       w
-    for (const Point& p : all_directions_) {
-         Point next = {choice.row + p.row, choice.col + p.col};
-         if (next.row > 0 && next.row < maze_row_size_ - 1
-                 && next.col > 0 && next.col < maze_col_size_ - 1
-                    && !(maze_[next.row][next.col] & path_bit_)) {
-             return next;
-         }
-    }
-    return {0,0};
 }
 
 void Thread_maze::solve_maze(Thread_maze::Solver_algorithm solver) {
@@ -848,9 +841,9 @@ void Thread_maze::print_solution_path() {
     if (builder_ == Builder_algorithm::randomized_depth_first) {
         std::cout << "Randomized Depth First Search\n";
     } else if (builder_ == Builder_algorithm::randomized_loop_erased) {
-        std::cout << "Loop-Erased Random Walk\n";
+        std::cout << "Loop-Erased Random Walks\n";
     } else if (builder_ == Builder_algorithm::randomized_grid) {
-        std::cout << "Randomized Grid\n";
+        std::cout << "Randomized Grid Runs\n";
     } else if (builder_ == Builder_algorithm::arena) {
         std::cout << "Arena\n";
     } else {
