@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <random>
 #include <vector>
+#include <stack>
 #include <array>
 
 
@@ -205,6 +206,8 @@ private:
     void generate_maze(Builder_algorithm algorithm, Maze_game game);
     void generate_randomized_dfs_maze();
     void generate_randomized_loop_erased_maze();
+    void connect_walk_to_maze(std::stack<Point>& walk_stack);
+    void erase_loop(std::stack<Point>& walk_stack);
     void generate_randomized_grid();
     void generate_arena();
     void build_path(int row, int col);

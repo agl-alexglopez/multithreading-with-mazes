@@ -106,10 +106,8 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game) {
         generate_arena();
     } else if (algorithm == Builder_algorithm::randomized_grid) {
         generate_randomized_grid();
-    } else {
-        std::cerr << "Invalid builder arg, somehow?" << std::endl;
-        std::abort();
     }
+    place_start_finish();
 }
 
 void Thread_maze::generate_randomized_loop_erased_maze() {
@@ -126,51 +124,33 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
     build_path(start_.row, start_.col);
     maze_[start_.row][start_.col] |= builder_bit_;
     Point maze_start = {2, 2};
-    std::stack<Point> dfs({maze_start});
+    std::stack<Point> walk_stack({maze_start});
     std::vector<int> random_direction_indices(generate_directions_.size());
     iota(begin(random_direction_indices), end(random_direction_indices), 0);
     Point previous_square = {};
-    while (!dfs.empty()) {
-        Point cur = dfs.top();
+    while (!walk_stack.empty()) {
+        Point cur = walk_stack.top();
         // The builder bit is only given to squares that are established as part of maze paths.
         if (maze_[cur.row][cur.col] & builder_bit_) {
-            dfs.pop();
-            while (!dfs.empty()) {
-                Point prev = dfs.top();
-                maze_[prev.row][prev.col] |= builder_bit_;
-                build_path(prev.row, prev.col);
-                if (prev.row < cur.row) {
-                    cur.row--;
-                } else if (prev.row > cur.row) {
-                    cur.row++;
-                } else if (prev.col > cur.col) {
-                    cur.col++;
-                } else if (prev.col < cur.col) {
-                    cur.col--;
-                }
-                maze_[cur.row][cur.col] |= builder_bit_;
-                build_path(cur.row, cur.col);
-                cur = prev;
-                dfs.pop();
-            }
+            connect_walk_to_maze(walk_stack);
             cur = choose_arbitrary_point();
-            dfs.push(cur);
+
+            // Important return. If we can't pick a point we are done.
+            if (!cur.row) {
+                return;
+            }
+
+            walk_stack.push(cur);
             previous_square = {};
         } else if (maze_[cur.row][cur.col] & start_bit_) {
-            dfs.pop();
-            Point back = dfs.top();
-            while (back != cur) {
-                maze_[back.row][back.col] &= ~start_bit_;
-                dfs.pop();
-                back = dfs.top();
-            }
+            erase_loop(walk_stack);
             // Manage this detail so we don't accidentally walk backwards and do this again.
             previous_square = {};
-            dfs.pop();
-            if (!dfs.empty()) {
-                previous_square = dfs.top();
+            walk_stack.pop();
+            if (!walk_stack.empty()) {
+                previous_square = walk_stack.top();
             }
-            dfs.push(cur);
+            walk_stack.push(cur);
         }
         // Mark our progress on our current random walk. If we see this again we have looped.
         maze_[cur.row][cur.col] |= start_bit_;
@@ -189,15 +169,46 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
                 break;
             }
         }
-        chose.row ? dfs.push(chose) : dfs.pop();
+        chose.row ? walk_stack.push(chose) : walk_stack.pop();
     }
-    // We needed to use an extra bit for this algorithm's logic, so we should clean up after.
-    for (std::vector<Square>& row : maze_) {
-        for (Square& square : row) {
-            square &= ~start_bit_;
+}
+
+void Thread_maze::connect_walk_to_maze(std::stack<Point>& walk_stack) {
+    Point cur = walk_stack.top();
+    walk_stack.pop();
+    while (!walk_stack.empty()) {
+        Point prev = walk_stack.top();
+        // It is now desirable to run into this path as we complete future random walks.
+        Square& square_bits = maze_[prev.row][prev.col];
+        square_bits &= ~start_bit_;
+        square_bits |= builder_bit_;
+        build_path(prev.row, prev.col);
+        if (prev.row < cur.row) {
+            cur.row--;
+        } else if (prev.row > cur.row) {
+            cur.row++;
+        } else if (prev.col > cur.col) {
+            cur.col++;
+        } else if (prev.col < cur.col) {
+            cur.col--;
         }
+        maze_[cur.row][cur.col] |= builder_bit_;
+        build_path(cur.row, cur.col);
+        cur = prev;
+        walk_stack.pop();
     }
-    place_start_finish();
+}
+
+void Thread_maze::erase_loop(std::stack<Point>& walk_stack) {
+    Point cur = walk_stack.top();
+    walk_stack.pop();
+    Point back = walk_stack.top();
+    // We will forget we ever saw this loop as it may be part of a good walk later.
+    while (back != cur) {
+        maze_[back.row][back.col] &= ~start_bit_;
+        walk_stack.pop();
+        back = walk_stack.top();
+    }
 }
 
 void Thread_maze::place_start_finish() {
@@ -275,7 +286,6 @@ void Thread_maze::generate_randomized_dfs_maze() {
         maze_[random_neighbor.row][random_neighbor.col] |= builder_bit_;
         dfs.push(random_neighbor);
     }
-    place_start_finish();
 }
 
 void Thread_maze::generate_arena() {
@@ -284,7 +294,6 @@ void Thread_maze::generate_arena() {
             build_path(row, col);
         }
     }
-    place_start_finish();
 }
 
 void Thread_maze::generate_randomized_grid() {
@@ -320,11 +329,11 @@ void Thread_maze::generate_randomized_grid() {
             }
         }
 
-        // We have seen all the neighbors for this current square. Safe to pop()
         if (!random_neighbor.row) {
             dfs.pop();
             continue;
         }
+        // Use random_direction and cur_step so I can invariantly add to rows AND columns in loop.
         Point cur_step = {};
         if (random_direction.row == -2) {
             cur_step = {-1,0};
@@ -354,7 +363,6 @@ void Thread_maze::generate_randomized_grid() {
             cur_run++;
         }
     }
-    place_start_finish();
 }
 
 void Thread_maze::build_wall(int row, int col) {
