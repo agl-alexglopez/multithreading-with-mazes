@@ -106,12 +106,15 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game) {
         generate_arena();
     } else if (algorithm == Builder_algorithm::randomized_grid) {
         generate_randomized_grid();
+    } else {
+        std::cerr << "Builder algorithm not set? Check for new builder algorithm." << std::endl;
+        std::abort();
     }
     place_start_finish();
 }
 
 void Thread_maze::generate_randomized_loop_erased_maze() {
-    /* Important to remember that your maze builds by jumping two squares at a time. Therefore for
+    /* Important to remember that this maze builds by jumping two squares at a time. Therefore for
      * Wilson's algorithm to work two points must both be even or both be odd to find each other.
      */
     start_ = {maze_row_size_ / 2, maze_col_size_ / 2};
@@ -156,20 +159,24 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
         maze_[cur.row][cur.col] |= start_bit_;
 
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
-        Point chose = {};
-        for (const int& i : random_direction_indices) {
-            const Point& p = generate_directions_[i];
-            Point next = {cur.row + p.row, cur.col + p.col};
-            // Eliminate bias. Do not check for seen squares, only the direction we just came from.
-            if (next.row > 0 && next.row < maze_row_size_ - 1
-                        && next.col > 0 && next.col < maze_col_size_ - 1
-                            && next != previous_square) {
-                previous_square = cur;
-                chose = next;
-                break;
+        /* This conveys what I want more clearly than breaking out of the inner loop and adding
+         * logic to check if we should push or pop from the stack.
+         */
+        [&] {
+            for (const int& i : random_direction_indices) {
+                const Point& p = generate_directions_[i];
+                Point next = {cur.row + p.row, cur.col + p.col};
+                // Do not check for seen squares, only the direction we just came from.
+                if (next.row > 0 && next.row < maze_row_size_ - 1
+                            && next.col > 0 && next.col < maze_col_size_ - 1
+                                && next != previous_square) {
+                    previous_square = cur;
+                    walk_stack.push(next);
+                    return;
+                }
             }
-        }
-        chose.row ? walk_stack.push(chose) : walk_stack.pop();
+            walk_stack.pop();
+        }();
     }
 }
 
@@ -179,21 +186,8 @@ void Thread_maze::connect_walk_to_maze(std::stack<Point>& walk_stack) {
     while (!walk_stack.empty()) {
         Point prev = walk_stack.top();
         // It is now desirable to run into this path as we complete future random walks.
-        Square& square_bits = maze_[prev.row][prev.col];
-        square_bits &= ~start_bit_;
-        square_bits |= builder_bit_;
-        build_path(prev.row, prev.col);
-        if (prev.row < cur.row) {
-            cur.row--;
-        } else if (prev.row > cur.row) {
-            cur.row++;
-        } else if (prev.col > cur.col) {
-            cur.col++;
-        } else if (prev.col < cur.col) {
-            cur.col--;
-        }
-        maze_[cur.row][cur.col] |= builder_bit_;
-        build_path(cur.row, cur.col);
+        maze_[prev.row][prev.col] &= ~start_bit_;
+        join_squares(cur, prev);
         cur = prev;
         walk_stack.pop();
     }
@@ -208,16 +202,6 @@ void Thread_maze::erase_loop(std::stack<Point>& walk_stack) {
         maze_[back.row][back.col] &= ~start_bit_;
         walk_stack.pop();
         back = walk_stack.top();
-    }
-}
-
-void Thread_maze::place_start_finish() {
-    start_ = pick_random_point();
-    maze_[start_.row][start_.col] |= start_bit_;
-    int num_finishes = game_ == Maze_game::gather ? 4 : 1;
-    for (int placement = 0; placement < num_finishes; placement++) {
-        finish_ = pick_random_point();
-        maze_[finish_.row][finish_.col] |= finish_bit_;
     }
 }
 
@@ -245,46 +229,26 @@ void Thread_maze::generate_randomized_dfs_maze() {
         Point cur = dfs.top();
         build_path(cur.row, cur.col);
         maze_[cur.row][cur.col] |= builder_bit_;
+        // The unvisited neighbor is always random because array is re-shuffled each time.
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
 
-        // The unvisited neighbor is guaranteed to be random because array is shuffled every time.
-        Point random_neighbor = {};
-        for (const int& i : random_direction_indices) {
-            // Choose another square that is two spaces a way.
-            const Point& direction = generate_directions_[i];
-            Point next = {cur.row + direction.row, cur.col + direction.col};
-            if (next.row > 0 && next.row < maze_row_size_ - 1
-                        && next.col > 0 && next.col < maze_col_size_ - 1
-                            && !(maze_[next.row][next.col] & builder_bit_)) {
-                random_neighbor = next;
-                break;
+        /* A true depth first search needs to only push the current branch on the stack. The same
+         * is possible without a lambda but we then need extra logic to check if we push or pop.
+         */
+        [&] {
+            for (const int& i : random_direction_indices) {
+                const Point& direction = generate_directions_[i];
+                Point next = {cur.row + direction.row, cur.col + direction.col};
+                if (next.row > 0 && next.row < maze_row_size_ - 1
+                            && next.col > 0 && next.col < maze_col_size_ - 1
+                                && !(maze_[next.row][next.col] & builder_bit_)) {
+                    join_squares(cur, next);
+                    dfs.push(next);
+                    return;
+                }
             }
-        }
-
-        // We have seen all the neighbors for this current square. Safe to pop()
-        if (!random_neighbor.row) {
             dfs.pop();
-            continue;
-        }
-
-        // Now we must break the wall between this two square jump.
-        if (random_neighbor.row < cur.row) {
-            cur.row--;
-        } else if (random_neighbor.row > cur.row) {
-            cur.row++;
-        } else if (random_neighbor.col < cur.col) {
-            cur.col--;
-        } else if (random_neighbor.col > cur.col) {
-            cur.col++;
-        } else {
-            std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
-        }
-        build_path(cur.row, cur.col);
-        // The maze generator leaves behind the builder bit to mark seen squares.
-        maze_[cur.row][cur.col] |= builder_bit_;
-        build_path(random_neighbor.row, random_neighbor.col);
-        maze_[random_neighbor.row][random_neighbor.col] |= builder_bit_;
-        dfs.push(random_neighbor);
+        }();
     }
 }
 
@@ -301,7 +265,6 @@ void Thread_maze::generate_randomized_grid() {
      * force the algorithm to keep running in the random direction it chooses for run_limit amount.
      * Shorter run_limits converge on normal depth first search, longer create longer straights.
      */
-    const int run_limit = 4;
     start_ = {row_random_(generator_), col_random_(generator_)};
     std::stack<Point> dfs({start_});
     std::vector<int> random_direction_indices(generate_directions_.size());
@@ -312,57 +275,84 @@ void Thread_maze::generate_randomized_grid() {
         build_path(cur.row, cur.col);
         maze_[cur.row][cur.col] |= builder_bit_;
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
-
-        // The unvisited neighbor is guaranteed to be random because array is shuffled every time.
-        Point random_direction = {};
-        Point random_neighbor = {};
-        for (const int& i : random_direction_indices) {
-            // Choose another square that is two spaces a way.
-            const Point& direction = generate_directions_[i];
-            Point next = {cur.row + direction.row, cur.col + direction.col};
-            if (next.row > 0 && next.row < maze_row_size_ - 1
-                        && next.col > 0 && next.col < maze_col_size_ - 1
-                            && !(maze_[next.row][next.col] & builder_bit_)) {
-                random_neighbor = next;
-                random_direction = direction;
-                break;
+        [&] {
+            // The unvisited neighbor is guaranteed to be random because array is shuffled every time.
+            for (const int& i : random_direction_indices) {
+                // Choose another square that is two spaces a way.
+                const Point& direction = generate_directions_[i];
+                Point next = {cur.row + direction.row, cur.col + direction.col};
+                if (next.row > 0 && next.row < maze_row_size_ - 1
+                            && next.col > 0 && next.col < maze_col_size_ - 1
+                                && !(maze_[next.row][next.col] & builder_bit_)) {
+                    complete_run(dfs, cur, direction);
+                    return;
+                }
             }
-        }
-
-        if (!random_neighbor.row) {
             dfs.pop();
-            continue;
-        }
-        // Use random_direction and cur_step so I can invariantly add to rows AND columns in loop.
-        Point cur_step = {};
-        if (random_direction.row == -2) {
-            cur_step = {-1,0};
-        } else if (random_direction.col == 2) {
-            cur_step = {0,1};
-        } else if (random_direction.row == 2) {
-            cur_step = {1,0};
-        } else if (random_direction.col == -2) {
-            cur_step = {0,-1};
-        }
-
-        // Create the "grid" appearance by running in one direction until a wall or limit hit.
-        int cur_run = 0;
-        while (random_neighbor.row < maze_row_size_ - 1 && random_neighbor.col < maze_col_size_ - 1
-                    && random_neighbor.row > 0 && random_neighbor.col > 0 && cur_run < run_limit) {
-            cur.row += cur_step.row;
-            cur.col += cur_step.col;
-            build_path(cur.row, cur.col);
-            maze_[cur.row][cur.col] |= builder_bit_;
-            cur = random_neighbor;
-
-            build_path(random_neighbor.row, random_neighbor.col);
-            maze_[random_neighbor.row][random_neighbor.col] |= builder_bit_;
-            dfs.push(random_neighbor);
-            random_neighbor.row += random_direction.row;
-            random_neighbor.col += random_direction.col;
-            cur_run++;
-        }
+        }();
     }
+}
+
+void Thread_maze::complete_run(std::stack<Point>& dfs, Point cur, const Point& direction) {
+    const int run_limit = 4;
+    Point next = {cur.row + direction.row, cur.col + direction.col};
+    Point cur_step = {};
+    if (direction.row == -2) {
+        cur_step = {-1,0};
+    } else if (direction.col == 2) {
+        cur_step = {0,1};
+    } else if (direction.row == 2) {
+        cur_step = {1,0};
+    } else if (direction.col == -2) {
+        cur_step = {0,-1};
+    }
+    // Create the "grid" by running in one direction until wall or limit.
+    int cur_run = 0;
+    while (next.row < maze_row_size_ - 1  && next.col < maze_col_size_ - 1
+                && next.row > 0 && next.col > 0 && cur_run < run_limit) {
+        cur.row += cur_step.row;
+        cur.col += cur_step.col;
+        build_path(cur.row, cur.col);
+        maze_[cur.row][cur.col] |= builder_bit_;
+        cur = next;
+
+        build_path(next.row, next.col);
+        maze_[next.row][next.col] |= builder_bit_;
+        dfs.push(next);
+        next.row += direction.row;
+        next.col += direction.col;
+        cur_run++;
+    }
+}
+
+void Thread_maze::place_start_finish() {
+    start_ = pick_random_point();
+    maze_[start_.row][start_.col] |= start_bit_;
+    int num_finishes = game_ == Maze_game::gather ? 4 : 1;
+    for (int placement = 0; placement < num_finishes; placement++) {
+        finish_ = pick_random_point();
+        maze_[finish_.row][finish_.col] |= finish_bit_;
+    }
+}
+
+void Thread_maze::join_squares(const Point& cur, const Point& next) {
+    if (next.row < cur.row) {
+        build_path(cur.row - 1, cur.col);
+        maze_[cur.row - 1][cur.col] |= builder_bit_;
+    } else if (next.row > cur.row) {
+        build_path(cur.row + 1, cur.col);
+        maze_[cur.row + 1][cur.col] |= builder_bit_;
+    } else if (next.col < cur.col) {
+        build_path(cur.row, cur.col - 1);
+        maze_[cur.row][cur.col - 1] |= builder_bit_;
+    } else if (next.col > cur.col) {
+        build_path(cur.row, cur.col + 1);
+        maze_[cur.row][cur.col + 1] |= builder_bit_;
+    } else {
+        std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
+    }
+    build_path(next.row, next.col);
+    maze_[next.row][next.col] |= builder_bit_;
 }
 
 void Thread_maze::build_wall(int row, int col) {

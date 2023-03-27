@@ -209,7 +209,9 @@ private:
     void connect_walk_to_maze(std::stack<Point>& walk_stack);
     void erase_loop(std::stack<Point>& walk_stack);
     void generate_randomized_grid();
+    void complete_run(std::stack<Point>& dfs, Point cur, const Point& direction);
     void generate_arena();
+    void join_squares(const Point& cur, const Point& next);
     void build_path(int row, int col);
     void build_wall(int row, int col);
     void add_modification(int row, int col);
