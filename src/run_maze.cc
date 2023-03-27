@@ -126,6 +126,10 @@ void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
             print_usage();
             std::abort();
         }
+    } else {
+        std::cerr << "Invalid flag past the first defense? " << flag << std::endl;
+        print_usage();
+        std::abort();
     }
 }
 

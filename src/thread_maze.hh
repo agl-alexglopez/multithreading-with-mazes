@@ -120,8 +120,8 @@ private:
         },
         {
             // Same but with rounded corners.
-            "●",    "╵",     "╶",    "╰",    "╷",    "│",    "╭",    "├",
-            "╴",    "╯",     "─",    "┴",    "╮",    "┤",    "┬",    "┼"
+                "●",    "╵",     "╶",    "╰",    "╷",    "│",    "╭",    "├",
+                "╴",    "╯",     "─",    "┴",    "╮",    "┤",    "┬",    "┼"
         }}
     };
 
@@ -186,6 +186,11 @@ private:
         { {1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1} }
     };
 
+    enum class Wilson_point {
+        even,
+        odd,
+    };
+
     Builder_algorithm builder_;
     Maze_modification modification_;
     Solver_algorithm solver_;
@@ -215,16 +220,16 @@ private:
     void build_path(int row, int col);
     void build_wall(int row, int col);
     void add_modification(int row, int col);
-    Point choose_arbitrary_point() const;
+    Point choose_arbitrary_point(Wilson_point start) const;
     void solve_with_dfs_threads();
     void solve_with_randomized_dfs_threads();
     void solve_with_bfs_threads();
-    bool dfs_thread_hunt(Point start, int thread_index, Thread_maze::Thread_paint thread_bit);
-    bool randomized_dfs_thread_hunt(Point start, int thread_index, Thread_paint thread_bit);
-    bool dfs_thread_gather(Point start, int thread_index, Thread_maze::Thread_paint thread_bit);
-    bool randomized_dfs_thread_gather(Point start, int thread_index, Thread_paint thread_bit);
-    bool bfs_thread_hunt(Point start, int thread_index, Thread_maze::Thread_paint thread_bit);
-    bool bfs_thread_gather(Point start, int thread_index, Thread_maze::Thread_paint thread_bit);
+    bool dfs_thread_hunt(Point start, int thread_index, Thread_maze::Thread_paint paint);
+    bool randomized_dfs_thread_hunt(Point start, int thread_index, Thread_paint paint);
+    bool dfs_thread_gather(Point start, int thread_index, Thread_maze::Thread_paint paint);
+    bool randomized_dfs_thread_gather(Point start, int thread_index, Thread_paint paint);
+    bool bfs_thread_hunt(Point start, int thread_index, Thread_maze::Thread_paint paint);
+    bool bfs_thread_gather(Point start, int thread_index, Thread_maze::Thread_paint paint);
     void place_start_finish();
     Point pick_random_point();
     Point find_nearest_square(Point choice);
