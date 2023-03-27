@@ -596,7 +596,7 @@ bool Thread_maze::randomized_dfs_thread_hunt(Point start, int thread_index, Thre
             maze_mutex_.unlock();
             result = tie_break;
             dfs.pop();
-            break;
+            return;
         }
         maze_mutex_.lock();
         maze_[cur.row][cur.col] |= seen;
