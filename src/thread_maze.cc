@@ -161,7 +161,7 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         /* C++ does not allow named loop breaks and this says what I want directly rather than
          * adding a break and odd if branch to see if we should push or pop from the stack. You
-         * may see this nested lambda style whenever I want an O(branch depth) recursive search.
+         * may see this nested lambda style when I want to simplify the push or pop logic.
          */
         [&] {
             for (const int& i : random_direction_indices) {
