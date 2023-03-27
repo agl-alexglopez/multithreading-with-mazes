@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <unordered_map>
 #include <vector>
 #include <string_view>
 #include <unordered_set>
@@ -8,6 +9,37 @@
 const std::unordered_set<std::string> argument_flags = {
     "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m",
 };
+
+const std::unordered_map<std::string,Thread_maze::Builder_algorithm> builder_table = {
+    {"random-df", Thread_maze::Builder_algorithm::randomized_depth_first},
+    {"loop-erase", Thread_maze::Builder_algorithm::randomized_loop_erased},
+    {"random-grid", Thread_maze::Builder_algorithm::randomized_grid},
+    {"arena", Thread_maze::Builder_algorithm::arena},
+};
+
+const std::unordered_map<std::string,Thread_maze::Maze_modification> modification_table = {
+    {"none", Thread_maze::Maze_modification::none},
+    {"cross", Thread_maze::Maze_modification::add_cross},
+    {"x", Thread_maze::Maze_modification::add_x},
+};
+
+const std::unordered_map<std::string,Thread_maze::Solver_algorithm> solver_table = {
+    {"dfs", Thread_maze::Solver_algorithm::depth_first_search},
+    {"dfs-random", Thread_maze::Solver_algorithm::randomized_depth_first_search},
+    {"bfs", Thread_maze::Solver_algorithm::randomized_depth_first_search},
+};
+
+const std::unordered_map<std::string,Thread_maze::Maze_style> style_table = {
+    {"sharp", Thread_maze::Maze_style::sharp},
+    {"round", Thread_maze::Maze_style::round},
+    {"doubles", Thread_maze::Maze_style::doubles},
+};
+
+const std::unordered_map<std::string,Thread_maze::Maze_game> game_table = {
+    {"hunt", Thread_maze::Maze_game::hunt},
+    {"gather", Thread_maze::Maze_game::gather},
+};
+
 
 void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
                       std::string_view flag,
@@ -57,7 +89,7 @@ void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
         if (maze_args.odd_rows % 2 == 0) {
             maze_args.odd_rows++;
         }
-        if (maze_args.odd_rows < 7 || maze_args.odd_cols < 7) {
+        if (maze_args.odd_rows < 7) {
             std::cerr << "Smallest maze possible is 7x7" << std::endl;
             std::abort();
         }
@@ -71,61 +103,45 @@ void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
             std::abort();
         }
     } else if (flag == "-b") {
-        if (arg == "random-df") {
-            maze_args.builder = Thread_maze::Builder_algorithm::randomized_depth_first;
-        } else if (arg == "loop-erase"){
-            maze_args.builder = Thread_maze::Builder_algorithm::randomized_loop_erased;
-        } else if (arg == "random-grid"){
-            maze_args.builder = Thread_maze::Builder_algorithm::randomized_grid;
-        } else if (arg == "arena") {
-            maze_args.builder = Thread_maze::Builder_algorithm::arena;
-        } else {
+        const auto found = builder_table.find(arg.data());
+        if (found == builder_table.end()) {
             std::cerr << "Invalid builder argument: " << arg << std::endl;
             print_usage();
             std::abort();
         }
+        maze_args.builder = found->second;
     } else if (flag == "-m") {
-        if (arg == "cross") {
-            maze_args.modification = Thread_maze::Maze_modification::add_cross;
-        } else if (arg == "x") {
-            maze_args.modification = Thread_maze::Maze_modification::add_x;
-        } else {
+        const auto found = modification_table.find(arg.data());
+        if (found == modification_table.end()) {
             std::cerr << "Invalid modification argument: " << arg << std::endl;
             print_usage();
             std::abort();
         }
+        maze_args.modification = found->second;
     } else if (flag == "-s") {
-        if (arg == "dfs") {
-            maze_args.solver = Thread_maze::Solver_algorithm::depth_first_search;
-        } else if (arg == "dfs-random") {
-            maze_args.solver = Thread_maze::Solver_algorithm::randomized_depth_first_search;
-        } else if (arg == "bfs") {
-            maze_args.solver = Thread_maze::Solver_algorithm::breadth_first_search;
-        } else {
+        const auto found = solver_table.find(arg.data());
+        if (found == solver_table.end()) {
             std::cerr << "Invalid solver argument: " << arg << std::endl;
             print_usage();
             std::abort();
         }
+        maze_args.solver = found->second;
     } else if (flag == "-g") {
-        if (arg == "hunt") {
-            maze_args.game = Thread_maze::Maze_game::hunt;
-        } else if (arg == "gather") {
-            maze_args.game = Thread_maze::Maze_game::gather;
-        } else {
-            std::cerr << "Invalid solver argument: " << arg << std::endl;
+        const auto found = game_table.find(arg.data());
+        if (found == game_table.end()) {
+            std::cerr << "Invalid game argument: " << arg << std::endl;
             print_usage();
             std::abort();
         }
+        maze_args.game = found->second;
     } else if (flag == "-d") {
-        if (arg == "standard") {
-            maze_args.style = Thread_maze::Maze_style::standard;
-        } else if (arg == "round") {
-            maze_args.style = Thread_maze::Maze_style::rounded;
-        } else {
-            std::cerr << "Invalid solver argument: " << arg << std::endl;
+        const auto found = style_table.find(arg.data());
+        if (found == style_table.end()) {
+            std::cerr << "Invalid drawing argument: " << arg << std::endl;
             print_usage();
             std::abort();
         }
+        maze_args.style = found->second;
     } else {
         std::cerr << "Invalid flag past the first defense? " << flag << std::endl;
         print_usage();
@@ -141,7 +157,7 @@ void print_usage() {
               << "│  Use flags, followed by arguments, in any order:     │\n"
               << "│                                                      │\n"
               << "│  -r Rows flag. Set rows for the maze.                │\n"
-              << "│      Any number > 5. Zoom out for larger mazes!      │\n"
+              << "│      Any number > 7. Zoom out for larger mazes!      │\n"
               << "│  -c Columns flag. Set columns for the maze.          │\n"
               << "│      Any number > 7. Zoom out for larger mazes!      │\n"
               << "│  -b Builder flag. Set maze building algorithm.       │\n"
@@ -154,14 +170,15 @@ void print_usage() {
               << "│      x - Add an x of crossing paths through center.  │\n"
               << "│  -s Solver flag. Set maze solving algorithm.         │\n"
               << "│      dfs - Depth First Search                        │\n"
-              << "│      dfs-random - Randomized Breadth First Search    │\n"
+              << "│      dfs-random - Randomized Depth First Search      │\n"
               << "│      bfs - Breadth First Search                      │\n"
               << "│  -g Game flag. Set the game for the threads to play. │\n"
               << "│      hunt - 4 threads race to find one finish.       │\n"
               << "│      gather - 4 threads gather 4 finish squares.     │\n"
               << "│  -d Draw flag. Set the line style for the maze.      │\n"
-              << "│      standard - The default straight lines.          │\n"
+              << "│      sharp - The default straight lines.             │\n"
               << "│      round - Rounded corners.                        │\n"
+              << "│      doubles - Rounded corners.                      │\n"
               << "│  -h Help flag. Make this prompt appear.              │\n"
               << "│      No arguments.                                   │\n"
               << "│                                                      │\n"

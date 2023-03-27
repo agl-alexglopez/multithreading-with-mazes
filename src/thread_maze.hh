@@ -42,8 +42,9 @@ public:
     };
 
     enum class Maze_style {
-        standard=0,
-        rounded,
+        sharp=0,
+        round,
+        doubles,
     };
 
     struct Packaged_args {
@@ -53,7 +54,7 @@ public:
         Maze_modification modification = Maze_modification::none;
         Solver_algorithm solver = Solver_algorithm::depth_first_search;
         Maze_game game = Maze_game::hunt;
-        Maze_style style = Maze_style::standard;
+        Maze_style style = Maze_style::sharp;
     };
 
     struct Point {
@@ -110,7 +111,7 @@ private:
     /* Walls are constructed in terms of other walls they need to connect to. For example, read
      * 0b0011 as, "this is a wall square that must connect to other walls to the East and North."
      */
-    static constexpr std::array<const std::array<const char *const,16>,2> wall_styles_ = {
+    static constexpr std::array<const std::array<const char *const,16>,3> wall_styles_ = {
         {{
             // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall with no walls around.
             // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
@@ -122,6 +123,11 @@ private:
             // Same but with rounded corners.
                 "●",    "╵",     "╶",    "╰",    "╷",    "│",    "╭",    "├",
                 "╴",    "╯",     "─",    "┴",    "╮",    "┤",    "┬",    "┼"
+        },
+        {
+            // Same but with double lines.
+                "◫",    "║",     "═",    "╚",    "║",    "║",    "╔",    "╠",
+                "═",    "╝",     "═",    "╩",    "╗",    "╣",    "╦",    "╬"
         }}
     };
 
