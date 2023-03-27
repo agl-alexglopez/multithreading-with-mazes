@@ -612,7 +612,7 @@ bool Thread_maze::randomized_dfs_thread_hunt(Point start, int thread_index, Thre
                         && (maze_[next.row][next.col] & path_bit_)) {
                     maze_mutex_.unlock();
                     dfs.push(next);
-                    break;
+                    return;
                 }
                 maze_mutex_.unlock();
             }
