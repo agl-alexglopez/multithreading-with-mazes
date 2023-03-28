@@ -33,7 +33,9 @@ Thread_maze::Thread_maze(const Thread_maze::Packaged_args& args)
     for (int row = 0; row < maze_row_size_; row++) {
         for (int col = 0; col < maze_col_size_; col++) {
             build_wall(row, col);
-            add_modification(row, col);
+            if (builder_ != Builder_algorithm::randomized_fractal) {
+                add_modification(row, col);
+            }
         }
     }
     // If threads need to rely on heap for thread safe resizing, we slow parallelism.
@@ -109,6 +111,14 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game) {
         generate_randomized_grid();
     } else if (algorithm == Builder_algorithm::randomized_fractal) {
         generate_randomized_fractal_maze();
+        // Fractal starts with paths and builds walls so add mods after.
+        if (modification_ != Maze_modification::none) {
+            for (int row = 0; row < maze_row_size_; row++) {
+                for (int col = 0; col < maze_col_size_; col++) {
+                    add_modification(row, col);
+                }
+            }
+        }
     } else {
         std::cerr << "Builder algorithm not set? Check for new builder algorithm." << std::endl;
         std::abort();
@@ -290,7 +300,7 @@ void Thread_maze::generate_randomized_fractal_maze() {
      */
 
     auto choose_division = [&](int axis_limit) -> int {
-        std::uniform_int_distribution divider(1, axis_limit - 2);
+        std::uniform_int_distribution<int> divider(1, axis_limit - 2);
         int divide = divider(generator_);
         if (divide % 2 != 0) {
             divide++;
@@ -302,7 +312,7 @@ void Thread_maze::generate_randomized_fractal_maze() {
     };
 
     auto choose_passage = [&](int axis_limit) -> int {
-        std::uniform_int_distribution random_passage(1, axis_limit - 2);
+        std::uniform_int_distribution<int> random_passage(1, axis_limit - 2);
         int passage = random_passage(generator_);
         if (passage % 2 == 0) {
             passage++;

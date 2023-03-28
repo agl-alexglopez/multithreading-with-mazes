@@ -11,11 +11,11 @@ const std::unordered_set<std::string> argument_flags = {
 };
 
 const std::unordered_map<std::string,Thread_maze::Builder_algorithm> builder_table = {
-    {"random-df", Thread_maze::Builder_algorithm::randomized_depth_first},
-    {"loop-erase", Thread_maze::Builder_algorithm::randomized_loop_erased},
-    {"random-grid", Thread_maze::Builder_algorithm::randomized_grid},
-    {"arena", Thread_maze::Builder_algorithm::arena},
+    {"rdfs", Thread_maze::Builder_algorithm::randomized_depth_first},
+    {"wilson", Thread_maze::Builder_algorithm::randomized_loop_erased},
     {"fractal", Thread_maze::Builder_algorithm::randomized_fractal},
+    {"grid", Thread_maze::Builder_algorithm::randomized_grid},
+    {"arena", Thread_maze::Builder_algorithm::arena},
 };
 
 const std::unordered_map<std::string,Thread_maze::Maze_modification> modification_table = {
@@ -26,7 +26,7 @@ const std::unordered_map<std::string,Thread_maze::Maze_modification> modificatio
 
 const std::unordered_map<std::string,Thread_maze::Solver_algorithm> solver_table = {
     {"dfs", Thread_maze::Solver_algorithm::depth_first_search},
-    {"dfs-random", Thread_maze::Solver_algorithm::randomized_depth_first_search},
+    {"rdfs", Thread_maze::Solver_algorithm::randomized_depth_first_search},
     {"bfs", Thread_maze::Solver_algorithm::breadth_first_search},
 };
 
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
             } else {
                 const auto& found_arg = argument_flags.find(arg.data());
                 if (found_arg == argument_flags.end()) {
-                    std::cerr << "Invalid argument parameter: " << arg << std::endl;
+                    std::cerr << "Invalid argument flag: " << arg << std::endl;
                     print_usage();
                     std::abort();
                 }
@@ -162,16 +162,17 @@ void print_usage() {
               << "│  -c Columns flag. Set columns for the maze.          │\n"
               << "│      Any number > 7. Zoom out for larger mazes!      │\n"
               << "│  -b Builder flag. Set maze building algorithm.       │\n"
-              << "│      random-df - Randomized Depth First Search.      │\n"
-              << "│      loop-erase - Loop-Erased Random Walk.           │\n"
-              << "│      random-grid - A random grid pattern.            │\n"
+              << "│      rdfs - Randomized Depth First Search.           │\n"
+              << "│      wilson - Loop-Erased Random Walk.               │\n"
+              << "│      fractal - Randomized recursive subdivision.     │\n"
+              << "│      grid - A random grid pattern.                   │\n"
               << "│      arena - Open floor with no walls.               │\n"
               << "│  -m Modification flag. Add shortcuts to the maze.    │\n"
               << "│      cross - Add crossroads through the center.      │\n"
               << "│      x - Add an x of crossing paths through center.  │\n"
               << "│  -s Solver flag. Set maze solving algorithm.         │\n"
               << "│      dfs - Depth First Search                        │\n"
-              << "│      dfs-random - Randomized Depth First Search      │\n"
+              << "│      rdfs - Randomized Depth First Search            │\n"
               << "│      bfs - Breadth First Search                      │\n"
               << "│  -g Game flag. Set the game for the threads to play. │\n"
               << "│      hunt - 4 threads race to find one finish.       │\n"
@@ -189,6 +190,7 @@ void print_usage() {
               << "│  ./run_maze                                          │\n"
               << "│  ./run_maze -r 51 -c 111 -b random-dfs -s bfs -hunt  │\n"
               << "│  ./run_maze -c 111 -s bfs -gather                    │\n"
+              << "│  ./run_maze -s dfs -m x -d round -b fractal          │\n"
               << "│                                                      │\n"
               << "└──────────────────────────────────────────────────────┘\n";
     std::cout << std::endl;
