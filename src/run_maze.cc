@@ -15,6 +15,7 @@ const std::unordered_map<std::string,Thread_maze::Builder_algorithm> builder_tab
     {"loop-erase", Thread_maze::Builder_algorithm::randomized_loop_erased},
     {"random-grid", Thread_maze::Builder_algorithm::randomized_grid},
     {"arena", Thread_maze::Builder_algorithm::arena},
+    {"fractal", Thread_maze::Builder_algorithm::randomized_fractal},
 };
 
 const std::unordered_map<std::string,Thread_maze::Maze_modification> modification_table = {
@@ -26,7 +27,7 @@ const std::unordered_map<std::string,Thread_maze::Maze_modification> modificatio
 const std::unordered_map<std::string,Thread_maze::Solver_algorithm> solver_table = {
     {"dfs", Thread_maze::Solver_algorithm::depth_first_search},
     {"dfs-random", Thread_maze::Solver_algorithm::randomized_depth_first_search},
-    {"bfs", Thread_maze::Solver_algorithm::randomized_depth_first_search},
+    {"bfs", Thread_maze::Solver_algorithm::breadth_first_search},
 };
 
 const std::unordered_map<std::string,Thread_maze::Maze_style> style_table = {

@@ -4,7 +4,9 @@
 #include <iomanip>
 #include <cstdint>
 #include <cstdlib>
+#include <ios>
 #include <random>
+#include <tuple>
 #include <stack>
 #include <queue>
 #include <iostream>
@@ -28,7 +30,6 @@ Thread_maze::Thread_maze(const Thread_maze::Packaged_args& args)
       start_({0,0}),
       finish_({0,0}),
       escape_path_index_(-1) {
-
     for (int row = 0; row < maze_row_size_; row++) {
         for (int col = 0; col < maze_col_size_; col++) {
             build_wall(row, col);
@@ -106,6 +107,8 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game) {
         generate_arena();
     } else if (algorithm == Builder_algorithm::randomized_grid) {
         generate_randomized_grid();
+    } else if (algorithm == Builder_algorithm::randomized_fractal) {
+        generate_randomized_fractal_maze();
     } else {
         std::cerr << "Builder algorithm not set? Check for new builder algorithm." << std::endl;
         std::abort();
@@ -159,9 +162,9 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
         maze_[cur.row][cur.col] |= start_bit_;
 
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
-        /* C++ does not allow named loop breaks and this says what I want directly rather than
-         * adding a break and odd if branch to see if we should push or pop from the stack. You
-         * may see this nested lambda style when I want to simplify the push or pop logic.
+        /* C++ does not allow named loop breaks/continues. This says what I want directly rather
+         * than adding a break and annoying logic to see if we should push or pop from the stack.
+         * You may see this nested lambda style when I want to simplify the push/pop logic.
          */
         [&] {
             for (const int& i : random_direction_indices) {
@@ -253,19 +256,146 @@ void Thread_maze::generate_randomized_dfs_maze() {
     }
 }
 
-void Thread_maze::generate_arena() {
-    for (int row = 2; row < maze_row_size_ - 2; row++) {
-        for (int col = 2; col < maze_col_size_ - 2; col++) {
+// I made an iterative implementation because I could only find recursive ones! mistake (*_*)
+void Thread_maze::generate_randomized_fractal_maze() {
+
+    /* So far these are only relevant functions to this algorithm. If they become useful elsewhere
+     * we can extract them out as member functions.
+     */
+
+    // All the other algorithms tunnel out passages. This one draws walls instead.
+    auto connect_wall = [&](int row, int col) {
+        Wall_line wall = 0b0;
+        if (row - 1 >= 0 && !(maze_[row - 1][col] & path_bit_)) {
+            wall |= north_wall_;
+            maze_[row - 1][col] |= south_wall_;
+        }
+        if (row + 1 < maze_row_size_ && !(maze_[row + 1][col] & path_bit_)) {
+            wall |= south_wall_;
+            maze_[row + 1][col] |= north_wall_;
+        }
+        if (col - 1 >= 0 && !(maze_[row][col - 1] & path_bit_)) {
+            wall |= west_wall_;
+            maze_[row][col - 1] |= east_wall_;
+        }
+        if (col + 1 < maze_col_size_ && !(maze_[row][col + 1] & path_bit_)) {
+            wall |= east_wall_;
+            maze_[row][col + 1] |= west_wall_;
+        }
+        maze_[row][col] |= wall;
+    };
+
+    /* All my squares are lumped together so wall logic must always be even and passage logic must
+     * but odd or vice versa. Change here if needed but they must not interfere with each other.
+     */
+
+    auto choose_division = [&](int axis_limit) -> int {
+        std::uniform_int_distribution divider(1, axis_limit - 2);
+        int divide = divider(generator_);
+        if (divide % 2 != 0) {
+            divide++;
+        }
+        if (divide >= axis_limit - 1) {
+            divide -= 2;
+        }
+        return divide;
+    };
+
+    auto choose_passage = [&](int axis_limit) -> int {
+        std::uniform_int_distribution random_passage(1, axis_limit - 2);
+        int passage = random_passage(generator_);
+        if (passage % 2 == 0) {
+            passage++;
+        }
+        if (passage >= axis_limit - 1) {
+            passage -= 2;
+        }
+        return passage;
+    };
+
+    for (int row = 1; row < maze_row_size_ - 1; row++) {
+        for (int col = 1; col < maze_col_size_ - 1; col++) {
             build_path(row, col);
+        }
+    }
+    int height = maze_row_size_;
+    int width = maze_col_size_;
+    // Our "recursion" is replaced by this state tuple in a stack. <starting corner,height,width>.
+    std::stack<std::tuple<Point,int,int>> division_stack({{{0,0},height,width}});
+    while (!division_stack.empty()) {
+        std::tuple<Point,int,int>& chamber = division_stack.top();
+        Point chamber_offset = std::get<0>(chamber);
+        int chamber_height = std::get<1>(chamber);
+        int chamber_width = std::get<2>(chamber);
+        if (chamber_height >= chamber_width && chamber_width > 3) {
+            int divide = choose_division(chamber_height);
+            int passage = choose_passage(chamber_width);
+            for (int col = 0; col < chamber_width; col++) {
+                if (col != passage) {
+                    maze_[chamber_offset.row + divide][chamber_offset.col + col] &= ~path_bit_;
+                    connect_wall(chamber_offset.row + divide, chamber_offset.col + col);
+                }
+            }
+            // It is important to remember to shrink the height before we continue down branch.
+            std::get<1>(chamber) = divide + 1;
+            Point offset = {chamber_offset.row + divide, chamber_offset.col};
+            division_stack.push(std::make_tuple(offset, chamber_height - divide, chamber_width));
+        } else if (chamber_width > chamber_height && chamber_height > 3){
+            int divide = choose_division(chamber_width);
+            int passage = choose_passage(chamber_height);
+            for (int row = 0; row < chamber_height; row++) {
+                if (row != passage) {
+                    maze_[chamber_offset.row + row][chamber_offset.col + divide] &= ~path_bit_;
+                    connect_wall(chamber_offset.row + row, chamber_offset.col + divide);
+                }
+            }
+            // In this case, we are shrinking the width.
+            std::get<2>(chamber) = divide + 1;
+            Point offset = {chamber_offset.row, chamber_offset.col + divide};
+            division_stack.push(std::make_tuple(offset, chamber_height, chamber_width - divide));
+        } else {
+            division_stack.pop();
         }
     }
 }
 
 void Thread_maze::generate_randomized_grid() {
-    /* This value is the key to this algorithm. It is simply a randomized depth first search but we
-     * force the algorithm to keep running in the random direction it chooses for run_limit amount.
-     * Shorter run_limits converge on normal depth first search, longer create longer straights.
-     */
+    auto complete_run = [&](std::stack<Point>& dfs, Point cur, const Point& direction) {
+        /* This value is the key to this algorithm. Simply a randomized depth first search but we
+         * force the algorithm to keep running in the random direction for limited amount.
+         * Shorter run_limits converge on normal depth first search, longer create longer straights.
+         */
+        const int run_limit = 4;
+        Point next = {cur.row + direction.row, cur.col + direction.col};
+        Point cur_step = {};
+        if (direction.row == -2) {
+            cur_step = {-1,0};
+        } else if (direction.col == 2) {
+            cur_step = {0,1};
+        } else if (direction.row == 2) {
+            cur_step = {1,0};
+        } else if (direction.col == -2) {
+            cur_step = {0,-1};
+        }
+        // Create the "grid" by running in one direction until wall or limit.
+        int cur_run = 0;
+        while (next.row < maze_row_size_ - 1  && next.col < maze_col_size_ - 1
+                    && next.row > 0 && next.col > 0 && cur_run < run_limit) {
+            cur.row += cur_step.row;
+            cur.col += cur_step.col;
+            build_path(cur.row, cur.col);
+            maze_[cur.row][cur.col] |= builder_bit_;
+            cur = next;
+
+            build_path(next.row, next.col);
+            maze_[next.row][next.col] |= builder_bit_;
+            dfs.push(next);
+            next.row += direction.row;
+            next.col += direction.col;
+            cur_run++;
+        }
+    };
+
     start_ = {row_random_(generator_), col_random_(generator_)};
     std::stack<Point> dfs({start_});
     std::vector<int> random_direction_indices(generate_directions_.size());
@@ -294,35 +424,11 @@ void Thread_maze::generate_randomized_grid() {
     }
 }
 
-void Thread_maze::complete_run(std::stack<Point>& dfs, Point cur, const Point& direction) {
-    const int run_limit = 4;
-    Point next = {cur.row + direction.row, cur.col + direction.col};
-    Point cur_step = {};
-    if (direction.row == -2) {
-        cur_step = {-1,0};
-    } else if (direction.col == 2) {
-        cur_step = {0,1};
-    } else if (direction.row == 2) {
-        cur_step = {1,0};
-    } else if (direction.col == -2) {
-        cur_step = {0,-1};
-    }
-    // Create the "grid" by running in one direction until wall or limit.
-    int cur_run = 0;
-    while (next.row < maze_row_size_ - 1  && next.col < maze_col_size_ - 1
-                && next.row > 0 && next.col > 0 && cur_run < run_limit) {
-        cur.row += cur_step.row;
-        cur.col += cur_step.col;
-        build_path(cur.row, cur.col);
-        maze_[cur.row][cur.col] |= builder_bit_;
-        cur = next;
-
-        build_path(next.row, next.col);
-        maze_[next.row][next.col] |= builder_bit_;
-        dfs.push(next);
-        next.row += direction.row;
-        next.col += direction.col;
-        cur_run++;
+void Thread_maze::generate_arena() {
+    for (int row = 2; row < maze_row_size_ - 2; row++) {
+        for (int col = 2; col < maze_col_size_ - 2; col++) {
+            build_path(row, col);
+        }
     }
 }
 
@@ -502,6 +608,23 @@ void Thread_maze::solve_with_bfs_threads() {
     for (std::thread& t : threads) {
         t.join();
     }
+    if (game_ == Maze_game::hunt) {
+        // It is cool to see the shortest path that the winning thread took to victory
+        Thread_paint winner_color = thread_masks_[escape_path_index_];
+        for (const Point& p : thread_paths_[escape_path_index_]) {
+            maze_[p.row][p.col] &= ~thread_mask_;
+            maze_[p.row][p.col] |= winner_color;
+        }
+    } else {
+        // Too chaotic to show all paths. So we will make a color flag near each finish.
+        int thread = 0;
+        for (const std::vector<Point>& path : thread_paths_) {
+            Thread_paint single_color = thread_masks_[thread++];
+            const Point& p = path.front();
+            maze_[p.row][p.col] &= ~thread_mask_;
+            maze_[p.row][p.col] |= single_color;
+        }
+    }
     print_solution_path();
 }
 
@@ -516,6 +639,7 @@ bool Thread_maze::dfs_thread_hunt(Point start, int thread_index, Thread_paint pa
     bool result = false;
     Point cur = start;
     while (!dfs.empty()) {
+        // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
         if (escape_path_index_ != -1) {
             result = false;
             break;
@@ -583,10 +707,7 @@ bool Thread_maze::randomized_dfs_thread_hunt(Point start, int thread_index, Thre
             result = false;
             break;
         }
-
-        // Don't pop() yet!
         cur = dfs.top();
-
         if (maze_[cur.row][cur.col] & finish_bit_) {
             maze_mutex_.lock();
             bool tie_break = escape_path_index_ == -1;
@@ -601,7 +722,6 @@ bool Thread_maze::randomized_dfs_thread_hunt(Point start, int thread_index, Thre
         maze_mutex_.lock();
         maze_[cur.row][cur.col] |= seen;
         maze_mutex_.unlock();
-
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         [&] {
             for (const int& i : random_direction_indices) {
@@ -619,7 +739,7 @@ bool Thread_maze::randomized_dfs_thread_hunt(Point start, int thread_index, Thre
             dfs.pop();
         }();
     }
-    // Another benefit of true depth first search is our stack holds path to exact location.
+
     while (!dfs.empty()) {
         cur = dfs.top();
         dfs.pop();
@@ -691,9 +811,7 @@ bool Thread_maze::randomized_dfs_thread_gather(Point start, int thread_index, Th
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
     while (!dfs.empty()) {
         cur = dfs.top();
-
         maze_mutex_.lock();
-        // We are the first thread to this finish! Claim it!
         if (maze_[cur.row][cur.col] & finish_bit_
                 && !(maze_[cur.row][cur.col] & cache_mask_)){
             maze_[cur.row][cur.col] |= seen;
@@ -702,10 +820,8 @@ bool Thread_maze::randomized_dfs_thread_gather(Point start, int thread_index, Th
             dfs.pop();
             break;
         }
-        // Shoot, another thread beat us here. Mark and move on to another finish.
         maze_[cur.row][cur.col] |= seen;
         maze_mutex_.unlock();
-        // Bias each thread's first choice towards orginal dispatch direction. More coverage.
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         [&] {
             for (const int& i : random_direction_indices) {
@@ -723,6 +839,7 @@ bool Thread_maze::randomized_dfs_thread_gather(Point start, int thread_index, Th
             dfs.pop();
         }();
     }
+
     while (!dfs.empty()) {
         cur = dfs.top();
         dfs.pop();
@@ -825,6 +942,7 @@ bool Thread_maze::bfs_thread_gather(Point start, int thread_index, Thread_paint 
         thread_paths_[thread_index].push_back(cur);
         cur = seen.at(cur);
     }
+    escape_path_index_ = thread_index;
     return result;
 }
 
@@ -845,6 +963,8 @@ void Thread_maze::print_solution_path() {
         std::cout << "Randomized Depth First Search\n";
     } else if (builder_ == Builder_algorithm::randomized_loop_erased) {
         std::cout << "Loop-Erased Random Walks\n";
+    } else if (builder_ == Builder_algorithm::randomized_fractal) {
+        std::cout << "Randomized Recursive Subdivision\n";
     } else if (builder_ == Builder_algorithm::randomized_grid) {
         std::cout << "Randomized Grid Runs\n";
     } else if (builder_ == Builder_algorithm::arena) {

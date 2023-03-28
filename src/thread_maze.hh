@@ -17,6 +17,7 @@ public:
     enum class Builder_algorithm {
         randomized_depth_first,
         randomized_loop_erased,
+        randomized_fractal,
         randomized_grid,
         arena,
     };
@@ -216,11 +217,13 @@ private:
     std::mutex maze_mutex_;
     void generate_maze(Builder_algorithm algorithm, Maze_game game);
     void generate_randomized_dfs_maze();
+    void generate_randomized_fractal_maze();
+    void divide_horizontally();
+    void divide_vertically();
     void generate_randomized_loop_erased_maze();
     void connect_walk_to_maze(std::stack<Point>& walk_stack);
     void erase_loop(std::stack<Point>& walk_stack);
     void generate_randomized_grid();
-    void complete_run(std::stack<Point>& dfs, Point cur, const Point& direction);
     void generate_arena();
     void join_squares(const Point& cur, const Point& next);
     void build_path(int row, int col);
