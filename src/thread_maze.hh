@@ -50,7 +50,7 @@ public:
         contrast,
     };
 
-    struct Packaged_args {
+    struct Maze_args {
         size_t odd_rows = 31;
         size_t odd_cols = 111;
         Builder_algorithm builder = Builder_algorithm::randomized_depth_first;
@@ -66,6 +66,29 @@ public:
     };
 
     /* Here is the scheme we will use to store tons of data in a square.
+     *
+     * When building the maze here is how we will use the available bits.
+     *
+     * wall structure----------------------||||
+     * ------------------------------------||||
+     * 0 direction bit-------------------| ||||
+     * 1 direction bit------------------|| ||||
+     * 2 direction bit-----------------||| ||||
+     * 3 unused bit-------------------|||| ||||
+     * -------------------------------|||| ||||
+     * 0 unused bit-----------------| |||| ||||
+     * 1 unused bit----------------|| |||| ||||
+     * 2 unused bit---------------||| |||| ||||
+     * 3 unused bit--------------|||| |||| ||||
+     * --------------------------|||| |||| ||||
+     * maze build bit----------| |||| |||| ||||
+     * maze paths bit---------|| |||| |||| ||||
+     * maze start bit--------||| |||| |||| ||||
+     * maze goals bit-------|||| |||| |||| ||||
+     *                    0b0000 0000 0000 0000
+     *
+     * The maze builder is responsible for zeroing out the direction bits as part of the
+     * building process. When solving the maze we adjust how we use the middle bits.
      *
      * wall structure----------------------||||
      * ------------------------------------||||
@@ -87,10 +110,11 @@ public:
      */
     using Square = uint16_t;
     using Wall_line = uint16_t;
+    using Path_marker = uint16_t;
     using Thread_paint = uint16_t;
     using Thread_cache = uint16_t;
 
-    Thread_maze(const Packaged_args& args);
+    Thread_maze(const Maze_args& args);
 
     void solve_maze(Solver_algorithm solver);
     void solve_maze();
@@ -109,7 +133,9 @@ private:
         odd,
     };
 
-    using Path_marker = uint16_t;
+    using Height = int;
+    using Width = int;
+
     static constexpr int marker_shift_ = 4;
     static constexpr Path_marker markers_mask_ = 0b1111'0000;
     static constexpr Path_marker is_origin_ =    0b0000'0000;

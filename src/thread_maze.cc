@@ -14,7 +14,7 @@
 #include <vector>
 
 
-Thread_maze::Thread_maze(const Thread_maze::Packaged_args& args)
+Thread_maze::Thread_maze(const Thread_maze::Maze_args& args)
     : builder_(args.builder),
       modification_(args.modification),
       solver_(args.solver),
@@ -129,7 +129,6 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game) {
 void Thread_maze::generate_randomized_loop_erased_maze() {
 
     // These functions are all very specific to this algorithm. Probably shouldn't be class members.
-
     auto choose_arbitrary_point = [&] (Thread_maze::Wilson_point start) -> Point {
         int init = start == Wilson_point::even ? 2 : 1;
         for (int row = init; row < maze_row_size_ - 1; row += 2) {
@@ -335,7 +334,7 @@ void Thread_maze::generate_randomized_dfs_maze() {
         }
         if (!branches_remain && cur != start_) {
             Path_marker dir = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
-            Point backtracking = backtracking_marks_[dir];
+            const Point& backtracking = backtracking_marks_[dir];
             Point next = {cur.row + backtracking.row, cur.col + backtracking.col};
             // We are using fields the threads will use later. Clean up.
             maze_[cur.row][cur.col] &= ~markers_mask_;
@@ -410,10 +409,10 @@ void Thread_maze::generate_randomized_fractal_maze() {
     int height = maze_row_size_;
     int width = maze_col_size_;
     // "Recursion" is replaced by tuple for each chamber. <chamber coordinates,height,width>.
-    std::stack<std::tuple<Point,int,int>> chamber_stack({{{0,0},height,width}});
+    std::stack<std::tuple<Point,Height,Width>> chamber_stack({{{0,0},height,width}});
     while (!chamber_stack.empty()) {
-        std::tuple<Point,int,int>& chamber = chamber_stack.top();
-        Point chamber_offset = std::get<0>(chamber);
+        std::tuple<Point,Height,Width>& chamber = chamber_stack.top();
+        const Point& chamber_offset = std::get<0>(chamber);
         int chamber_height = std::get<1>(chamber);
         int chamber_width = std::get<2>(chamber);
         if (chamber_height >= chamber_width && chamber_width > 3) {
@@ -449,6 +448,7 @@ void Thread_maze::generate_randomized_fractal_maze() {
 }
 
 void Thread_maze::generate_randomized_grid() {
+    // We need an explicit stack. We run over previous paths so in place directions don't work.
     auto complete_run = [&](std::stack<Point>& dfs, Point cur, const Point& direction) {
         /* This value is the key to this algorithm. Simply a randomized depth first search but we
          * force the algorithm to keep running in the random direction for limited amount.
@@ -456,27 +456,14 @@ void Thread_maze::generate_randomized_grid() {
          */
         const int run_limit = 4;
         Point next = {cur.row + direction.row, cur.col + direction.col};
-        Point cur_step = {};
-        if (direction.row == -2) {
-            cur_step = {-1,0};
-        } else if (direction.col == 2) {
-            cur_step = {0,1};
-        } else if (direction.row == 2) {
-            cur_step = {1,0};
-        } else if (direction.col == -2) {
-            cur_step = {0,-1};
-        }
         // Create the "grid" by running in one direction until wall or limit.
         int cur_run = 0;
         while (next.row < maze_row_size_ - 1  && next.col < maze_col_size_ - 1
                     && next.row > 0 && next.col > 0 && cur_run < run_limit) {
-            cur.row += cur_step.row;
-            cur.col += cur_step.col;
-            build_path(cur.row, cur.col);
             maze_[cur.row][cur.col] |= builder_bit_;
+            join_squares(cur, next);
             cur = next;
 
-            build_path(next.row, next.col);
             maze_[next.row][next.col] |= builder_bit_;
             dfs.push(next);
             next.row += direction.row;

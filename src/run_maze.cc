@@ -43,13 +43,13 @@ const std::unordered_map<std::string,Thread_maze::Maze_game> game_table = {
 };
 
 
-void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
+void set_relevant_arg(Thread_maze::Maze_args& maze_args,
                       std::string_view flag,
                       std::string_view arg);
 void print_usage();
 
 int main(int argc, char **argv) {
-    Thread_maze::Packaged_args maze_args = {};
+    Thread_maze::Maze_args maze_args = {};
     if (argc == 1) {
         Thread_maze maze(maze_args);
         maze.solve_maze();
@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void set_relevant_arg(Thread_maze::Packaged_args& maze_args,
+void set_relevant_arg(Thread_maze::Maze_args& maze_args,
                       std::string_view flag,
                       std::string_view arg) {
     if (flag == "-r") {
