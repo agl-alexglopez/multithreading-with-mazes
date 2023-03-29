@@ -1,5 +1,4 @@
 #include <iostream>
-#include <sstream>
 #include <unordered_map>
 #include <vector>
 #include <string_view>
@@ -34,6 +33,8 @@ const std::unordered_map<std::string,Thread_maze::Maze_style> style_table = {
     {"sharp", Thread_maze::Maze_style::sharp},
     {"round", Thread_maze::Maze_style::round},
     {"doubles", Thread_maze::Maze_style::doubles},
+    {"bold", Thread_maze::Maze_style::bold},
+    {"contrast", Thread_maze::Maze_style::contrast},
 };
 
 const std::unordered_map<std::string,Thread_maze::Maze_game> game_table = {
@@ -180,7 +181,9 @@ void print_usage() {
               << "│  -d Draw flag. Set the line style for the maze.      │\n"
               << "│      sharp - The default straight lines.             │\n"
               << "│      round - Rounded corners.                        │\n"
-              << "│      doubles - Rounded corners.                      │\n"
+              << "│      doubles - Sharp double lines.                   │\n"
+              << "│      bold - Thicker straight lines.                  │\n"
+              << "│      contrast - Full block width and height walls.   │\n"
               << "│  -h Help flag. Make this prompt appear.              │\n"
               << "│      No arguments.                                   │\n"
               << "│                                                      │\n"

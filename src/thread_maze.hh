@@ -46,6 +46,8 @@ public:
         sharp=0,
         round,
         doubles,
+        bold,
+        contrast,
     };
 
     struct Packaged_args {
@@ -129,8 +131,8 @@ private:
     /* Walls are constructed in terms of other walls they need to connect to. For example, read
      * 0b0011 as, "this is a wall square that must connect to other walls to the East and North."
      */
-    static constexpr std::array<const std::array<const char *const,16>,3> wall_styles_ = {
-        {{
+    static constexpr std::array<const std::array<const char *const,16>,5> wall_styles_ = {{
+        {
             // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall with no walls around.
             // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
                 "■",    "╵",     "╶",    "└",    "╷",    "│",    "┌",    "├",
@@ -146,8 +148,18 @@ private:
             // Same but with double lines.
                 "◫",    "║",     "═",    "╚",    "║",    "║",    "╔",    "╠",
                 "═",    "╝",     "═",    "╩",    "╗",    "╣",    "╦",    "╬"
-        }}
-    };
+        },
+        {
+            // Same but with bold lines.
+                "■",    "╹",     "╺",    "┗",    "╻",    "┃",    "┏",    "┣",
+                "╸",    "┛",     "━",    "┻",    "┓",    "┫",    "┳",    "╋"
+        },
+        {
+            // Simpler approach that creates well-connected high contrast black/white.
+                "█",    "█",     "█",    "█",    "█",    "█",    "█",    "█",
+                "█",    "█",     "█",    "█",    "█",    "█",    "█",    "█",
+        },
+    }};
 
     static constexpr Square builder_bit_ = 0b0001'0000'0000'0000;
     static constexpr Square path_bit_ =    0b0010'0000'0000'0000;

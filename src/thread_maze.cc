@@ -316,10 +316,11 @@ void Thread_maze::generate_randomized_dfs_maze() {
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
     Point cur = start_;
-    while (true) {
+    bool branches_remain = true;
+    while (branches_remain) {
         // The unvisited neighbor is always random because array is re-shuffled each time.
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
-        bool branches_remain = false;
+        branches_remain = false;
         for (const int& i : random_direction_indices) {
             const Point& direction = generate_directions_[i];
             Point next = {cur.row + direction.row, cur.col + direction.col};
@@ -332,15 +333,14 @@ void Thread_maze::generate_randomized_dfs_maze() {
                 break;
             }
         }
-        if (!branches_remain && start_ == cur) {
-            return;
-        } else if (!branches_remain) {
-            Path_marker direction = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
-            Point backtracking = backtracking_marks_[direction];
+        if (!branches_remain && cur != start_) {
+            Path_marker dir = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
+            Point backtracking = backtracking_marks_[dir];
             Point next = {cur.row + backtracking.row, cur.col + backtracking.col};
             // We are using fields the threads will use later. Clean up.
             maze_[cur.row][cur.col] &= ~markers_mask_;
             cur = next;
+            branches_remain = true;
         }
     }
 }
@@ -409,10 +409,10 @@ void Thread_maze::generate_randomized_fractal_maze() {
     }
     int height = maze_row_size_;
     int width = maze_col_size_;
-    // Our "recursion" is replaced by this state tuple in a stack. <starting corner,height,width>.
-    std::stack<std::tuple<Point,int,int>> division_stack({{{0,0},height,width}});
-    while (!division_stack.empty()) {
-        std::tuple<Point,int,int>& chamber = division_stack.top();
+    // "Recursion" is replaced by tuple for each chamber. <chamber coordinates,height,width>.
+    std::stack<std::tuple<Point,int,int>> chamber_stack({{{0,0},height,width}});
+    while (!chamber_stack.empty()) {
+        std::tuple<Point,int,int>& chamber = chamber_stack.top();
         Point chamber_offset = std::get<0>(chamber);
         int chamber_height = std::get<1>(chamber);
         int chamber_width = std::get<2>(chamber);
@@ -425,10 +425,10 @@ void Thread_maze::generate_randomized_fractal_maze() {
                     connect_wall(chamber_offset.row + divide, chamber_offset.col + col);
                 }
             }
-            // It is important to remember to shrink the height before we continue down branch.
+            // Remember to shrink height of this branch before we continue down next branch.
             std::get<1>(chamber) = divide + 1;
             Point offset = {chamber_offset.row + divide, chamber_offset.col};
-            division_stack.push(std::make_tuple(offset, chamber_height - divide, chamber_width));
+            chamber_stack.push(std::make_tuple(offset, chamber_height - divide, chamber_width));
         } else if (chamber_width > chamber_height && chamber_height > 3){
             int divide = choose_division(chamber_width);
             int passage = choose_passage(chamber_height);
@@ -441,9 +441,9 @@ void Thread_maze::generate_randomized_fractal_maze() {
             // In this case, we are shrinking the width.
             std::get<2>(chamber) = divide + 1;
             Point offset = {chamber_offset.row, chamber_offset.col + divide};
-            division_stack.push(std::make_tuple(offset, chamber_height, chamber_width - divide));
+            chamber_stack.push(std::make_tuple(offset, chamber_height, chamber_width - divide));
         } else {
-            division_stack.pop();
+            chamber_stack.pop();
         }
     }
 }
@@ -495,21 +495,23 @@ void Thread_maze::generate_randomized_grid() {
         build_path(cur.row, cur.col);
         maze_[cur.row][cur.col] |= builder_bit_;
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
-        [&] {
-            // Unvisited neighbor is always random because array is shuffled every time.
-            for (const int& i : random_direction_indices) {
-                // Choose another square that is two spaces a way.
-                const Point& direction = generate_directions_[i];
-                Point next = {cur.row + direction.row, cur.col + direction.col};
-                if (next.row > 0 && next.row < maze_row_size_ - 1
-                            && next.col > 0 && next.col < maze_col_size_ - 1
-                                && !(maze_[next.row][next.col] & builder_bit_)) {
-                    complete_run(dfs, cur, direction);
-                    return;
-                }
+        bool branches_remain = false;
+        // Unvisited neighbor is always random because array is shuffled every time.
+        for (const int& i : random_direction_indices) {
+            // Choose another square that is two spaces a way.
+            const Point& direction = generate_directions_[i];
+            Point next = {cur.row + direction.row, cur.col + direction.col};
+            if (next.row > 0 && next.row < maze_row_size_ - 1
+                        && next.col > 0 && next.col < maze_col_size_ - 1
+                            && !(maze_[next.row][next.col] & builder_bit_)) {
+                complete_run(dfs, cur, direction);
+                branches_remain = true;
+                break;
             }
+        }
+        if (!branches_remain) {
             dfs.pop();
-        }();
+        }
     }
 }
 
