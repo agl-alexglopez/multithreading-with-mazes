@@ -35,6 +35,7 @@ const std::unordered_map<std::string,Thread_maze::Maze_style> style_table = {
     {"doubles", Thread_maze::Maze_style::doubles},
     {"bold", Thread_maze::Maze_style::bold},
     {"contrast", Thread_maze::Maze_style::contrast},
+    {"spikes", Thread_maze::Maze_style::spikes},
 };
 
 const std::unordered_map<std::string,Thread_maze::Maze_game> game_table = {
@@ -184,6 +185,7 @@ void print_usage() {
               << "│      doubles - Sharp double lines.                   │\n"
               << "│      bold - Thicker straight lines.                  │\n"
               << "│      contrast - Full block width and height walls.   │\n"
+              << "│      spikes - Connected lines with spikes.           │\n"
               << "│  -h Help flag. Make this prompt appear.              │\n"
               << "│      No arguments.                                   │\n"
               << "│                                                      │\n"
