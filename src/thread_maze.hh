@@ -84,7 +84,7 @@ public:
      *                    0b0000 0000 0000 0000
      */
     using Square = uint16_t;
-    using Wall_line = uint8_t;
+    using Wall_line = uint16_t;
     using Thread_paint = uint16_t;
     using Thread_cache = uint16_t;
 
@@ -101,6 +101,23 @@ public:
     const std::vector<Square>& operator[](size_t index) const;
 
 private:
+
+    enum class Wilson_point {
+        even,
+        odd,
+    };
+
+    using Path_marker = uint16_t;
+    static constexpr int marker_shift_ = 4;
+    static constexpr Path_marker markers_mask_ = 0b1111'0000;
+    static constexpr Path_marker is_origin_ =    0b0000'0000;
+    static constexpr Path_marker from_north_ =   0b0001'0000;
+    static constexpr Path_marker from_east_ =    0b0010'0000;
+    static constexpr Path_marker from_south_ =   0b0011'0000;
+    static constexpr Path_marker from_west_ =    0b0100'0000;
+    static constexpr std::array<Point,5> backtracking_marks_ = {
+        {{0,0}, {-2,0}, {0,2}, {2,0}, {0,-2},}
+    };
 
     static constexpr Wall_line wall_mask_ =     0b1111;
     static constexpr Wall_line floating_wall_ = 0b0000;
@@ -193,11 +210,6 @@ private:
         { {1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1} }
     };
 
-    enum class Wilson_point {
-        even,
-        odd,
-    };
-
     Builder_algorithm builder_;
     Maze_modification modification_;
     Solver_algorithm solver_;
@@ -218,18 +230,15 @@ private:
     void generate_maze(Builder_algorithm algorithm, Maze_game game);
     void generate_randomized_dfs_maze();
     void generate_randomized_fractal_maze();
-    void divide_horizontally();
-    void divide_vertically();
     void generate_randomized_loop_erased_maze();
-    void connect_walk_to_maze(std::stack<Point>& walk_stack);
-    void erase_loop(std::stack<Point>& walk_stack);
+    void carve_path_walls(int row, int col);
+    void carve_path_markings(const Point& cur, const Point& next);
     void generate_randomized_grid();
     void generate_arena();
     void join_squares(const Point& cur, const Point& next);
     void build_path(int row, int col);
     void build_wall(int row, int col);
     void add_modification(int row, int col);
-    Point choose_arbitrary_point(Wilson_point start) const;
     void solve_with_dfs_threads();
     void solve_with_randomized_dfs_threads();
     void solve_with_bfs_threads();

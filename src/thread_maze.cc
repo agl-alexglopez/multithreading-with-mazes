@@ -127,142 +127,221 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game) {
 }
 
 void Thread_maze::generate_randomized_loop_erased_maze() {
+
+    // These functions are all very specific to this algorithm. Probably shouldn't be class members.
+
+    auto choose_arbitrary_point = [&] (Thread_maze::Wilson_point start) -> Point {
+        int init = start == Wilson_point::even ? 2 : 1;
+        for (int row = init; row < maze_row_size_ - 1; row += 2) {
+            for (int col = init; col < maze_col_size_ - 1; col += 2) {
+                Point cur = {row, col};
+                if (!(maze_[cur.row][cur.col] & builder_bit_)) {
+                    return cur;
+                }
+            }
+        }
+        return {0,0};
+    };
+
+    auto build_with_marks = [&] (const Point& cur, const Point& next) {
+        Point wall = cur;
+        carve_path_walls(cur.row, cur.col);
+        if (next.row < cur.row) {
+            wall.row--;
+        } else if (next.row > cur.row) {
+            wall.row++;
+        } else if (next.col < cur.col) {
+            wall.col--;
+        } else if (next.col > cur.col) {
+            wall.col++;
+        } else {
+            std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
+        }
+        // Be careful of the order here. Next then wall or wall alters the direction bits from next.
+        carve_path_walls(next.row, next.col);
+        carve_path_walls(wall.row, wall.col);
+    };
+
+    auto connect_walk_to_maze = [&] (const Point& walk) {
+        Point cur = walk;
+        while (maze_[cur.row][cur.col] & markers_mask_) {
+            // It is now desirable to run into this path as we complete future random walks.
+            maze_[cur.row][cur.col] &= ~start_bit_;
+            const Path_marker& mark = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
+            const Point& direction = backtracking_marks_[mark];
+            Point next = {cur.row + direction.row, cur.col + direction.col};
+            build_with_marks(cur, next);
+            // Clean up after ourselves and leave no marks behind for the maze solvers.
+            maze_[cur.row][cur.col] &= ~markers_mask_;
+            cur = next;
+        }
+        maze_[cur.row][cur.col] &= ~start_bit_;
+        maze_[cur.row][cur.col] &= ~markers_mask_;
+        carve_path_walls(cur.row, cur.col);
+    };
+
+    auto erase_loop = [&] (const Point& walk, const Point& loop_root) {
+        // We will forget we ever saw this loop as it may be part of a good walk later.
+        Point cur = walk;
+        while (cur != loop_root) {
+            maze_[cur.row][cur.col] &= ~start_bit_;
+            const Path_marker& mark = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
+            const Point& direction = backtracking_marks_[mark];
+            Point next = {cur.row + direction.row, cur.col + direction.col};
+            maze_[cur.row][cur.col] &= ~markers_mask_;
+            cur = next;
+        }
+    };
+
+    auto mark_origin = [&] (const Point& walk, const Point& next) {
+        if (next.row > walk.row) {
+            maze_[next.row][next.col] |= from_north_;
+        } else if (next.row < walk.row) {
+            maze_[next.row][next.col] |= from_south_;
+        } else if (next.col < walk.col) {
+            maze_[next.row][next.col] |= from_east_;
+        } else if (next.col > walk.col) {
+            maze_[next.row][next.col] |= from_west_;
+        }
+    };
+
     /* Important to remember that this maze builds by jumping two squares at a time. Therefore for
-     * Wilson's algorithm to work two points must both be even or both be odd to find each other.
+     * Wilson's algorithm to work two points must both be even or odd to find each other.
      */
     start_ = {maze_row_size_ / 2, maze_col_size_ / 2};
-    if (start_.row % 2 != 0) {
+    if (start_.row % 2 == 0) {
         start_.row++;
     }
-    if (start_.col % 2 != 0) {
+    if (start_.col % 2 == 0) {
         start_.col++;
     }
     build_path(start_.row, start_.col);
     maze_[start_.row][start_.col] |= builder_bit_;
-    Point maze_start = {2, 2};
-    std::stack<Point> walk_stack({maze_start});
+    Point walk = {1, 1};
+    maze_[walk.row][walk.col] &= ~markers_mask_;
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
+
     Point previous_square = {};
-    while (!walk_stack.empty()) {
-        Point cur = walk_stack.top();
-        // The builder bit is only given to squares that are established as part of maze paths.
-        if (maze_[cur.row][cur.col] & builder_bit_) {
-            connect_walk_to_maze(walk_stack);
-            cur = choose_arbitrary_point(Wilson_point::even);
-
-            // Important return. If we can't pick a point we are done.
-            if (!cur.row) {
-                return;
-            }
-
-            walk_stack.push(cur);
-            previous_square = {};
-        } else if (maze_[cur.row][cur.col] & start_bit_) {
-            erase_loop(walk_stack);
-            // Manage this detail so we don't accidentally walk backwards and do this again.
-            previous_square = {};
-            walk_stack.pop();
-            if (!walk_stack.empty()) {
-                previous_square = walk_stack.top();
-            }
-            walk_stack.push(cur);
-        }
+    while (true) {
         // Mark our progress on our current random walk. If we see this again we have looped.
-        maze_[cur.row][cur.col] |= start_bit_;
-
+        maze_[walk.row][walk.col] |= start_bit_;
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
-        /* C++ does not allow named loop breaks/continues. This says what I want directly rather
-         * than adding a break and annoying logic to see if we should push or pop from the stack.
-         * You may see this nested lambda style when I want to simplify the push/pop logic.
-         */
-        [&] {
-            for (const int& i : random_direction_indices) {
-                const Point& p = generate_directions_[i];
-                Point next = {cur.row + p.row, cur.col + p.col};
-                // Do not check for seen squares, only the direction we just came from.
-                if (next.row > 0 && next.row < maze_row_size_ - 1
-                            && next.col > 0 && next.col < maze_col_size_ - 1
-                                && next != previous_square) {
-                    previous_square = cur;
-                    walk_stack.push(next);
+        for (const int& i : random_direction_indices) {
+            const Point& p = generate_directions_[i];
+            Point next = {walk.row + p.row, walk.col + p.col};
+            // Do not check for seen squares, only valid moves and the direction we just came from.
+            if (next.row <= 0 || next.row >= maze_row_size_ - 1
+                        || next.col <= 0 || next.col >= maze_col_size_ - 1
+                            || next == previous_square) {
+                continue;
+            }
+
+            if (maze_[next.row][next.col] & builder_bit_) {
+                build_with_marks(walk, next);
+                connect_walk_to_maze(walk);
+                walk = choose_arbitrary_point(Wilson_point::odd);
+
+                // Important return! This is the only way out of the wilson algorithm.
+                if (!walk.row) {
                     return;
                 }
+
+                maze_[walk.row][walk.col] &= ~markers_mask_;
+                previous_square = {};
+            } else if (maze_[next.row][next.col] & start_bit_) {
+                erase_loop(walk, next);
+                walk = next;
+                previous_square = {};
+                const Path_marker& mark = (maze_[walk.row][walk.col] & markers_mask_) >> marker_shift_;
+                const Point& direction = backtracking_marks_[mark];
+                previous_square = {walk.row + direction.row, walk.col + direction.col};
+            } else {
+                mark_origin(walk, next);
+                previous_square = walk;
+                walk = next;
             }
-            walk_stack.pop();
-        }();
-    }
-}
-
-void Thread_maze::connect_walk_to_maze(std::stack<Point>& walk_stack) {
-    Point cur = walk_stack.top();
-    walk_stack.pop();
-    while (!walk_stack.empty()) {
-        Point prev = walk_stack.top();
-        // It is now desirable to run into this path as we complete future random walks.
-        maze_[prev.row][prev.col] &= ~start_bit_;
-        join_squares(cur, prev);
-        cur = prev;
-        walk_stack.pop();
-    }
-}
-
-void Thread_maze::erase_loop(std::stack<Point>& walk_stack) {
-    Point cur = walk_stack.top();
-    walk_stack.pop();
-    Point back = walk_stack.top();
-    // We will forget we ever saw this loop as it may be part of a good walk later.
-    while (back != cur) {
-        maze_[back.row][back.col] &= ~start_bit_;
-        walk_stack.pop();
-        back = walk_stack.top();
-    }
-}
-
-// Maze is built by jumping two squares at a time. Be careful to always be odd or even.
-Thread_maze::Point Thread_maze::choose_arbitrary_point(Wilson_point start) const {
-    int init = start == Wilson_point::even ? 2 : 1;
-    for (int row = init; row < maze_row_size_ - 1; row += 2) {
-        for (int col = init; col < maze_col_size_ - 1; col += 2) {
-            Point cur = {row, col};
-            if (!(maze_[cur.row][cur.col] & builder_bit_)) {
-                return cur;
-            }
+            break;
         }
     }
-    return {0,0};
+}
+
+void Thread_maze::carve_path_walls (int row, int col) {
+    maze_[row][col] |= path_bit_;
+    if (row - 1 >= 0) {
+        maze_[row - 1][col] &= ~south_wall_;
+    }
+    if (row + 1 < maze_row_size_) {
+        maze_[row + 1][col] &= ~north_wall_;
+    }
+    if (col - 1 >= 0) {
+        maze_[row][col - 1] &= ~east_wall_;
+    }
+    if (col + 1 < maze_col_size_) {
+        maze_[row][col + 1] &= ~west_wall_;
+    }
+    maze_[row][col] |= builder_bit_;
+}
+
+void Thread_maze::carve_path_markings (const Point& cur, const Point& next) {
+    Point wall = cur;
+    carve_path_walls(cur.row, cur.col);
+    if (next.row < cur.row) {
+        wall.row--;
+        maze_[next.row][next.col] |= from_south_;
+    } else if (next.row > cur.row) {
+        wall.row++;
+        maze_[next.row][next.col] |= from_north_;
+    } else if (next.col < cur.col) {
+        wall.col--;
+        maze_[next.row][next.col] |= from_east_;
+    } else if (next.col > cur.col) {
+        wall.col++;
+        maze_[next.row][next.col] |= from_west_;
+    } else {
+        std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
+    }
+    // Be careful of the order here. Next then wall or wall alters the direction bits from next.
+    carve_path_walls(next.row, next.col);
+    carve_path_walls(wall.row, wall.col);
 }
 
 void Thread_maze::generate_randomized_dfs_maze() {
+    /* Thanks the the bits that the maze provides, we only need O(1) auxillary storage to complete
+     * our recursive depth first search maze building. We will mark our current branch and complete
+     * any backtracking by leaving backtracking instructions in the bits of path squares.
+     */
     start_ = {row_random_(generator_), col_random_(generator_)};
-    std::stack<Point> dfs({start_});
+    maze_[start_.row][start_.col] &= ~markers_mask_;
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
-    while (!dfs.empty()) {
-        // Don't pop yet!
-        Point cur = dfs.top();
-        build_path(cur.row, cur.col);
-        maze_[cur.row][cur.col] |= builder_bit_;
+    Point cur = start_;
+    while (true) {
         // The unvisited neighbor is always random because array is re-shuffled each time.
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
-
-        /* A true depth first search needs to only push the current branch on the stack. The same
-         * is possible without a lambda but we then need extra logic to check if we push or pop.
-         */
-        [&] {
-            for (const int& i : random_direction_indices) {
-                const Point& direction = generate_directions_[i];
-                Point next = {cur.row + direction.row, cur.col + direction.col};
-                if (next.row > 0 && next.row < maze_row_size_ - 1
-                            && next.col > 0 && next.col < maze_col_size_ - 1
-                                && !(maze_[next.row][next.col] & builder_bit_)) {
-                    join_squares(cur, next);
-                    dfs.push(next);
-                    return;
-                }
+        bool branches_remain = false;
+        for (const int& i : random_direction_indices) {
+            const Point& direction = generate_directions_[i];
+            Point next = {cur.row + direction.row, cur.col + direction.col};
+            if (next.row > 0 && next.row < maze_row_size_ - 1
+                        && next.col > 0 && next.col < maze_col_size_ - 1
+                            && !(maze_[next.row][next.col] & builder_bit_)) {
+                branches_remain = true;
+                carve_path_markings(cur, next);
+                cur = next;
+                break;
             }
-            dfs.pop();
-        }();
+        }
+        if (!branches_remain && start_ == cur) {
+            return;
+        } else if (!branches_remain) {
+            Path_marker direction = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
+            Point backtracking = backtracking_marks_[direction];
+            Point next = {cur.row + backtracking.row, cur.col + backtracking.col};
+            // We are using fields the threads will use later. Clean up.
+            maze_[cur.row][cur.col] &= ~markers_mask_;
+            cur = next;
+        }
     }
 }
 
