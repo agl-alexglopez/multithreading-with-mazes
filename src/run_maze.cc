@@ -41,6 +41,7 @@ const std::unordered_map<std::string,Thread_maze::Maze_style> style_table = {
 const std::unordered_map<std::string,Thread_maze::Maze_game> game_table = {
     {"hunt", Thread_maze::Maze_game::hunt},
     {"gather", Thread_maze::Maze_game::gather},
+    {"corners", Thread_maze::Maze_game::corners},
 };
 
 

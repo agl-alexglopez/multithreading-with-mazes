@@ -40,6 +40,7 @@ public:
     enum class Maze_game {
         hunt,
         gather,
+        corners,
     };
 
     enum class Maze_style {
@@ -268,6 +269,7 @@ private:
     std::vector<std::vector<Point>> thread_paths_;
     Point start_;
     Point finish_;
+    std::array<Point,4> corner_starts_;
     int escape_path_index_;
     // I would rather have a maze of atomic ints, but I can't construct atomics at runtime.
     std::mutex maze_mutex_;

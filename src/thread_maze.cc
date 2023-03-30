@@ -1,5 +1,6 @@
 #include "thread_maze.hh"
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <iomanip>
 #include <cstdint>
@@ -511,12 +512,58 @@ void Thread_maze::generate_arena() {
 }
 
 void Thread_maze::place_start_finish() {
-    start_ = pick_random_point();
-    maze_[start_.row][start_.col] |= start_bit_;
-    int num_finishes = game_ == Maze_game::gather ? 4 : 1;
-    for (int placement = 0; placement < num_finishes; placement++) {
-        finish_ = pick_random_point();
-        maze_[finish_.row][finish_.col] |= finish_bit_;
+    if (game_ == Maze_game::corners) {
+        bool is_corner_set = false;
+        for (int row = 1; row < maze_row_size_ - 1 && !is_corner_set; row++) {
+            for (int col = 1; col < maze_col_size_ && !is_corner_set; col++) {
+                if (maze_[row][col] & path_bit_) {
+                    maze_[row][col] |= start_bit_;
+                    corner_starts_[0] = {row, col};
+                    is_corner_set = true;
+                }
+            }
+        }
+        is_corner_set = false;
+        for (int row = 1; row < maze_row_size_ - 1 && !is_corner_set; row++) {
+            for (int col = maze_col_size_ - 2; col > 0 && !is_corner_set; col--) {
+                if (maze_[row][col] & path_bit_) {
+                    maze_[row][col] |= start_bit_;
+                    corner_starts_[1] = {row, col};
+                    is_corner_set = true;
+                }
+            }
+        }
+        is_corner_set = false;
+        for (int row = maze_row_size_ - 2; row > 0 && !is_corner_set; row--) {
+            for (int col = 0; col < maze_col_size_ - 2 && !is_corner_set; col++) {
+                if (maze_[row][col] & path_bit_) {
+                    maze_[row][col] |= start_bit_;
+                    corner_starts_[2] = {row, col};
+                    is_corner_set = true;
+                }
+            }
+        }
+        is_corner_set = false;
+        for (int row = maze_row_size_ - 2; row > 0 && !is_corner_set; row--) {
+            for (int col = maze_col_size_ - 2; col > 0 && !is_corner_set; col--) {
+                if (maze_[row][col] & path_bit_) {
+                    maze_[row][col] |= start_bit_;
+                    corner_starts_[3] = {row, col};
+                    is_corner_set = true;
+                }
+            }
+        }
+        finish_ = {maze_row_size_ / 2, maze_col_size_ / 2};
+        maze_[maze_row_size_ / 2][maze_col_size_ / 2] |= path_bit_;
+        maze_[maze_row_size_ / 2][maze_col_size_ / 2] |= finish_bit_;
+    } else {
+        start_ = pick_random_point();
+        maze_[start_.row][start_.col] |= start_bit_;
+        int num_finishes = game_ == Maze_game::gather ? 4 : 1;
+        for (int placement = 0; placement < num_finishes; placement++) {
+            finish_ = pick_random_point();
+            maze_[finish_.row][finish_.col] |= finish_bit_;
+        }
     }
 }
 
@@ -623,18 +670,36 @@ void Thread_maze::solve_with_dfs_threads() {
         clear_paths();
     }
     std::vector<std::thread> threads(cardinal_directions_.size());
-    for (int i = 0; i < num_threads_; i++) {
-        const Thread_paint& thread_mask = thread_masks_[i];
-        if (game_ == Maze_game::hunt) {
+    if (game_ == Maze_game::hunt) {
+        for (int i = 0; i < num_threads_; i++) {
+            const Thread_paint& thread_mask = thread_masks_[i];
             threads[i] = std::thread([this, i, thread_mask] {
                 dfs_thread_hunt(start_, i, thread_mask);
             });
-        } else {
+        }
+    } else if (game_ == Maze_game::gather) {
+        for (int i = 0; i < num_threads_; i++) {
+            const Thread_paint& thread_mask = thread_masks_[i];
             threads[i] = std::thread([this, i, thread_mask] {
                 dfs_thread_gather(start_, i, thread_mask);
             });
         }
+    } else if (game_ == Maze_game::corners) {
+        std::vector<int> random_starting_corners(corner_starts_.size());
+        std::iota(begin(random_starting_corners), end(random_starting_corners), 0);
+        shuffle(begin(random_starting_corners), end(random_starting_corners), generator_);
+        for (int i = 0; i < num_threads_; i++) {
+            const Thread_paint& thread_mask = thread_masks_[i];
+            const Point& corner = corner_starts_[random_starting_corners[i]];
+            threads[i] = std::thread([this, corner, i, thread_mask] {
+                dfs_thread_hunt(corner, i, thread_mask);
+            });
+        }
+    } else {
+        std::cerr << "Uncategorized game slipped through initializations." << std::endl;
+        std::abort();
     }
+
     for (std::thread& t : threads) {
         t.join();
     }
@@ -646,17 +711,34 @@ void Thread_maze::solve_with_randomized_dfs_threads() {
         clear_paths();
     }
     std::vector<std::thread> threads(cardinal_directions_.size());
-    for (int i = 0; i < num_threads_; i++) {
-        const Thread_paint& thread_mask = thread_masks_[i];
-        if (game_ == Maze_game::hunt) {
+    if (game_ == Maze_game::hunt) {
+        for (int i = 0; i < num_threads_; i++) {
+            const Thread_paint& thread_mask = thread_masks_[i];
             threads[i] = std::thread([this, i, thread_mask] {
                 randomized_dfs_thread_hunt(start_, i, thread_mask);
             });
-        } else {
+        }
+    } else if (game_ == Maze_game::gather) {
+        for (int i = 0; i < num_threads_; i++) {
+            const Thread_paint& thread_mask = thread_masks_[i];
             threads[i] = std::thread([this, i, thread_mask] {
                 randomized_dfs_thread_gather(start_, i, thread_mask);
             });
         }
+    } else if (game_ == Maze_game::corners) {
+        std::vector<int> random_starting_corners(corner_starts_.size());
+        std::iota(begin(random_starting_corners), end(random_starting_corners), 0);
+        shuffle(begin(random_starting_corners), end(random_starting_corners), generator_);
+        for (int i = 0; i < num_threads_; i++) {
+            const Thread_paint& thread_mask = thread_masks_[i];
+            const Point& corner = corner_starts_[random_starting_corners[i]];
+            threads[i] = std::thread([this, corner, i, thread_mask] {
+                randomized_dfs_thread_hunt(corner, i, thread_mask);
+            });
+        }
+    } else {
+        std::cerr << "Uncategorized game slipped through initializations." << std::endl;
+        std::abort();
     }
     for (std::thread& t : threads) {
         t.join();
@@ -670,30 +752,40 @@ void Thread_maze::solve_with_bfs_threads() {
     }
 
     std::vector<std::thread> threads(cardinal_directions_.size());
-    for (int i = 0; i < num_threads_; i++) {
-        const Thread_paint& thread_mask = thread_masks_[i];
-        if (game_ == Maze_game::hunt) {
+    if (game_ == Maze_game::hunt) {
+        for (int i = 0; i < num_threads_; i++) {
+            const Thread_paint& thread_mask = thread_masks_[i];
             threads[i] = std::thread([this, i, thread_mask] {
                 bfs_thread_hunt(start_, i, thread_mask);
             });
-        } else {
+        }
+    } else if (game_ == Maze_game::gather) {
+        for (int i = 0; i < num_threads_; i++) {
+            const Thread_paint& thread_mask = thread_masks_[i];
             threads[i] = std::thread([this, i, thread_mask] {
                 bfs_thread_gather(start_, i, thread_mask);
             });
         }
+    } else if (game_ == Maze_game::corners) {
+        std::vector<int> random_starting_corners(corner_starts_.size());
+        std::iota(begin(random_starting_corners), end(random_starting_corners), 0);
+        shuffle(begin(random_starting_corners), end(random_starting_corners), generator_);
+        for (int i = 0; i < num_threads_; i++) {
+            const Thread_paint& thread_mask = thread_masks_[i];
+            const Point& corner = corner_starts_[random_starting_corners[i]];
+            threads[i] = std::thread([this, &corner, i, thread_mask] {
+                bfs_thread_hunt(corner, i, thread_mask);
+            });
+        }
+    } else {
+        std::cerr << "Uncategorized game slipped through initializations." << std::endl;
+        std::abort();
     }
 
     for (std::thread& t : threads) {
         t.join();
     }
-    if (game_ == Maze_game::hunt) {
-        // It is cool to see the shortest path that the winning thread took to victory
-        Thread_paint winner_color = thread_masks_[escape_path_index_];
-        for (const Point& p : thread_paths_[escape_path_index_]) {
-            maze_[p.row][p.col] &= ~thread_mask_;
-            maze_[p.row][p.col] |= winner_color;
-        }
-    } else {
+    if (game_ == Maze_game::gather) {
         // Too chaotic to show all paths. So we will make a color flag near each finish.
         int thread = 0;
         for (const std::vector<Point>& path : thread_paths_) {
@@ -701,6 +793,13 @@ void Thread_maze::solve_with_bfs_threads() {
             const Point& p = path.front();
             maze_[p.row][p.col] &= ~thread_mask_;
             maze_[p.row][p.col] |= single_color;
+        }
+    } else {
+        // It is cool to see the shortest path that the winning thread took to victory
+        Thread_paint winner_color = thread_masks_[escape_path_index_];
+        for (const Point& p : thread_paths_[escape_path_index_]) {
+            maze_[p.row][p.col] &= ~thread_mask_;
+            maze_[p.row][p.col] |= winner_color;
         }
     }
     print_solution_path();
@@ -1027,14 +1126,14 @@ bool Thread_maze::bfs_thread_gather(Point start, int thread_index, Thread_paint 
 void Thread_maze::print_solution_path() {
     std::cout << "\n";
     print_maze();
-    if (game_ == Maze_game::hunt) {
-        std::cout << thread_colors_.at(thread_masks_[escape_path_index_] >> thread_tag_offset_)
-                  << "█" << " thread won!" << ansi_nil_ << "\n";
-    } else if (game_ == Maze_game::gather) {
+    if (game_ == Maze_game::gather) {
         for (const Thread_paint& mask : thread_masks_) {
             std::cout << thread_colors_.at(mask >> thread_tag_offset_) << "█" << ansi_nil_;
         }
         std::cout << " All threads found their finish squares!\n";
+    } else {
+        std::cout << thread_colors_.at(thread_masks_[escape_path_index_] >> thread_tag_offset_)
+                  << "█" << " thread won!" << ansi_nil_ << "\n";
     }
     std::cout << "Maze generated with ";
     if (builder_ == Builder_algorithm::randomized_depth_first) {
