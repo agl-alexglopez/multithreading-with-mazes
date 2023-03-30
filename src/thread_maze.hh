@@ -34,9 +34,6 @@ public:
         breadth_first_search,
     };
 
-    /* -hunt - 4 threads compete from one starting point to find the finish.
-     * -gather - 4 threads work together, communicating to gather 4 finish squares.
-     */
     enum class Maze_game {
         hunt,
         gather,
@@ -73,10 +70,10 @@ public:
      *
      * wall structure----------------------||||
      * ------------------------------------||||
-     * 0 direction bit-------------------| ||||
-     * 1 direction bit------------------|| ||||
-     * 2 direction bit-----------------||| ||||
-     * 3 unused bit-------------------|||| ||||
+     * 0 backtrack marker bit------------| ||||
+     * 1 backtrack marker bit ----------|| ||||
+     * 2 backtrack marker bit----------||| ||||
+     * 3 unused-----------------------|||| ||||
      * -------------------------------|||| ||||
      * 0 unused bit-----------------| |||| ||||
      * 1 unused bit----------------|| |||| ||||
@@ -112,7 +109,7 @@ public:
      */
     using Square = uint16_t;
     using Wall_line = uint16_t;
-    using Path_marker = uint16_t;
+    using Backtrack_marker = uint16_t;
     using Thread_paint = uint16_t;
     using Thread_cache = uint16_t;
 
@@ -139,12 +136,12 @@ private:
     using Width = int;
 
     static constexpr int marker_shift_ = 4;
-    static constexpr Path_marker markers_mask_ = 0b1111'0000;
-    static constexpr Path_marker is_origin_ =    0b0000'0000;
-    static constexpr Path_marker from_north_ =   0b0001'0000;
-    static constexpr Path_marker from_east_ =    0b0010'0000;
-    static constexpr Path_marker from_south_ =   0b0011'0000;
-    static constexpr Path_marker from_west_ =    0b0100'0000;
+    static constexpr Backtrack_marker markers_mask_ = 0b1111'0000;
+    static constexpr Backtrack_marker is_origin_ =    0b0000'0000;
+    static constexpr Backtrack_marker from_north_ =   0b0001'0000;
+    static constexpr Backtrack_marker from_east_ =    0b0010'0000;
+    static constexpr Backtrack_marker from_south_ =   0b0011'0000;
+    static constexpr Backtrack_marker from_west_ =    0b0100'0000;
     static constexpr std::array<Point,5> backtracking_marks_ = {
         {{0,0}, {-2,0}, {0,2}, {2,0}, {0,-2},}
     };

@@ -167,7 +167,7 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
         while (maze_[cur.row][cur.col] & markers_mask_) {
             // It is now desirable to run into this path as we complete future random walks.
             maze_[cur.row][cur.col] &= ~start_bit_;
-            const Path_marker& mark = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
+            Backtrack_marker mark = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
             const Point& direction = backtracking_marks_[mark];
             Point next = {cur.row + direction.row, cur.col + direction.col};
             build_with_marks(cur, next);
@@ -185,7 +185,7 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
         Point cur = walk;
         while (cur != loop_root) {
             maze_[cur.row][cur.col] &= ~start_bit_;
-            const Path_marker& mark = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
+            Backtrack_marker mark = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
             const Point& direction = backtracking_marks_[mark];
             Point next = {cur.row + direction.row, cur.col + direction.col};
             maze_[cur.row][cur.col] &= ~markers_mask_;
@@ -253,7 +253,7 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
                 erase_loop(walk, next);
                 walk = next;
                 previous_square = {};
-                const Path_marker& mark = (maze_[walk.row][walk.col] & markers_mask_) >> marker_shift_;
+                Backtrack_marker mark = (maze_[walk.row][walk.col] & markers_mask_) >> marker_shift_;
                 const Point& direction = backtracking_marks_[mark];
                 previous_square = {walk.row + direction.row, walk.col + direction.col};
             } else {
@@ -334,7 +334,7 @@ void Thread_maze::generate_randomized_dfs_maze() {
             }
         }
         if (!branches_remain && cur != start_) {
-            Path_marker dir = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
+            Backtrack_marker dir = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
             const Point& backtracking = backtracking_marks_[dir];
             Point next = {cur.row + backtracking.row, cur.col + backtracking.col};
             // We are using fields the threads will use later. Clean up.
