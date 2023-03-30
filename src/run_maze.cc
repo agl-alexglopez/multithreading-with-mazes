@@ -180,6 +180,7 @@ void print_usage() {
               << "│  -g Game flag. Set the game for the threads to play. │\n"
               << "│      hunt - 4 threads race to find one finish.       │\n"
               << "│      gather - 4 threads gather 4 finish squares.     │\n"
+              << "│      corners - 4 threads race to the center.         │\n"
               << "│  -d Draw flag. Set the line style for the maze.      │\n"
               << "│      sharp - The default straight lines.             │\n"
               << "│      round - Rounded corners.                        │\n"

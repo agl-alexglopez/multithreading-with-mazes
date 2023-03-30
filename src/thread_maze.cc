@@ -223,7 +223,7 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
 
     Point previous_square = {};
-    while (true) {
+    for (;;) {
         // Mark our progress on our current random walk. If we see this again we have looped.
         maze_[walk.row][walk.col] |= start_bit_;
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
@@ -345,7 +345,7 @@ void Thread_maze::generate_randomized_dfs_maze() {
     }
 }
 
-// I made an iterative implementation because I could only find recursive ones! mistake (*_*)
+// I made an iterative implementation because I've never seen one for this algorithm.
 void Thread_maze::generate_randomized_fractal_maze() {
 
     /* So far these are only relevant functions to this algorithm. If they become useful elsewhere
@@ -407,10 +407,8 @@ void Thread_maze::generate_randomized_fractal_maze() {
             build_path(row, col);
         }
     }
-    int height = maze_row_size_;
-    int width = maze_col_size_;
     // "Recursion" is replaced by tuple for each chamber. <chamber coordinates,height,width>.
-    std::stack<std::tuple<Point,Height,Width>> chamber_stack({{{0,0},height,width}});
+    std::stack<std::tuple<Point,Height,Width>> chamber_stack({{{0,0},maze_row_size_,maze_col_size_}});
     while (!chamber_stack.empty()) {
         std::tuple<Point,Height,Width>& chamber = chamber_stack.top();
         const Point& chamber_offset = std::get<0>(chamber);
@@ -449,7 +447,7 @@ void Thread_maze::generate_randomized_fractal_maze() {
 }
 
 void Thread_maze::generate_randomized_grid() {
-    // We need an explicit stack. We run over previous paths so in place directions don't work.
+    // We need an explicit stack. We run over previous paths so in place backtrack won't work.
     auto complete_run = [&](std::stack<Point>& dfs, Point cur, const Point& direction) {
         /* This value is the key to this algorithm. Simply a randomized depth first search but we
          * force the algorithm to keep running in the random direction for limited amount.
@@ -512,50 +510,36 @@ void Thread_maze::generate_arena() {
 }
 
 void Thread_maze::place_start_finish() {
-    if (game_ == Maze_game::corners) {
+    // Dimensions of a maze vary based on random build generation. We need this atrocity.
+    auto set_corner = [&] (int row_init, int col_init,
+                           int row_end, int col_end,
+                           bool increment_row, bool increment_col,
+                           int corner_array_index){
         bool is_corner_set = false;
-        for (int row = 1; row < maze_row_size_ - 1 && !is_corner_set; row++) {
-            for (int col = 1; col < maze_col_size_ && !is_corner_set; col++) {
+        for (int row = row_init;
+                (increment_row ? row < row_end : row > row_end) && !is_corner_set;
+                    increment_row ? row++ : row--) {
+            for (int col = col_init;
+                    (increment_col ? col < col_end : col > col_end) && !is_corner_set;
+                        increment_col ? col++ : col--) {
                 if (maze_[row][col] & path_bit_) {
                     maze_[row][col] |= start_bit_;
-                    corner_starts_[0] = {row, col};
+                    corner_starts_[corner_array_index] = {row, col};
                     is_corner_set = true;
                 }
             }
         }
-        is_corner_set = false;
-        for (int row = 1; row < maze_row_size_ - 1 && !is_corner_set; row++) {
-            for (int col = maze_col_size_ - 2; col > 0 && !is_corner_set; col--) {
-                if (maze_[row][col] & path_bit_) {
-                    maze_[row][col] |= start_bit_;
-                    corner_starts_[1] = {row, col};
-                    is_corner_set = true;
-                }
-            }
-        }
-        is_corner_set = false;
-        for (int row = maze_row_size_ - 2; row > 0 && !is_corner_set; row--) {
-            for (int col = 0; col < maze_col_size_ - 2 && !is_corner_set; col++) {
-                if (maze_[row][col] & path_bit_) {
-                    maze_[row][col] |= start_bit_;
-                    corner_starts_[2] = {row, col};
-                    is_corner_set = true;
-                }
-            }
-        }
-        is_corner_set = false;
-        for (int row = maze_row_size_ - 2; row > 0 && !is_corner_set; row--) {
-            for (int col = maze_col_size_ - 2; col > 0 && !is_corner_set; col--) {
-                if (maze_[row][col] & path_bit_) {
-                    maze_[row][col] |= start_bit_;
-                    corner_starts_[3] = {row, col};
-                    is_corner_set = true;
-                }
-            }
-        }
-        finish_ = {maze_row_size_ / 2, maze_col_size_ / 2};
-        maze_[maze_row_size_ / 2][maze_col_size_ / 2] |= path_bit_;
-        maze_[maze_row_size_ / 2][maze_col_size_ / 2] |= finish_bit_;
+    };
+    if (game_ == Maze_game::corners) {
+        set_corner(1, 1, maze_row_size_ - 2, maze_col_size_ - 2, true, true, 0);
+        set_corner(1, maze_col_size_ - 2, maze_row_size_ - 2, 0, true, false, 1);
+        set_corner(maze_row_size_ - 2, 1, 0, maze_col_size_ - 2, false, true, 2);
+        set_corner(maze_row_size_ - 2, maze_col_size_ - 2, 0, 0, false, false, 3);
+        int middle_row = maze_row_size_ / 2;
+        int middle_col = maze_col_size_ / 2;
+        finish_ = {middle_row, middle_col};
+        maze_[middle_row][middle_col] |= path_bit_;
+        maze_[middle_row][middle_col] |= finish_bit_;
     } else {
         start_ = pick_random_point();
         maze_[start_.row][start_.col] |= start_bit_;
