@@ -49,6 +49,17 @@ public:
         spikes,
     };
 
+    enum class Animation_speed {
+        none,
+        speed_1,
+        speed_2,
+        speed_3,
+        speed_4,
+        speed_5,
+        speed_6,
+        speed_7,
+    };
+
     struct Maze_args {
         size_t odd_rows = 31;
         size_t odd_cols = 111;
@@ -57,6 +68,7 @@ public:
         Solver_algorithm solver = Solver_algorithm::depth_first_search;
         Maze_game game = Maze_game::hunt;
         Maze_style style = Maze_style::sharp;
+        Animation_speed speed = Animation_speed::none;
     };
 
     struct Point {
@@ -235,6 +247,7 @@ private:
     static constexpr const char *const ansi_dark_blu_mag_ = "\033[38;5;57m";
     static constexpr const char *const ansi_bold_ = "\033[1m";
     static constexpr const char *const ansi_nil_ = "\033[0m";
+    static constexpr const char *const ansi_clear_screen = "\033[2J\033[1;1H";
     static constexpr std::array<const char *const,16> thread_colors_ = {
         nullptr,
         // Threads Overlaps. The zero thread is the zero index bit with a value of 1.
@@ -252,11 +265,17 @@ private:
         { {1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1} }
     };
 
+    static constexpr int overlap_key_and_message_height = 16;
+    static constexpr std::array<int,8> animation_speeds_ = {
+        0, 20000, 10000, 5000, 2000, 1000, 500, 250
+    };
+
     Builder_algorithm builder_;
     Maze_modification modification_;
     Solver_algorithm solver_;
     Maze_game game_;
     Maze_style style_;
+    Animation_speed speed_;
     std::vector<std::vector<Square>> maze_;
     int maze_row_size_;
     int maze_col_size_;
@@ -283,18 +302,31 @@ private:
     void build_wall(int row, int col);
     void add_modification(int row, int col);
     void solve_with_dfs_threads();
+    void animate_with_dfs_threads();
     void solve_with_randomized_dfs_threads();
+    void animate_with_randomized_dfs_threads();
     void solve_with_bfs_threads();
+    void animate_with_bfs_threads();
     bool dfs_thread_hunt(Point start, int thread_index, Thread_maze::Thread_paint paint);
+    bool dfs_thread_hunt_animated(Point start, int thread_index, Thread_maze::Thread_paint paint);
     bool randomized_dfs_thread_hunt(Point start, int thread_index, Thread_paint paint);
+    bool randomized_dfs_thread_hunt_animated(Point start, int thread_index, Thread_paint paint);
     bool dfs_thread_gather(Point start, int thread_index, Thread_maze::Thread_paint paint);
+    bool dfs_thread_gather_animated(Point start, int thread_index, Thread_maze::Thread_paint paint);
     bool randomized_dfs_thread_gather(Point start, int thread_index, Thread_paint paint);
+    bool randomized_dfs_thread_gather_animated(Point start, int thread_index, Thread_paint paint);
     bool bfs_thread_hunt(Point start, int thread_index, Thread_maze::Thread_paint paint);
+    bool bfs_thread_hunt_animated(Point start, int thread_index, Thread_maze::Thread_paint paint);
     bool bfs_thread_gather(Point start, int thread_index, Thread_maze::Thread_paint paint);
+    bool bfs_thread_gather_animated(Point start, int thread_index, Thread_maze::Thread_paint paint);
     void place_start_finish();
     Point pick_random_point();
     Point find_nearest_square(Point choice);
     void print_solution_path();
+    void set_cursor_position(int row, int col) const;
+    void print_square(int row, int col) const;
+    void print_builder() const;
+    void print_solver() const;
     void print_maze() const;
     void print_overlap_key() const;
     void set_squares(const std::vector<std::vector<Square>>& tiles);

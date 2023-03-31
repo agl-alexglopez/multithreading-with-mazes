@@ -6,7 +6,7 @@
 #include "thread_maze.hh"
 
 const std::unordered_set<std::string> argument_flags = {
-    "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m",
+    "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-p"
 };
 
 const std::unordered_map<std::string,Thread_maze::Builder_algorithm> builder_table = {
@@ -44,6 +44,16 @@ const std::unordered_map<std::string,Thread_maze::Maze_game> game_table = {
     {"corners", Thread_maze::Maze_game::corners},
 };
 
+const std::unordered_map<std::string,Thread_maze::Animation_speed> playback_table = {
+    {"0", Thread_maze::Animation_speed::none},
+    {"1", Thread_maze::Animation_speed::speed_1},
+    {"2", Thread_maze::Animation_speed::speed_2},
+    {"3", Thread_maze::Animation_speed::speed_3},
+    {"4", Thread_maze::Animation_speed::speed_4},
+    {"5", Thread_maze::Animation_speed::speed_5},
+    {"6", Thread_maze::Animation_speed::speed_6},
+    {"7", Thread_maze::Animation_speed::speed_7},
+};
 
 void set_relevant_arg(Thread_maze::Maze_args& maze_args,
                       std::string_view flag,
@@ -146,6 +156,14 @@ void set_relevant_arg(Thread_maze::Maze_args& maze_args,
             std::abort();
         }
         maze_args.style = found->second;
+    } else if (flag == "-p") {
+        const auto found = playback_table.find(arg.data());
+        if (found == playback_table.end()) {
+            std::cerr << "Invalid playback argument: " << arg << std::endl;
+            print_usage();
+            std::abort();
+        }
+        maze_args.speed = found->second;
     } else {
         std::cerr << "Invalid flag past the first defense? " << flag << std::endl;
         print_usage();
@@ -188,6 +206,8 @@ void print_usage() {
               << "│      bold - Thicker straight lines.                  │\n"
               << "│      contrast - Full block width and height walls.   │\n"
               << "│      spikes - Connected lines with spikes.           │\n"
+              << "│  -p Playback flag. Watch a real time maze solution.  │\n"
+              << "│      Any number 1-7. Speed increases with number.    │\n"
               << "│  -h Help flag. Make this prompt appear.              │\n"
               << "│      No arguments.                                   │\n"
               << "│                                                      │\n"
