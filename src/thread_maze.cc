@@ -217,7 +217,12 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game) {
         std::cerr << "Builder algorithm not set? Check for new builder algorithm." << std::endl;
         std::abort();
     }
-    place_start_finish();
+    if (!solver_speed_) {
+        clear_screen();
+        place_start_finish();
+    } else {
+        place_start_finish_animated();
+    }
 }
 
 
@@ -384,14 +389,14 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
             build_with_marks(cur, next);
             // Clean up after ourselves and leave no marks behind for the maze solvers.
             maze_[cur.row][cur.col] &= ~markers_mask_;
-            flush_cursor_at_position(cur.row, cur.col);
+            flush_cursor_maze_coordinate(cur.row, cur.col);
             std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
             cur = next;
         }
         maze_[cur.row][cur.col] &= ~start_bit_;
         maze_[cur.row][cur.col] &= ~markers_mask_;
         carve_path_walls_animated(cur.row, cur.col);
-        flush_cursor_at_position(cur.row, cur.col);
+        flush_cursor_maze_coordinate(cur.row, cur.col);
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     };
 
@@ -404,7 +409,7 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
             const Point& direction = backtracking_marks_[mark];
             Point next = {cur.row + direction.row, cur.col + direction.col};
             maze_[cur.row][cur.col] &= ~markers_mask_;
-            flush_cursor_at_position(cur.row, cur.col);
+            flush_cursor_maze_coordinate(cur.row, cur.col);
             std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
             cur = next;
         }
@@ -420,7 +425,7 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
         } else if (next.col > walk.col) {
             maze_[next.row][next.col] |= from_west_;
         }
-        flush_cursor_at_position(next.row, next.col);
+        flush_cursor_maze_coordinate(next.row, next.col);
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     };
 
@@ -459,7 +464,6 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
 
                 // This is the only way out of the wilson algorithm! Everything is connected.
                 if (!walk.row) {
-                    clear_screen();
                     return;
                 }
 
@@ -536,7 +540,6 @@ void Thread_maze::generate_randomized_dfs_maze() {
             branches_remain = true;
         }
     }
-    clear_screen();
 }
 
 void Thread_maze::generate_randomized_dfs_maze_animated() {
@@ -568,13 +571,12 @@ void Thread_maze::generate_randomized_dfs_maze_animated() {
             Point next = {cur.row + backtracking.row, cur.col + backtracking.col};
             // We are using fields the threads will use later. Clear bits as we backtrack.
             maze_[cur.row][cur.col] &= ~markers_mask_;
-            flush_cursor_at_position(cur.row, cur.col);
+            flush_cursor_maze_coordinate(cur.row, cur.col);
             std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
             cur = next;
             branches_remain = true;
         }
     }
-    clear_screen();
 }
 
 
@@ -695,29 +697,29 @@ void Thread_maze::generate_randomized_fractal_maze_animated() {
         if (row - 1 >= 0 && !(maze_[row - 1][col] & path_bit_)) {
             wall |= north_wall_;
             maze_[row - 1][col] |= south_wall_;
-            flush_cursor_at_position(row - 1, col);
+            flush_cursor_maze_coordinate(row - 1, col);
             std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
         }
         if (row + 1 < maze_row_size_ && !(maze_[row + 1][col] & path_bit_)) {
             wall |= south_wall_;
             maze_[row + 1][col] |= north_wall_;
-            flush_cursor_at_position(row + 1, col);
+            flush_cursor_maze_coordinate(row + 1, col);
             std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
         }
         if (col - 1 >= 0 && !(maze_[row][col - 1] & path_bit_)) {
             wall |= west_wall_;
             maze_[row][col - 1] |= east_wall_;
-            flush_cursor_at_position(row, col - 1);
+            flush_cursor_maze_coordinate(row, col - 1);
             std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
         }
         if (col + 1 < maze_col_size_ && !(maze_[row][col + 1] & path_bit_)) {
             wall |= east_wall_;
             maze_[row][col + 1] |= west_wall_;
-            flush_cursor_at_position(row, col + 1);
+            flush_cursor_maze_coordinate(row, col + 1);
             std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
         }
         maze_[row][col] |= wall;
-        flush_cursor_at_position(row, col);
+        flush_cursor_maze_coordinate(row, col);
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     };
 
@@ -795,7 +797,6 @@ void Thread_maze::generate_randomized_fractal_maze_animated() {
             }
         }
     }
-    clear_screen();
 }
 
 
@@ -902,12 +903,11 @@ void Thread_maze::generate_randomized_grid_animated() {
         }
         if (!branches_remain) {
             maze_[cur.row][cur.col] &= ~zero_thread_;
-            flush_cursor_at_position(cur.row, cur.col);
+            flush_cursor_maze_coordinate(cur.row, cur.col);
             std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
             dfs.pop();
         }
     }
-    clear_screen();
 }
 
 
@@ -929,7 +929,6 @@ void Thread_maze::generate_arena_animated() {
             carve_path_walls_animated(row, col);
         }
     }
-    clear_screen();
 }
 
 
@@ -982,6 +981,60 @@ void Thread_maze::place_start_finish() {
     }
 }
 
+void Thread_maze::place_start_finish_animated() {
+    // Dimensions of a maze vary based on random build generation. We need this atrocity.
+    auto set_corner = [&] (int row_init, int col_init,
+                           int row_end, int col_end,
+                           bool increment_row, bool increment_col,
+                           int corner_array_index){
+        for (int row = row_init;
+                (increment_row ? row < row_end : row > row_end);
+                    increment_row ? row++ : row--) {
+            for (int col = col_init;
+                    (increment_col ? col < col_end : col > col_end);
+                        increment_col ? col++ : col--) {
+                if (maze_[row][col] & path_bit_) {
+                    maze_[row][col] |= start_bit_;
+                    corner_starts_[corner_array_index] = {row, col};
+                    flush_cursor_maze_coordinate(row, col);
+                    std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
+                    return;
+                }
+            }
+        }
+    };
+
+    if (game_ == Maze_game::corners) {
+        set_corner(1, 1, maze_row_size_ - 2, maze_col_size_ - 2, true, true, 0);
+        set_corner(1, maze_col_size_ - 2, maze_row_size_ - 2, 0, true, false, 1);
+        set_corner(maze_row_size_ - 2, 1, 0, maze_col_size_ - 2, false, true, 2);
+        set_corner(maze_row_size_ - 2, maze_col_size_ - 2, 0, 0, false, false, 3);
+        int middle_row = maze_row_size_ / 2;
+        int middle_col = maze_col_size_ / 2;
+        finish_ = {middle_row, middle_col};
+        for (const Point& p : all_directions_) {
+            Point next = {finish_.row + p.row, finish_.col + p.col};
+            maze_[next.row][next.col] |= path_bit_;
+            flush_cursor_maze_coordinate(next.row, next.col);
+            std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
+        }
+        maze_[middle_row][middle_col] |= path_bit_;
+        maze_[middle_row][middle_col] |= finish_bit_;
+        flush_cursor_maze_coordinate(middle_row, middle_col);
+        std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
+    } else {
+        start_ = pick_random_point();
+        maze_[start_.row][start_.col] |= start_bit_;
+        int num_finishes = game_ == Maze_game::gather ? 4 : 1;
+        for (int placement = 0; placement < num_finishes; placement++) {
+            finish_ = pick_random_point();
+            maze_[finish_.row][finish_.col] |= finish_bit_;
+            flush_cursor_maze_coordinate(finish_.row, finish_.col);
+            std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
+        }
+    }
+}
+
 void Thread_maze::carve_path_walls (int row, int col) {
     maze_[row][col] |= path_bit_;
     if (row - 1 >= 0) {
@@ -1002,26 +1055,26 @@ void Thread_maze::carve_path_walls (int row, int col) {
 // The animated version tries to save cursor movements if they are not necessary.
 void Thread_maze::carve_path_walls_animated(int row, int col) {
     maze_[row][col] |= path_bit_;
-    flush_cursor_at_position(row, col);
+    flush_cursor_maze_coordinate(row, col);
     std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     if (row - 1 >= 0 && !(maze_[row - 1][col] & path_bit_)) {
         maze_[row - 1][col] &= ~south_wall_;
-        flush_cursor_at_position(row - 1, col);
+        flush_cursor_maze_coordinate(row - 1, col);
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     }
     if (row + 1 < maze_row_size_ && !(maze_[row + 1][col] & path_bit_)) {
         maze_[row + 1][col] &= ~north_wall_;
-        flush_cursor_at_position(row + 1, col);
+        flush_cursor_maze_coordinate(row + 1, col);
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     }
     if (col - 1 >= 0 && !(maze_[row][col - 1] & path_bit_)) {
         maze_[row][col - 1] &= ~east_wall_;
-        flush_cursor_at_position(row, col - 1);
+        flush_cursor_maze_coordinate(row, col - 1);
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     }
     if (col + 1 < maze_col_size_ && !(maze_[row][col + 1] & path_bit_)) {
         maze_[row][col + 1] &= ~west_wall_;
-        flush_cursor_at_position(row, col + 1);
+        flush_cursor_maze_coordinate(row, col + 1);
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     }
     maze_[row][col] |= builder_bit_;
@@ -1143,26 +1196,26 @@ void Thread_maze::build_path(int row, int col) {
 
 void Thread_maze::build_path_animated(int row, int col) {
     maze_[row][col] |= path_bit_;
-    flush_cursor_at_position(row, col);
+    flush_cursor_maze_coordinate(row, col);
     std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     if (row - 1 >= 0 && !(maze_[row - 1][col] & path_bit_)) {
         maze_[row - 1][col] &= ~south_wall_;
-        flush_cursor_at_position(row - 1, col);
+        flush_cursor_maze_coordinate(row - 1, col);
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     }
     if (row + 1 < maze_row_size_ && !(maze_[row + 1][col] & path_bit_)) {
         maze_[row + 1][col] &= ~north_wall_;
-        flush_cursor_at_position(row + 1, col);
+        flush_cursor_maze_coordinate(row + 1, col);
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     }
     if (col - 1 >= 0 && !(maze_[row][col - 1] & path_bit_)) {
         maze_[row][col - 1] &= ~east_wall_;
-        flush_cursor_at_position(row, col - 1);
+        flush_cursor_maze_coordinate(row, col - 1);
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     }
     if (col + 1 < maze_col_size_ && !(maze_[row][col + 1] & path_bit_)) {
         maze_[row][col + 1] &= ~west_wall_;
-        flush_cursor_at_position(row, col + 1);
+        flush_cursor_maze_coordinate(row, col + 1);
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     }
 }
@@ -1293,13 +1346,10 @@ void Thread_maze::animate_with_dfs_threads() {
         clear_paths();
     }
 
-    clear_screen();
-    for (int row = 0; row < maze_row_size_; row++) {
-        for (int col = 0; col < maze_col_size_; col++) {
-            print_square(row, col);
-        }
-        std::cout << "\n";
+    if (!builder_speed_) {
+        clear_and_flush_grid();
     }
+    set_cursor_position(maze_row_size_, 0);
     print_overlap_key();
     print_builder();
     print_solver();
@@ -1341,6 +1391,7 @@ void Thread_maze::animate_with_dfs_threads() {
         t.join();
     }
     set_cursor_position(maze_row_size_ + overlap_key_and_message_height, 0);
+    print_solution_path();
     std::cout << std::endl;
 }
 
@@ -1442,7 +1493,7 @@ bool Thread_maze::dfs_thread_hunt_animated(Point start, int thread_index, Thread
         maze_mutex_.lock();
         maze_[cur.row][cur.col] |= seen;
         maze_[cur.row][cur.col] |= paint;
-        flush_cursor_at_position(cur.row, cur.col);
+        flush_cursor_maze_coordinate(cur.row, cur.col);
         maze_mutex_.unlock();
         std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
 
@@ -1467,7 +1518,7 @@ bool Thread_maze::dfs_thread_hunt_animated(Point start, int thread_index, Thread
         if (!found_branch_to_explore) {
             maze_mutex_.lock();
             maze_[cur.row][cur.col] &= ~paint;
-            flush_cursor_at_position(cur.row, cur.col);
+            flush_cursor_maze_coordinate(cur.row, cur.col);
             maze_mutex_.unlock();
             std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
             dfs.pop();
@@ -1554,7 +1605,7 @@ bool Thread_maze::dfs_thread_gather_animated(Point start, int thread_index, Thre
         // Shoot, another thread beat us here. Mark and move on to another finish.
         maze_[cur.row][cur.col] |= seen;
         maze_[cur.row][cur.col] |= paint;
-        flush_cursor_at_position(cur.row, cur.col);
+        flush_cursor_maze_coordinate(cur.row, cur.col);
         maze_mutex_.unlock();
         std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
 
@@ -1578,7 +1629,7 @@ bool Thread_maze::dfs_thread_gather_animated(Point start, int thread_index, Thre
         if (!found_branch_to_explore) {
             maze_mutex_.lock();
             maze_[cur.row][cur.col] &= ~paint;
-            flush_cursor_at_position(cur.row, cur.col);
+            flush_cursor_maze_coordinate(cur.row, cur.col);
             maze_mutex_.unlock();
             std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
             dfs.pop();
@@ -1600,14 +1651,10 @@ void Thread_maze::animate_with_randomized_dfs_threads() {
     if (escape_path_index_ != -1) {
         clear_paths();
     }
-
-    clear_screen();
-    for (int row = 0; row < maze_row_size_; row++) {
-        for (int col = 0; col < maze_col_size_; col++) {
-            print_square(row, col);
-        }
-        std::cout << "\n";
+    if (!builder_speed_) {
+        clear_and_flush_grid();
     }
+    set_cursor_position(maze_row_size_, 0);
     print_overlap_key();
     print_builder();
     print_solver();
@@ -1647,6 +1694,7 @@ void Thread_maze::animate_with_randomized_dfs_threads() {
         t.join();
     }
     set_cursor_position(maze_row_size_ + overlap_key_and_message_height, 0);
+    print_solution_path();
     std::cout << std::endl;
 }
 
@@ -1780,7 +1828,7 @@ bool Thread_maze::randomized_dfs_thread_hunt_animated(Point start, int thread_in
         maze_mutex_.lock();
         maze_[cur.row][cur.col] |= seen;
         maze_[cur.row][cur.col] |= paint;
-        flush_cursor_at_position(cur.row, cur.col);
+        flush_cursor_maze_coordinate(cur.row, cur.col);
         maze_mutex_.unlock();
         std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
 
@@ -1802,7 +1850,7 @@ bool Thread_maze::randomized_dfs_thread_hunt_animated(Point start, int thread_in
         if (!found_branch_to_explore) {
             maze_mutex_.lock();
             maze_[cur.row][cur.col] &= ~paint;
-            flush_cursor_at_position(cur.row, cur.col);
+            flush_cursor_maze_coordinate(cur.row, cur.col);
             maze_mutex_.unlock();
             std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
             dfs.pop();
@@ -1888,7 +1936,7 @@ bool Thread_maze::randomized_dfs_thread_gather_animated(Point start, int thread_
         }
         maze_[cur.row][cur.col] |= seen;
         maze_[cur.row][cur.col] |= paint;
-        flush_cursor_at_position(cur.row, cur.col);
+        flush_cursor_maze_coordinate(cur.row, cur.col);
         maze_mutex_.unlock();
         std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
 
@@ -1910,7 +1958,7 @@ bool Thread_maze::randomized_dfs_thread_gather_animated(Point start, int thread_
         if (!found_branch_to_explore) {
             maze_mutex_.lock();
             maze_[cur.row][cur.col] &= ~paint;
-            flush_cursor_at_position(cur.row, cur.col);
+            flush_cursor_maze_coordinate(cur.row, cur.col);
             maze_mutex_.unlock();
             dfs.pop();
         }
@@ -1996,13 +2044,10 @@ void Thread_maze::animate_with_bfs_threads() {
         clear_paths();
     }
 
-    clear_screen();
-    for (int row = 0; row < maze_row_size_; row++) {
-        for (int col = 0; col < maze_col_size_; col++) {
-            print_square(row, col);
-        }
-        std::cout << "\n";
+    if (!builder_speed_) {
+        clear_and_flush_grid();
     }
+    set_cursor_position(maze_row_size_, 0);
     print_overlap_key();
     print_builder();
     print_solver();
@@ -2050,7 +2095,7 @@ void Thread_maze::animate_with_bfs_threads() {
             const Point& p = path.front();
             maze_[p.row][p.col] &= ~thread_mask_;
             maze_[p.row][p.col] |= single_color;
-            flush_cursor_at_position(p.row, p.col);
+            flush_cursor_maze_coordinate(p.row, p.col);
         }
     } else {
         // It is cool to see the shortest path that the winning thread took to victory
@@ -2058,10 +2103,11 @@ void Thread_maze::animate_with_bfs_threads() {
         for (const Point& p : thread_paths_[escape_path_index_]) {
             maze_[p.row][p.col] &= ~thread_mask_;
             maze_[p.row][p.col] |= winner_color;
-            flush_cursor_at_position(p.row, p.col);
+            flush_cursor_maze_coordinate(p.row, p.col);
         }
     }
     set_cursor_position(maze_row_size_ + overlap_key_and_message_height, 0);
+    print_solution_path();
     std::cout << std::endl;
 }
 
@@ -2147,7 +2193,7 @@ bool Thread_maze::bfs_thread_hunt_animated(Point start, int thread_index, Thread
         // This creates a nice fanning out of mixed color for each searching thread.
         maze_mutex_.lock();
         maze_[cur.row][cur.col] |= paint;
-        flush_cursor_at_position(cur.row, cur.col);
+        flush_cursor_maze_coordinate(cur.row, cur.col);
         maze_mutex_.unlock();
         std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
 
@@ -2235,9 +2281,7 @@ bool Thread_maze::bfs_thread_gather_animated(Point start, int thread_index, Thre
         }
         maze_[cur.row][cur.col] |= paint;
         maze_[cur.row][cur.col] |= seen_bit;
-        set_cursor_position(cur.row, cur.col);
-        print_square(cur.row, cur.col);
-        std::cout << std::flush;
+        flush_cursor_maze_coordinate(cur.row, cur.col);
         maze_mutex_.unlock();
         std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
 
@@ -2298,7 +2342,6 @@ void Thread_maze::print_solver() const {
 }
 
 void Thread_maze::print_solution_path() {
-    std::cout << "\n";
     if (game_ == Maze_game::gather) {
         for (const Thread_paint& mask : thread_masks_) {
             std::cout << thread_colors_.at(mask >> thread_tag_offset_) << "█" << ansi_nil_;
@@ -2308,7 +2351,6 @@ void Thread_maze::print_solution_path() {
         std::cout << thread_colors_.at(thread_masks_[escape_path_index_] >> thread_tag_offset_)
                   << "█" << " thread won!" << ansi_nil_ << "\n";
     }
-    std::cout << std::endl;
 }
 
 void Thread_maze::clear_and_flush_grid() const {
@@ -2326,7 +2368,7 @@ void Thread_maze::clear_screen() const {
     std::cout << ansi_clear_screen;
 }
 
-void Thread_maze::flush_cursor_at_position(int row, int col) const {
+void Thread_maze::flush_cursor_maze_coordinate(int row, int col) const {
     set_cursor_position(row, col);
     print_square(row, col);
     std::cout << std::flush;

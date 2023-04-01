@@ -259,9 +259,10 @@ private:
     static constexpr const char *const ansi_dark_blu_mag_ = "\033[38;5;57m";
     static constexpr const char *const ansi_bold_ = "\033[1m";
     static constexpr const char *const ansi_nil_ = "\033[0m";
+    static constexpr const char *const ansi_start_ = "\033[38;5;87mS";
     static constexpr const char *const ansi_clear_screen = "\033[2J\033[1;1H";
     static constexpr std::array<const char *const,16> thread_colors_ = {
-        nullptr,
+        ansi_nil_,
         // Threads Overlaps. The zero thread is the zero index bit with a value of 1.
         // 0b0001   0b0010     0b0011     0b0100     0b0101     0b0110        0b0111
         ansi_red_, ansi_grn_, ansi_yel_, ansi_blu_, ansi_mag_, ansi_cyn_, ansi_red_grn_blu_,
@@ -277,7 +278,7 @@ private:
         { {1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1} }
     };
 
-    static constexpr int overlap_key_and_message_height = 16;
+    static constexpr int overlap_key_and_message_height = 17;
     static constexpr std::array<int,8> solver_speeds_ = {
         0, 20000, 10000, 5000, 2000, 1000, 500, 250
     };
@@ -348,12 +349,13 @@ private:
     bool bfs_thread_gather(Point start, int thread_index, Thread_maze::Thread_paint paint);
     bool bfs_thread_gather_animated(Point start, int thread_index, Thread_maze::Thread_paint paint);
     void place_start_finish();
+    void place_start_finish_animated();
     Point pick_random_point();
     Point find_nearest_square(Point choice);
     void print_solution_path();
     void clear_and_flush_grid() const;
     void clear_screen() const;
-    void flush_cursor_at_position(int row, int col) const;
+    void flush_cursor_maze_coordinate(int row, int col) const;
     void set_cursor_position(int row, int col) const;
     void print_square(int row, int col) const;
     void print_builder() const;
