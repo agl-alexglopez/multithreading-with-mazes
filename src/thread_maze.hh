@@ -156,6 +156,11 @@ private:
         odd,
     };
 
+    struct Disjoint_set {
+        std::unordered_map<int, std::pair<Point, int>> parent;
+        std::unordered_map<int, std::pair<Point,int>> rank;
+    };
+
     using Height = int;
     using Width = int;
 
@@ -310,6 +315,7 @@ private:
     void generate_maze(Builder_algorithm algorithm, Maze_game game);
     void generate_randomized_dfs_maze();
     void generate_randomized_dfs_maze_animated();
+    void generate_randomized_kruskal_maze();
     void generate_randomized_fractal_maze();
     void generate_randomized_fractal_maze_animated();
     void generate_randomized_loop_erased_maze();

@@ -217,6 +217,7 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game) {
         std::cerr << "Builder algorithm not set? Check for new builder algorithm." << std::endl;
         std::abort();
     }
+    // It's nice to have a smooth transition to solver without unecessary screen refresh.
     if (!solver_speed_) {
         clear_screen();
         place_start_finish();
@@ -245,7 +246,6 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
         } else {
             std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
         }
-        // Be careful of the order here. Next then wall or wall alters the direction bits from next.
         carve_path_walls(next.row, next.col);
         carve_path_walls(wall.row, wall.col);
     };
@@ -577,6 +577,14 @@ void Thread_maze::generate_randomized_dfs_maze_animated() {
             branches_remain = true;
         }
     }
+}
+
+
+/* * * * * * * * * * * * * *        Kruskal's Algorithm          * * * * * * * * * * * * * * * * */
+
+
+void Thread_maze::generate_randomized_kruskal_maze() {
+
 }
 
 
