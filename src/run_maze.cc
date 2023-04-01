@@ -6,7 +6,7 @@
 #include "thread_maze.hh"
 
 const std::unordered_set<std::string> argument_flags = {
-    "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-p"
+    "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-sp", "-bp"
 };
 
 const std::unordered_map<std::string,Thread_maze::Builder_algorithm> builder_table = {
@@ -44,15 +44,26 @@ const std::unordered_map<std::string,Thread_maze::Maze_game> game_table = {
     {"corners", Thread_maze::Maze_game::corners},
 };
 
-const std::unordered_map<std::string,Thread_maze::Animation_speed> playback_table = {
-    {"0", Thread_maze::Animation_speed::none},
-    {"1", Thread_maze::Animation_speed::speed_1},
-    {"2", Thread_maze::Animation_speed::speed_2},
-    {"3", Thread_maze::Animation_speed::speed_3},
-    {"4", Thread_maze::Animation_speed::speed_4},
-    {"5", Thread_maze::Animation_speed::speed_5},
-    {"6", Thread_maze::Animation_speed::speed_6},
-    {"7", Thread_maze::Animation_speed::speed_7},
+const std::unordered_map<std::string,Thread_maze::Solver_speed> solver_playback_table = {
+    {"0", Thread_maze::Solver_speed::instant},
+    {"1", Thread_maze::Solver_speed::speed_1},
+    {"2", Thread_maze::Solver_speed::speed_2},
+    {"3", Thread_maze::Solver_speed::speed_3},
+    {"4", Thread_maze::Solver_speed::speed_4},
+    {"5", Thread_maze::Solver_speed::speed_5},
+    {"6", Thread_maze::Solver_speed::speed_6},
+    {"7", Thread_maze::Solver_speed::speed_7},
+};
+
+const std::unordered_map<std::string,Thread_maze::Builder_speed> builder_playback_table = {
+    {"0", Thread_maze::Builder_speed::instant},
+    {"1", Thread_maze::Builder_speed::speed_1},
+    {"2", Thread_maze::Builder_speed::speed_2},
+    {"3", Thread_maze::Builder_speed::speed_3},
+    {"4", Thread_maze::Builder_speed::speed_4},
+    {"5", Thread_maze::Builder_speed::speed_5},
+    {"6", Thread_maze::Builder_speed::speed_6},
+    {"7", Thread_maze::Builder_speed::speed_7},
 };
 
 void set_relevant_arg(Thread_maze::Maze_args& maze_args,
@@ -156,14 +167,22 @@ void set_relevant_arg(Thread_maze::Maze_args& maze_args,
             std::abort();
         }
         maze_args.style = found->second;
-    } else if (flag == "-p") {
-        const auto found = playback_table.find(arg.data());
-        if (found == playback_table.end()) {
+    } else if (flag == "-sp") {
+        const auto found = solver_playback_table.find(arg.data());
+        if (found == solver_playback_table.end()) {
             std::cerr << "Invalid playback argument: " << arg << std::endl;
             print_usage();
             std::abort();
         }
-        maze_args.speed = found->second;
+        maze_args.solver_speed = found->second;
+    } else if (flag == "-bp") {
+        const auto found = builder_playback_table.find(arg.data());
+        if (found == builder_playback_table.end()) {
+            std::cerr << "Invalid playback argument: " << arg << std::endl;
+            print_usage();
+            std::abort();
+        }
+        maze_args.builder_speed = found->second;
     } else {
         std::cerr << "Invalid flag past the first defense? " << flag << std::endl;
         print_usage();
@@ -206,7 +225,9 @@ void print_usage() {
               << "│      bold - Thicker straight lines.                  │\n"
               << "│      contrast - Full block width and height walls.   │\n"
               << "│      spikes - Connected lines with spikes.           │\n"
-              << "│  -p Playback flag. Watch a real time maze solution.  │\n"
+              << "│  -sp Solver Playback flag. Watch the maze solution.  │\n"
+              << "│      Any number 1-7. Speed increases with number.    │\n"
+              << "│  -bp Builder Playback flag. Watch the maze build.    │\n"
               << "│      Any number 1-7. Speed increases with number.    │\n"
               << "│  -h Help flag. Make this prompt appear.              │\n"
               << "│      No arguments.                                   │\n"
@@ -217,7 +238,7 @@ void print_usage() {
               << "│  ./run_maze                                          │\n"
               << "│  ./run_maze -r 51 -c 111 -b random-dfs -s bfs -hunt  │\n"
               << "│  ./run_maze -c 111 -s bfs -gather                    │\n"
-              << "│  ./run_maze -s dfs -m x -d round -b fractal          │\n"
+              << "│  ./run_maze -s dfs -m x -d round -b fractal -p 4     │\n"
               << "│                                                      │\n"
               << "└──────────────────────────────────────────────────────┘\n";
     std::cout << std::endl;

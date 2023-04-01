@@ -49,8 +49,19 @@ public:
         spikes,
     };
 
-    enum class Animation_speed {
-        none,
+    enum class Builder_speed {
+        instant=0,
+        speed_1,
+        speed_2,
+        speed_3,
+        speed_4,
+        speed_5,
+        speed_6,
+        speed_7,
+    };
+
+    enum class Solver_speed {
+        instant,
         speed_1,
         speed_2,
         speed_3,
@@ -68,7 +79,8 @@ public:
         Solver_algorithm solver = Solver_algorithm::depth_first_search;
         Maze_game game = Maze_game::hunt;
         Maze_style style = Maze_style::sharp;
-        Animation_speed speed = Animation_speed::none;
+        Solver_speed solver_speed = Solver_speed::instant;
+        Builder_speed builder_speed = Builder_speed::instant;
     };
 
     struct Point {
@@ -237,7 +249,7 @@ private:
     static constexpr const char *const ansi_mag_ = "\033[38;5;201m";
     static constexpr const char *const ansi_cyn_ = "\033[38;5;87m";
     static constexpr const char *const ansi_wit_ = "\033[38;5;231m";
-    static constexpr const char *const ansi_dark_red_ = "\033[38;5;52m";
+    static constexpr const char *const ansi_prp_red_ = "\033[38;5;204m";
     static constexpr const char *const ansi_blu_mag_ = "\033[38;5;105m";
     static constexpr const char *const ansi_red_grn_blu_ = "\033[38;5;121m";
     static constexpr const char *const ansi_grn_prp_ = "\033[38;5;106m";
@@ -254,7 +266,7 @@ private:
         // 0b0001   0b0010     0b0011     0b0100     0b0101     0b0110        0b0111
         ansi_red_, ansi_grn_, ansi_yel_, ansi_blu_, ansi_mag_, ansi_cyn_, ansi_red_grn_blu_,
         // 0b1000    0b1001          0b1010           0b1011            0b1100
-        ansi_prp_, ansi_dark_red_, ansi_grn_prp_, ansi_red_grn_prp_, ansi_dark_blu_mag_,
+        ansi_prp_, ansi_prp_red_, ansi_grn_prp_, ansi_red_grn_prp_, ansi_dark_blu_mag_,
         // 0b1101              0b1110          0b1111
         ansi_red_blu_prp_, ansi_grn_blu_prp_, ansi_wit_,
     };
@@ -266,8 +278,12 @@ private:
     };
 
     static constexpr int overlap_key_and_message_height = 16;
-    static constexpr std::array<int,8> animation_speeds_ = {
+    static constexpr std::array<int,8> solver_speeds_ = {
         0, 20000, 10000, 5000, 2000, 1000, 500, 250
+    };
+
+    static constexpr std::array<int,8> builder_speeds_ = {
+        0, 10000, 5000, 2500, 1000, 500, 250, 100
     };
 
     Builder_algorithm builder_;
@@ -275,7 +291,8 @@ private:
     Solver_algorithm solver_;
     Maze_game game_;
     Maze_style style_;
-    Animation_speed speed_;
+    int solver_speed_;
+    int builder_speed_;
     std::vector<std::vector<Square>> maze_;
     int maze_row_size_;
     int maze_col_size_;
@@ -291,16 +308,27 @@ private:
     std::mutex maze_mutex_;
     void generate_maze(Builder_algorithm algorithm, Maze_game game);
     void generate_randomized_dfs_maze();
+    void generate_randomized_dfs_maze_animated();
     void generate_randomized_fractal_maze();
+    void generate_randomized_fractal_maze_animated();
     void generate_randomized_loop_erased_maze();
+    void generate_randomized_loop_erased_maze_animated();
+    Point choose_arbitrary_point(Wilson_point start) const;
     void carve_path_walls(int row, int col);
+    void carve_path_walls_animated(int row, int col);
     void carve_path_markings(const Point& cur, const Point& next);
+    void carve_path_markings_animated(const Point& cur, const Point& next);
     void generate_randomized_grid();
+    void generate_randomized_grid_animated();
     void generate_arena();
+    void generate_arena_animated();
     void join_squares(const Point& cur, const Point& next);
+    void join_squares_animated(const Point& cur, const Point& next);
     void build_path(int row, int col);
+    void build_path_animated(int row, int col);
     void build_wall(int row, int col);
     void add_modification(int row, int col);
+    void add_modification_animated(int row, int col);
     void solve_with_dfs_threads();
     void animate_with_dfs_threads();
     void solve_with_randomized_dfs_threads();
@@ -323,6 +351,9 @@ private:
     Point pick_random_point();
     Point find_nearest_square(Point choice);
     void print_solution_path();
+    void clear_and_flush_grid() const;
+    void clear_screen() const;
+    void flush_cursor_at_position(int row, int col) const;
     void set_cursor_position(int row, int col) const;
     void print_square(int row, int col) const;
     void print_builder() const;
