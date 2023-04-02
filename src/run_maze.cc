@@ -171,7 +171,7 @@ void set_relevant_arg(Thread_maze::Maze_args& maze_args,
     } else if (flag == "-sp") {
         const auto found = solver_playback_table.find(arg.data());
         if (found == solver_playback_table.end()) {
-            std::cerr << "Invalid playback argument: " << arg << std::endl;
+            std::cerr << "Invalid solver playback argument: " << arg << std::endl;
             print_usage();
             std::abort();
         }
@@ -179,7 +179,7 @@ void set_relevant_arg(Thread_maze::Maze_args& maze_args,
     } else if (flag == "-bp") {
         const auto found = builder_playback_table.find(arg.data());
         if (found == builder_playback_table.end()) {
-            std::cerr << "Invalid playback argument: " << arg << std::endl;
+            std::cerr << "Invalid builder playback argument: " << arg << std::endl;
             print_usage();
             std::abort();
         }

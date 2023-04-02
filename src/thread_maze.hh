@@ -145,10 +145,10 @@ private:
     static constexpr Backtrack_marker from_east_ =    0b0010'0000;
     static constexpr Backtrack_marker from_south_ =   0b0011'0000;
     static constexpr Backtrack_marker from_west_ =    0b0100'0000;
-    static constexpr const char *const from_north_mark_ = "\033[38;5;1m█\033[0m";
-    static constexpr const char *const from_east_mark_ = "\033[38;5;2m█\033[0m";
-    static constexpr const char *const from_south_mark_ = "\033[38;5;3m█\033[0m";
-    static constexpr const char *const from_west_mark_ = "\033[38;5;4m█\033[0m";
+    static constexpr const char *const from_north_mark_ = "\033[38;5;15m\033[48;5;1m↑\033[0m";
+    static constexpr const char *const from_east_mark_ = "\033[38;5;15m\033[48;5;2m→\033[0m";
+    static constexpr const char *const from_south_mark_ = "\033[38;5;15m\033[48;5;3m↓\033[0m";
+    static constexpr const char *const from_west_mark_ = "\033[38;5;15m\033[48;5;4m←\033[0m";
     static constexpr std::array<Point,5> backtracking_marks_ = {
         {{0,0}, {-2,0}, {0,2}, {2,0}, {0,-2},}
     };

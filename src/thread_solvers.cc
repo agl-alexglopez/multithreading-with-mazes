@@ -164,6 +164,7 @@ void Thread_solvers::solve_maze() {
     if (solver_speed_) {
         set_cursor_point(maze_.row_size() + overlap_key_and_message_height, 0);
     } else {
+        clear_screen();
         print_maze();
         print_overlap_key();
         maze_.print_builder();

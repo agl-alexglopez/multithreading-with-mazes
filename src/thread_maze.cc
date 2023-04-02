@@ -266,7 +266,6 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm) {
         std::cerr << "Builder algorithm not set? Check for new builder algorithm." << std::endl;
         std::abort();
     }
-    std::cout << std::endl;
 }
 
 
