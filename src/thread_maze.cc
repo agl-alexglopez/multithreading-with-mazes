@@ -35,10 +35,16 @@ struct Disjoint_set {
     }
 
     int find(int p) {
-        if (parent[p] != p) {
-            parent[p] = find(parent[p]);
+        std::vector<int> rewire_stack;
+        while (parent[p] != p) {
+            rewire_stack.push_back(p);
+            p = parent[p];
         }
-        return parent[p];
+        while (!rewire_stack.empty()) {
+            parent[rewire_stack.back()] = p;
+            rewire_stack.pop_back();
+        }
+        return p;
     }
 
     bool is_union(int a, int b) {
@@ -533,7 +539,6 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
                 previous_square = walk;
                 walk = next;
             }
-            // Our walk needs to be depth first, so break after selection.
             break;
         }
     }
@@ -643,16 +648,16 @@ void Thread_maze::generate_randomized_kruskal_maze() {
     Disjoint_set sets(indices);
     for (const Point& p : walls) {
         if (p.row % 2 == 0) {
-            int above_set_id = set_ids[{p.row - 1, p.col}];
-            int below_set_id = set_ids[{p.row + 1, p.col}];
-            if (!sets.is_union(above_set_id, below_set_id)) {
-                join_squares({p.row - 1, p.col}, {p.row + 1, p.col});
+            Point above_cell = {p.row - 1, p.col};
+            Point below_cell = {p.row + 1, p.col};
+            if (!sets.is_union(set_ids[above_cell], set_ids[below_cell])) {
+                join_squares_animated(above_cell, below_cell);
             }
         } else {
-            int left_id = set_ids[{p.row, p.col - 1}];
-            int right_id = set_ids[{p.row, p.col + 1}];
-            if (!sets.is_union(left_id, right_id)) {
-                join_squares({p.row, p.col - 1}, {p.row, p.col + 1});
+            Point left_cell = {p.row, p.col - 1};
+            Point right_cell = {p.row, p.col + 1};
+            if (!sets.is_union(set_ids[left_cell], set_ids[right_cell])) {
+                join_squares_animated(left_cell, right_cell);
             }
         }
     }
@@ -668,16 +673,16 @@ void Thread_maze::generate_randomized_kruskal_maze_animated() {
     clear_and_flush_grid();
     for (const Point& p : walls) {
         if (p.row % 2 == 0) {
-            int above_cell_id = set_ids[{p.row - 1, p.col}];
-            int below_cell_id = set_ids[{p.row + 1, p.col}];
-            if (!sets.is_union(above_cell_id, below_cell_id)) {
-                join_squares_animated({p.row - 1, p.col}, {p.row + 1, p.col});
+            Point above_cell = {p.row - 1, p.col};
+            Point below_cell = {p.row + 1, p.col};
+            if (!sets.is_union(set_ids[above_cell], set_ids[below_cell])) {
+                join_squares_animated(above_cell, below_cell);
             }
         } else {
-            int left_cell_id = set_ids[{p.row, p.col - 1}];
-            int right_cell_id = set_ids[{p.row, p.col + 1}];
-            if (!sets.is_union(left_cell_id, right_cell_id)) {
-                join_squares_animated({p.row, p.col - 1}, {p.row, p.col + 1});
+            Point left_cell = {p.row, p.col - 1};
+            Point right_cell = {p.row, p.col + 1};
+            if (!sets.is_union(set_ids[left_cell], set_ids[right_cell])) {
+                join_squares_animated(left_cell, right_cell);
             }
         }
     }
@@ -687,6 +692,7 @@ std::vector<Thread_maze::Point> Thread_maze::load_shuffled_walls() {
     std::vector<Point> walls = {};
     // The walls between cells to the left and right. If row is odd look left and right.
     for (int row = 1; row < maze_row_size_ - 1; row += 2) {
+        // Cells will be odd walls will be even within a col.
         for (int col = 2; col < maze_col_size_ - 1; col += 2) {
             walls.push_back({row, col});
         }
@@ -705,6 +711,7 @@ std::unordered_map<Thread_maze::Point, int> Thread_maze::tag_cells() {
     std::unordered_map<Point,int> set_ids = {};
     int id = 0;
     for (int row = 1; row < maze_row_size_ - 1; row += 2) {
+        // Cells will be odd walls will be even within a col.
         for (int col = 1; col < maze_col_size_ - 1; col += 2) {
             set_ids[{row,col}] = id;
             id++;
