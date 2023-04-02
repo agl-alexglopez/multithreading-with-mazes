@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <ios>
+#include <numeric>
 #include <ostream>
 #include <random>
 #include <string>
@@ -16,6 +18,50 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+
+namespace {
+
+using Height = int;
+using Width = int;
+
+struct Disjoint_set {
+    std::unordered_map<int, int> parent;
+    std::unordered_map<int, int> rank;
+    Disjoint_set(const std::vector<int>& universe) {
+        for (const int& p : universe) {
+            parent[p] = p;
+            rank[p] = 0;
+        }
+    }
+
+    int find(int p) {
+        if (parent[p] != p) {
+            parent[p] = find(parent[p]);
+        }
+        return parent[p];
+    }
+
+    bool is_union(int a, int b) {
+        int x = find(a);
+        int y = find(b);
+        if (x == y) {
+            return true;
+        }
+        if (rank[x] > rank[y]) {
+            parent[y] = x;
+        } else if (rank[x] < rank[y]) {
+            parent[x] = y;
+        } else {
+            parent[x] = y;
+            rank[y]++;
+        }
+        return false;
+    }
+
+};
+
+
+} // namespace
 
 
 Thread_maze::Thread_maze(const Thread_maze::Maze_args& args)
@@ -212,6 +258,12 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm, Maze_game game) {
             generate_randomized_fractal_maze_animated();
         } else {
             generate_randomized_fractal_maze();
+        }
+    } else if (algorithm == Builder_algorithm::randomized_kruskal) {
+        if (builder_speed_) {
+            generate_randomized_kruskal_maze_animated();
+        } else {
+            generate_randomized_kruskal_maze();
         }
     } else {
         std::cerr << "Builder algorithm not set? Check for new builder algorithm." << std::endl;
@@ -584,9 +636,82 @@ void Thread_maze::generate_randomized_dfs_maze_animated() {
 
 
 void Thread_maze::generate_randomized_kruskal_maze() {
-
+    std::vector<Point> walls = load_shuffled_walls();
+    std::unordered_map<Point,int> set_ids = tag_cells();
+    std::vector<int> indices(set_ids.size());
+    std::iota(begin(indices), end(indices), 0);
+    Disjoint_set sets(indices);
+    for (const Point& p : walls) {
+        if (p.row % 2 == 0) {
+            int above_set_id = set_ids[{p.row - 1, p.col}];
+            int below_set_id = set_ids[{p.row + 1, p.col}];
+            if (!sets.is_union(above_set_id, below_set_id)) {
+                join_squares({p.row - 1, p.col}, {p.row + 1, p.col});
+            }
+        } else {
+            int left_id = set_ids[{p.row, p.col - 1}];
+            int right_id = set_ids[{p.row, p.col + 1}];
+            if (!sets.is_union(left_id, right_id)) {
+                join_squares({p.row, p.col - 1}, {p.row, p.col + 1});
+            }
+        }
+    }
 }
 
+void Thread_maze::generate_randomized_kruskal_maze_animated() {
+    std::vector<Point> walls = load_shuffled_walls();
+    std::unordered_map<Point,int> set_ids = tag_cells();
+    std::vector<int> indices(set_ids.size());
+    std::iota(begin(indices), end(indices), 0);
+    Disjoint_set sets(indices);
+
+    clear_and_flush_grid();
+    for (const Point& p : walls) {
+        if (p.row % 2 == 0) {
+            int above_cell_id = set_ids[{p.row - 1, p.col}];
+            int below_cell_id = set_ids[{p.row + 1, p.col}];
+            if (!sets.is_union(above_cell_id, below_cell_id)) {
+                join_squares_animated({p.row - 1, p.col}, {p.row + 1, p.col});
+            }
+        } else {
+            int left_cell_id = set_ids[{p.row, p.col - 1}];
+            int right_cell_id = set_ids[{p.row, p.col + 1}];
+            if (!sets.is_union(left_cell_id, right_cell_id)) {
+                join_squares_animated({p.row, p.col - 1}, {p.row, p.col + 1});
+            }
+        }
+    }
+}
+
+std::vector<Thread_maze::Point> Thread_maze::load_shuffled_walls() {
+    std::vector<Point> walls = {};
+    // The walls between cells to the left and right. If row is odd look left and right.
+    for (int row = 1; row < maze_row_size_ - 1; row += 2) {
+        for (int col = 2; col < maze_col_size_ - 1; col += 2) {
+            walls.push_back({row, col});
+        }
+    }
+    // The walls between cells above and below. If row is even look above and below.
+    for (int row = 2; row < maze_row_size_ - 1; row += 2) {
+        for (int col = 1; col < maze_col_size_ - 1; col += 2) {
+            walls.push_back({row, col});
+        }
+    }
+    std::shuffle(walls.begin(), walls.end(), generator_);
+    return walls;
+}
+
+std::unordered_map<Thread_maze::Point, int> Thread_maze::tag_cells() {
+    std::unordered_map<Point,int> set_ids = {};
+    int id = 0;
+    for (int row = 1; row < maze_row_size_ - 1; row += 2) {
+        for (int col = 1; col < maze_col_size_ - 1; col += 2) {
+            set_ids[{row,col}] = id;
+            id++;
+        }
+    }
+    return set_ids;
+}
 
 /* * * * * * * * * * * * * *       Recursive Subdivision         * * * * * * * * * * * * * * * * */
 
@@ -824,11 +949,9 @@ void Thread_maze::generate_randomized_grid() {
         int cur_run = 0;
         while (next.row < maze_row_size_ - 1  && next.col < maze_col_size_ - 1
                     && next.row > 0 && next.col > 0 && cur_run < run_limit) {
-            maze_[cur.row][cur.col] |= builder_bit_;
             join_squares(cur, next);
             cur = next;
 
-            maze_[next.row][next.col] |= builder_bit_;
             dfs.push(next);
             next.row += direction.row;
             next.col += direction.col;
@@ -843,8 +966,6 @@ void Thread_maze::generate_randomized_grid() {
     while (!dfs.empty()) {
         // Don't pop yet!
         Point cur = dfs.top();
-        build_path(cur.row, cur.col);
-        maze_[cur.row][cur.col] |= builder_bit_;
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         bool branches_remain = false;
         // Unvisited neighbor is always random because array is shuffled every time.
@@ -874,10 +995,8 @@ void Thread_maze::generate_randomized_grid_animated() {
         int cur_run = 0;
         while (next.row < maze_row_size_ - 1  && next.col < maze_col_size_ - 1
                     && next.row > 0 && next.col > 0 && cur_run < run_limit) {
-            maze_[cur.row][cur.col] |= builder_bit_;
             join_squares_animated(cur, next);
             cur = next;
-            maze_[next.row][next.col] |= builder_bit_;
             dfs.push(next);
             next.row += direction.row;
             next.col += direction.col;
@@ -893,7 +1012,6 @@ void Thread_maze::generate_randomized_grid_animated() {
     while (!dfs.empty()) {
         // Don't pop yet!
         Point cur = dfs.top();
-        maze_[cur.row][cur.col] |= zero_thread_;
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         bool branches_remain = false;
         // Unvisited neighbor is always random because array is shuffled every time.
@@ -1134,6 +1252,8 @@ void Thread_maze::carve_path_markings_animated(const Point& cur, const Point& ne
 
 void Thread_maze::join_squares(const Point& cur, const Point& next) {
     Point wall = cur;
+    build_path(cur.row, cur.col);
+    maze_[cur.row][cur.col] |= builder_bit_;
     if (next.row < cur.row) {
         wall.row--;
     } else if (next.row > cur.row) {
@@ -2325,6 +2445,8 @@ void Thread_maze::print_builder() const {
         std::cout << "Loop-Erased Random Walks\n";
     } else if (builder_ == Builder_algorithm::randomized_fractal) {
         std::cout << "Randomized Recursive Subdivision\n";
+    } else if (builder_ == Builder_algorithm::randomized_kruskal) {
+        std::cout << "Randomized Disjoint Sets\n";
     } else if (builder_ == Builder_algorithm::randomized_grid) {
         std::cout << "Randomized Grid Runs\n";
     } else if (builder_ == Builder_algorithm::arena) {

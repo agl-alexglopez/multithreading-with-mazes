@@ -18,6 +18,7 @@ public:
         randomized_depth_first,
         randomized_loop_erased,
         randomized_fractal,
+        randomized_kruskal,
         randomized_grid,
         arena,
     };
@@ -156,14 +157,6 @@ private:
         odd,
     };
 
-    struct Disjoint_set {
-        std::unordered_map<int, std::pair<Point, int>> parent;
-        std::unordered_map<int, std::pair<Point,int>> rank;
-    };
-
-    using Height = int;
-    using Width = int;
-
     static constexpr int marker_shift_ = 4;
     static constexpr Backtrack_marker markers_mask_ = 0b1111'0000;
     static constexpr Backtrack_marker is_origin_ =    0b0000'0000;
@@ -215,7 +208,8 @@ private:
         },
         {
             // Same but with crosses that create spikes.
-                "✸",    "╀",     "┾",    "╄",    "╁",    "╂",    "╆",    "╊",
+                "✸",    "╀",     "┾",    "╊",    "╁",    "╂",    "╆",    "╊",
+
                 "┽",    "╃",     "┿",    "╇",    "╅",    "╉",    "╈",    "╋"
         },
     }};
@@ -316,6 +310,9 @@ private:
     void generate_randomized_dfs_maze();
     void generate_randomized_dfs_maze_animated();
     void generate_randomized_kruskal_maze();
+    void generate_randomized_kruskal_maze_animated();
+    std::vector<Point> load_shuffled_walls();
+    std::unordered_map<Point, int> tag_cells();
     void generate_randomized_fractal_maze();
     void generate_randomized_fractal_maze_animated();
     void generate_randomized_loop_erased_maze();
