@@ -36,6 +36,14 @@ public:
         Solver_speed speed = Solver_speed::instant;
     };
 
+    Thread_solvers(Thread_maze& maze, const Solver_args& args);
+    void solve_maze();
+    void print_overlap_key() const;
+
+
+private:
+
+
     /* The maze builder is responsible for zeroing out the direction bits as part of the
      * building process. When solving the maze we adjust how we use the middle bits.
      *
@@ -60,17 +68,9 @@ public:
     using Thread_paint = uint16_t;
     using Thread_cache = uint16_t;
 
-    Thread_solvers(Thread_maze& maze, const Solver_args& args);
-    void solve_maze();
-    void print_overlap_key() const;
 
-
-private:
-
-
-    static constexpr Thread_maze::Square start_bit_ =   0b0100'0000'0000'0000;
-    static constexpr Thread_maze::Square finish_bit_ =  0b1000'0000'0000'0000;
-
+    static constexpr Thread_paint start_bit_ =   0b0100'0000'0000'0000;
+    static constexpr Thread_paint finish_bit_ =  0b1000'0000'0000'0000;
     static constexpr int num_threads_ = 4;
     static constexpr Thread_paint thread_tag_offset_ = 4;
     static constexpr Thread_paint thread_mask_ =  0b1111'0000;
@@ -83,7 +83,6 @@ private:
     };
 
     static constexpr Thread_cache clear_cache_ = 0b0001'1111'1111'0000;
-
     static constexpr Thread_cache cache_mask_ =  0b1111'0000'0000;
     static constexpr Thread_cache zero_seen_ =   0b0001'0000'0000;
     static constexpr Thread_cache one_seen_ =    0b0010'0000'0000;
@@ -91,24 +90,27 @@ private:
     static constexpr Thread_cache three_seen_ =  0b1000'0000'0000;
 
     static constexpr int starting_path_len_ = 4096;
-    static constexpr const char *const ansi_red_ = "\033[38;5;1m";
-    static constexpr const char *const ansi_grn_ = "\033[38;5;2m";
-    static constexpr const char *const ansi_yel_ = "\033[38;5;3m";
-    static constexpr const char *const ansi_blu_ = "\033[38;5;4m";
-    static constexpr const char *const ansi_prp_ = "\033[38;5;183m";
-    static constexpr const char *const ansi_mag_ = "\033[38;5;201m";
-    static constexpr const char *const ansi_cyn_ = "\033[38;5;87m";
-    static constexpr const char *const ansi_wit_ = "\033[38;5;231m";
-    static constexpr const char *const ansi_prp_red_ = "\033[38;5;204m";
-    static constexpr const char *const ansi_blu_mag_ = "\033[38;5;105m";
-    static constexpr const char *const ansi_red_grn_blu_ = "\033[38;5;121m";
-    static constexpr const char *const ansi_grn_prp_ = "\033[38;5;106m";
-    static constexpr const char *const ansi_grn_blu_prp_ = "\033[38;5;60m";
-    static constexpr const char *const ansi_red_grn_prp_ = "\033[38;5;105m";
-    static constexpr const char *const ansi_red_blu_prp_ = "\033[38;5;89m";
-    static constexpr const char *const ansi_dark_blu_mag_ = "\033[38;5;57m";
+    static constexpr const char *const ansi_clear_screen_ = "\033[2J\033[1;1H";
+    static constexpr const char *const ansi_red_ = "\033[38;5;1m█\033[0m";
+    static constexpr const char *const ansi_grn_ = "\033[38;5;2m█\033[0m";
+    static constexpr const char *const ansi_yel_ = "\033[38;5;3m█\033[0m";
+    static constexpr const char *const ansi_blu_ = "\033[38;5;4m█\033[0m";
+    static constexpr const char *const ansi_prp_ = "\033[38;5;183m█\033[0m";
+    static constexpr const char *const ansi_mag_ = "\033[38;5;201m█\033[0m";
+    static constexpr const char *const ansi_cyn_ = "\033[38;5;87m█\033[0m";
+    static constexpr const char *const ansi_wit_ = "\033[38;5;231m█\033[0m";
+    static constexpr const char *const ansi_prp_red_ = "\033[38;5;204m█\033[0m";
+    static constexpr const char *const ansi_blu_mag_ = "\033[38;5;105m█\033[0m";
+    static constexpr const char *const ansi_red_grn_blu_ = "\033[38;5;121m█\033[0m";
+    static constexpr const char *const ansi_grn_prp_ = "\033[38;5;106m█\033[0m";
+    static constexpr const char *const ansi_grn_blu_prp_ = "\033[38;5;60m█\033[0m";
+    static constexpr const char *const ansi_red_grn_prp_ = "\033[38;5;105m█\033[0m";
+    static constexpr const char *const ansi_red_blu_prp_ = "\033[38;5;89m█\033[0m";
+    static constexpr const char *const ansi_dark_blu_mag_ = "\033[38;5;57m█\033[0m";
     static constexpr const char *const ansi_bold_ = "\033[1m";
     static constexpr const char *const ansi_nil_ = "\033[0m";
+    static constexpr const char *const ansi_finish_ = "\033[1m\033[38;5;87mF\033[0m";
+    static constexpr const char *const ansi_start_ = "\033[1m\033[38;5;87mS\033[0m";
     static constexpr std::array<const char *const,16> thread_colors_ = {
         ansi_nil_,
         // Threads Overlaps. The zero thread is the zero index bit with a value of 1.
@@ -130,7 +132,7 @@ private:
     static constexpr std::array<Thread_maze::Point,7> all_directions_ = {
         { {1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1} }
     };
-    static constexpr int overlap_key_and_message_height = 17;
+    static constexpr int overlap_key_and_message_height = 11;
     static constexpr std::array<int,8> solver_speeds_ = {
         0, 20000, 10000, 5000, 2000, 1000, 500, 250
     };

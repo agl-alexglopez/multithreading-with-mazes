@@ -1192,7 +1192,7 @@ void Thread_solvers::clear_and_flush_paths() const {
 }
 
 void Thread_solvers::clear_screen() const {
-    std::cout << Thread_maze::ansi_clear_screen_;
+    std::cout << ansi_clear_screen_;
 }
 
 void Thread_solvers::print_maze() const {
@@ -1214,12 +1214,12 @@ void Thread_solvers::flush_cursor_path_coordinate(int row, int col) const {
 void Thread_solvers::print_point(int row, int col) const {
     const Thread_maze::Square& square = maze_[row][col];
     if (square & finish_bit_) {
-        std::cout << ansi_bold_ << ansi_cyn_ << "F" << ansi_nil_;
+        std::cout << ansi_finish_;
     } else if (square & start_bit_) {
-        std::cout << ansi_bold_ << ansi_cyn_ << "S" << ansi_nil_;
+        std::cout << ansi_start_;
     } else if (square & thread_mask_) {
         Thread_paint thread_color = (square & thread_mask_) >> thread_tag_offset_;
-        std::cout << thread_colors_[thread_color] << "█" << ansi_nil_;
+        std::cout << thread_colors_[thread_color];
     } else {
         maze_.print_maze_square(row, col);
     }
@@ -1247,31 +1247,23 @@ void Thread_solvers::print_solver() const {
 void Thread_solvers::print_solution_path() const {
     if (game_ == Maze_game::gather) {
         for (const Thread_paint& mask : thread_masks_) {
-            std::cout << thread_colors_.at(mask >> thread_tag_offset_) << "█" << ansi_nil_;
+            std::cout << thread_colors_.at(mask >> thread_tag_offset_);
         }
         std::cout << " All threads found their finish squares!\n";
     } else {
         std::cout << thread_colors_.at(thread_masks_[escape_path_index_] >> thread_tag_offset_)
-                  << "█" << " thread won!" << ansi_nil_ << "\n";
+                  << " thread won!" << "\n";
     }
 }
 
 void Thread_solvers::print_overlap_key() const {
-    const std::string d = "█████████████";
-    const char *const n = ansi_nil_;
-    std:: cout << "┌─────────────────────────────────────────────────────────────────────┐\n"
-               << "│  Overlapping Color Key: 3_THREAD | 2_THREAD | 1_THREAD | 0_THREAD   │\n"
-               << "├─────────────┬─────────────┬─────────────┬─────────────┬─────────────┤\n"
-               << "│     0       │     1       │    1|0      │     2       │     2|0     │\n"
-               << "├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
-               << "│"<<thread_colors_[1]<<d<<n<<"│"<<thread_colors_[2]<<d<<n<<"│"<<thread_colors_[3]<<d<<n<<"│"<<thread_colors_[4]<<d<<n<<"│"<<thread_colors_[5]<<d<<n<<"│\n"
-               << "├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
-               << "│    2|1      │   2|1|0     │     3       │    3|0      │     3|1     │\n"
-               << "├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
-               << "│"<<thread_colors_[6]<<d<<n<<"│"<<thread_colors_[7]<<d<<n<<"│"<<thread_colors_[8]<<d<<n<<"│"<<thread_colors_[9]<<d<<n<<"│"<<thread_colors_[10]<<d<<n<<"│\n"
-               << "├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
-               << "│    3|1|0    │    3|2      │   3|2|0     │   3|2|1     │   3|2|1|0   │\n"
-               << "├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤\n"
-               << "│"<<thread_colors_[11]<<d<<n<<"│"<<thread_colors_[12]<<d<<n<<"│"<<thread_colors_[13]<<d<<n<<"│"<<thread_colors_[14]<<d<<n<<"│"<<thread_colors_[15]<<d<<n<<"│\n"
-               << "└─────────────┴─────────────┴─────────────┴─────────────┴─────────────┘\n";
+    std:: cout << "┌────────────────────────────────────────────────────────────────┐\n"
+               << "│     Overlap Key: 3_THREAD | 2_THREAD | 1_THREAD | 0_THREAD     │\n"
+               << "├────────────┬────────────┬────────────┬────────────┬────────────┤\n"
+               << "│ "<<thread_colors_[1]<<" = 0      │ "<<thread_colors_[2]<<" = 1      │ "<<thread_colors_[3]<<" = 1|0    │ "<<thread_colors_[4]<<" = 2      │ "<<thread_colors_[5]<<" = 2|0    │\n"
+               << "├────────────┼────────────┼────────────┼────────────┼────────────┤\n"
+               << "│ "<<thread_colors_[6]<<" = 2|1    │ "<<thread_colors_[7]<<" = 2|1|0  │ "<<thread_colors_[8]<<" = 3      │ "<<thread_colors_[9]<<" = 3|0    │ "<<thread_colors_[10]<<" = 3|1    │\n"
+               << "├────────────┼────────────┼────────────┼────────────┼────────────┤\n"
+               << "│ "<<thread_colors_[11]<<" = 3|1|0  │ "<<thread_colors_[12]<<" = 3|2    │ "<<thread_colors_[13]<<" = 3|2|0  │ "<<thread_colors_[14]<<" = 3|2|1  │ "<<thread_colors_[15]<<" = 3|2|1|0│\n"
+               << "└────────────┴────────────┴────────────┴────────────┴────────────┘\n";
 }

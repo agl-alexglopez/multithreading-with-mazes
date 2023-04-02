@@ -15,7 +15,6 @@
 class Thread_maze {
 
 public:
-    static constexpr const char *const ansi_clear_screen_ = "\033[2J\033[1;1H";
 
     enum class Builder_algorithm {
         randomized_depth_first,
@@ -110,12 +109,8 @@ public:
      *                    0b0000 0000 0000 0000
      */
     using Square = uint16_t;
-    using Wall_line = uint16_t;
-    using Backtrack_marker = uint16_t;
-    static constexpr Square builder_bit_ = 0b0001'0000'0000'0000;
     static constexpr Square path_bit_ =    0b0010'0000'0000'0000;
-    static constexpr Square start_bit_ =   0b0100'0000'0000'0000;
-    static constexpr Square clear_unused_ = 0b0001'1111'1111'0000;
+    static constexpr Square clear_available_bits_ = 0b0001'1111'1111'0000;
 
     Thread_maze(const Maze_args& args);
     void new_maze();
@@ -138,6 +133,11 @@ private:
         odd,
     };
 
+    using Wall_line = uint16_t;
+    using Backtrack_marker = uint16_t;
+
+    static constexpr Square start_bit_ =   0b0100'0000'0000'0000;
+    static constexpr Square builder_bit_ = 0b0001'0000'0000'0000;
     static constexpr int marker_shift_ = 4;
     static constexpr Backtrack_marker markers_mask_ = 0b1111'0000;
     static constexpr Backtrack_marker is_origin_ =    0b0000'0000;
@@ -145,6 +145,7 @@ private:
     static constexpr Backtrack_marker from_east_ =    0b0010'0000;
     static constexpr Backtrack_marker from_south_ =   0b0011'0000;
     static constexpr Backtrack_marker from_west_ =    0b0100'0000;
+    static constexpr const char *const ansi_clear_screen_ = "\033[2J\033[1;1H";
     static constexpr const char *const from_north_mark_ = "\033[38;5;15m\033[48;5;1m↑\033[0m";
     static constexpr const char *const from_east_mark_ = "\033[38;5;15m\033[48;5;2m→\033[0m";
     static constexpr const char *const from_south_mark_ = "\033[38;5;15m\033[48;5;3m↓\033[0m";
@@ -223,7 +224,6 @@ private:
     std::mt19937 generator_;
     std::uniform_int_distribution<int> row_random_;
     std::uniform_int_distribution<int> col_random_;
-    int escape_path_index_;
     void generate_maze(Builder_algorithm algorithm);
     void generate_randomized_dfs_maze();
     void generate_randomized_dfs_maze_animated();

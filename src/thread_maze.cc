@@ -1331,7 +1331,7 @@ void Thread_maze::print_maze() const {
 void Thread_maze::clear_squares() {
     for (std::vector<Square>& row : maze_) {
         for (Square& square : row) {
-            square &= ~clear_unused_;
+            square &= ~clear_available_bits_;
         }
     }
 }
