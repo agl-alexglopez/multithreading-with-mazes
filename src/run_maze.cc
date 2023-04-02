@@ -4,6 +4,7 @@
 #include <string_view>
 #include <unordered_set>
 #include "thread_maze.hh"
+#include "thread_solvers.hh"
 
 const std::unordered_set<std::string> argument_flags = {
     "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-sp", "-bp"
@@ -24,10 +25,10 @@ const std::unordered_map<std::string,Thread_maze::Maze_modification> modificatio
     {"x", Thread_maze::Maze_modification::add_x},
 };
 
-const std::unordered_map<std::string,Thread_maze::Solver_algorithm> solver_table = {
-    {"dfs", Thread_maze::Solver_algorithm::depth_first_search},
-    {"rdfs", Thread_maze::Solver_algorithm::randomized_depth_first_search},
-    {"bfs", Thread_maze::Solver_algorithm::breadth_first_search},
+const std::unordered_map<std::string,Thread_solvers::Solver_algorithm> solver_table = {
+    {"dfs", Thread_solvers::Solver_algorithm::depth_first_search},
+    {"rdfs", Thread_solvers::Solver_algorithm::randomized_depth_first_search},
+    {"bfs", Thread_solvers::Solver_algorithm::breadth_first_search},
 };
 
 const std::unordered_map<std::string,Thread_maze::Maze_style> style_table = {
@@ -39,21 +40,21 @@ const std::unordered_map<std::string,Thread_maze::Maze_style> style_table = {
     {"spikes", Thread_maze::Maze_style::spikes},
 };
 
-const std::unordered_map<std::string,Thread_maze::Maze_game> game_table = {
-    {"hunt", Thread_maze::Maze_game::hunt},
-    {"gather", Thread_maze::Maze_game::gather},
-    {"corners", Thread_maze::Maze_game::corners},
+const std::unordered_map<std::string,Thread_solvers::Maze_game> game_table = {
+    {"hunt", Thread_solvers::Maze_game::hunt},
+    {"gather", Thread_solvers::Maze_game::gather},
+    {"corners", Thread_solvers::Maze_game::corners},
 };
 
-const std::unordered_map<std::string,Thread_maze::Solver_speed> solver_playback_table = {
-    {"0", Thread_maze::Solver_speed::instant},
-    {"1", Thread_maze::Solver_speed::speed_1},
-    {"2", Thread_maze::Solver_speed::speed_2},
-    {"3", Thread_maze::Solver_speed::speed_3},
-    {"4", Thread_maze::Solver_speed::speed_4},
-    {"5", Thread_maze::Solver_speed::speed_5},
-    {"6", Thread_maze::Solver_speed::speed_6},
-    {"7", Thread_maze::Solver_speed::speed_7},
+const std::unordered_map<std::string,Thread_solvers::Solver_speed> solver_playback_table = {
+    {"0", Thread_solvers::Solver_speed::instant},
+    {"1", Thread_solvers::Solver_speed::speed_1},
+    {"2", Thread_solvers::Solver_speed::speed_2},
+    {"3", Thread_solvers::Solver_speed::speed_3},
+    {"4", Thread_solvers::Solver_speed::speed_4},
+    {"5", Thread_solvers::Solver_speed::speed_5},
+    {"6", Thread_solvers::Solver_speed::speed_6},
+    {"7", Thread_solvers::Solver_speed::speed_7},
 };
 
 const std::unordered_map<std::string,Thread_maze::Builder_speed> builder_playback_table = {
@@ -67,23 +68,21 @@ const std::unordered_map<std::string,Thread_maze::Builder_speed> builder_playbac
     {"7", Thread_maze::Builder_speed::speed_7},
 };
 
-void set_relevant_arg(Thread_maze::Maze_args& maze_args,
+void set_relevant_arg(Thread_maze::Maze_args& maze_args, Thread_solvers::Solver_args& solver_args,
                       std::string_view flag,
                       std::string_view arg);
 void print_usage();
 
 int main(int argc, char **argv) {
     Thread_maze::Maze_args maze_args = {};
-    if (argc == 1) {
-        Thread_maze maze(maze_args);
-        maze.solve_maze();
-    } else {
+    Thread_solvers::Solver_args solver_args = {};
+    if (argc > 1) {
         const std::vector<std::string_view> args(argv + 1, argv + argc);
         bool process_current = false;
         std::string_view prev_flag = {};
         for (const std::string_view& arg : args) {
             if (process_current) {
-                set_relevant_arg(maze_args, prev_flag, arg);
+                set_relevant_arg(maze_args, solver_args, prev_flag, arg);
                 process_current = false;
             } else {
                 const auto& found_arg = argument_flags.find(arg.data());
@@ -101,13 +100,14 @@ int main(int argc, char **argv) {
                 }
             }
         }
-        Thread_maze maze(maze_args);
-        maze.solve_maze();
     }
+    Thread_maze maze(maze_args);
+    Thread_solvers(maze, solver_args).solve_maze();
     return 0;
 }
 
 void set_relevant_arg(Thread_maze::Maze_args& maze_args,
+                      Thread_solvers::Solver_args& solver_args,
                       std::string_view flag,
                       std::string_view arg) {
     if (flag == "-r") {
@@ -151,7 +151,7 @@ void set_relevant_arg(Thread_maze::Maze_args& maze_args,
             print_usage();
             std::abort();
         }
-        maze_args.solver = found->second;
+        solver_args.solver = found->second;
     } else if (flag == "-g") {
         const auto found = game_table.find(arg.data());
         if (found == game_table.end()) {
@@ -159,7 +159,7 @@ void set_relevant_arg(Thread_maze::Maze_args& maze_args,
             print_usage();
             std::abort();
         }
-        maze_args.game = found->second;
+        solver_args.game = found->second;
     } else if (flag == "-d") {
         const auto found = style_table.find(arg.data());
         if (found == style_table.end()) {
@@ -175,7 +175,7 @@ void set_relevant_arg(Thread_maze::Maze_args& maze_args,
             print_usage();
             std::abort();
         }
-        maze_args.solver_speed = found->second;
+        solver_args.speed = found->second;
     } else if (flag == "-bp") {
         const auto found = builder_playback_table.find(arg.data());
         if (found == builder_playback_table.end()) {

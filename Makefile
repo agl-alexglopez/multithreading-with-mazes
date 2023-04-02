@@ -4,7 +4,7 @@ BINDIR = bin
 OBJDIR = obj
 SRC := $(wildcard $(SRCDIR)/*.cc)
 OBJ := $(patsubst $(SRCDIR)/%.cc, $(OBJDIR)/%.o,$(SRC))
-DEPENDENCIES = $(SRCDIR)/thread_maze.hh
+DEPENDENCIES = $(SRCDIR)/thread_maze.hh $(SRCDIR)/thread_solvers.hh
 # CXX = /usr/bin/clang++-10
 
 PROGS = run_maze
