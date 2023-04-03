@@ -19,6 +19,7 @@
 #include <queue>
 #include <iostream>
 #include <thread>
+#include <unordered_set>
 #include <vector>
 
 namespace {
@@ -30,11 +31,16 @@ class Disjoint_set {
 public:
     Disjoint_set(const std::vector<int>& maze_square_ids)
         : parent_set_(maze_square_ids.size()),
-          set_rank_(maze_square_ids.size()){
+          set_rank_(maze_square_ids.size(), 0){
         for (size_t elem = 0; elem < maze_square_ids.size(); elem++) {
             parent_set_[elem] = elem;
-            set_rank_[elem] = 0;
         }
+    }
+
+    Disjoint_set(int num_sets)
+        : parent_set_(num_sets),
+          set_rank_(num_sets, 0){
+        std::iota(begin(parent_set_), end(parent_set_), 0);
     }
 
     int find(int p) {
@@ -50,11 +56,11 @@ public:
         return p;
     }
 
-    bool is_union(int a, int b) {
+    bool made_union(int a, int b) {
         int x = find(a);
         int y = find(b);
         if (x == y) {
-            return true;
+            return false;
         }
         if (set_rank_[x] > set_rank_[y]) {
             parent_set_[y] = x;
@@ -64,7 +70,7 @@ public:
             parent_set_[x] = y;
             set_rank_[y]++;
         }
-        return false;
+        return true;
     }
 
     bool is_union_no_merge(int a, int b) {
@@ -674,13 +680,13 @@ void Thread_maze::generate_randomized_kruskal_maze() {
         if (p.row % 2 == 0) {
             Point above_cell = {p.row - 1, p.col};
             Point below_cell = {p.row + 1, p.col};
-            if (!sets.is_union(set_ids[above_cell], set_ids[below_cell])) {
+            if (sets.made_union(set_ids[above_cell], set_ids[below_cell])) {
                 join_squares(above_cell, below_cell);
             }
         } else {
             Point left_cell = {p.row, p.col - 1};
             Point right_cell = {p.row, p.col + 1};
-            if (!sets.is_union(set_ids[left_cell], set_ids[right_cell])) {
+            if (sets.made_union(set_ids[left_cell], set_ids[right_cell])) {
                 join_squares(left_cell, right_cell);
             }
         }
@@ -698,13 +704,13 @@ void Thread_maze::generate_randomized_kruskal_maze_animated() {
         if (p.row % 2 == 0) {
             Point above_cell = {p.row - 1, p.col};
             Point below_cell = {p.row + 1, p.col};
-            if (!sets.is_union(set_ids[above_cell], set_ids[below_cell])) {
+            if (sets.made_union(set_ids[above_cell], set_ids[below_cell])) {
                 join_squares_animated(above_cell, below_cell);
             }
         } else {
             Point left_cell = {p.row, p.col - 1};
             Point right_cell = {p.row, p.col + 1};
-            if (!sets.is_union(set_ids[left_cell], set_ids[right_cell])) {
+            if (sets.made_union(set_ids[left_cell], set_ids[right_cell])) {
                 join_squares_animated(left_cell, right_cell);
             }
         }

@@ -205,6 +205,8 @@ void print_usage() {
               << "│      Any number > 7. Zoom out for larger mazes!      │\n"
               << "│  -b Builder flag. Set maze building algorithm.       │\n"
               << "│      rdfs - Randomized Depth First Search.           │\n"
+              << "│      kruskal - Randomized Kruskal's algorithm.       │\n"
+              << "│      kruskal - Randomized Prim's algorithm.          │\n"
               << "│      wilson - Loop-Erased Random Walk.               │\n"
               << "│      fractal - Randomized recursive subdivision.     │\n"
               << "│      grid - A random grid pattern.                   │\n"
