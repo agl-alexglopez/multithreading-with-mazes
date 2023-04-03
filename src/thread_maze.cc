@@ -2,7 +2,9 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <climits>
 #include <cstddef>
+#include <functional>
 #include <iomanip>
 #include <cstdint>
 #include <cstdlib>
@@ -24,9 +26,8 @@ namespace {
 using Height = int;
 using Width = int;
 
-struct Disjoint_set {
-    std::vector<int> parent_set_;
-    std::vector<int> set_rank_;
+class Disjoint_set {
+public:
     Disjoint_set(const std::vector<int>& maze_square_ids)
         : parent_set_(maze_square_ids.size()),
           set_rank_(maze_square_ids.size()){
@@ -66,6 +67,38 @@ struct Disjoint_set {
         return false;
     }
 
+    bool is_union_no_merge(int a, int b) {
+        int x = find(a);
+        int y = find(b);
+        return x == y;
+    }
+
+private:
+    std::vector<int> parent_set_;
+    std::vector<int> set_rank_;
+};
+
+struct Priority_cell {
+    Thread_maze::Point cell;
+    int priority;
+    bool operator==(const Priority_cell& rhs) const {
+        return this->priority == rhs.priority && this->cell == rhs.cell;
+    }
+    bool operator!=(const Priority_cell& rhs) const {
+        return !(*this == rhs);
+    }
+    bool operator<(const Priority_cell& rhs) const {
+        return this->priority < rhs.priority;
+    }
+    bool operator>(const Priority_cell& rhs) const {
+        return this->priority > rhs.priority;
+    }
+    bool operator<=(const Priority_cell& rhs) const {
+        return !(*this > rhs);
+    }
+    bool operator>=(const Priority_cell& rhs) const {
+        return !(*this < rhs);
+    }
 };
 
 
@@ -264,6 +297,12 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm) {
             generate_randomized_kruskal_maze_animated();
         } else {
             generate_randomized_kruskal_maze();
+        }
+    } else if (algorithm == Builder_algorithm::randomized_prim) {
+        if (builder_speed_) {
+            generate_randomized_prim_maze_animated();
+        } else {
+            generate_randomized_prim_maze();
         }
     } else {
         std::cerr << "Builder algorithm not set? Check for new builder algorithm." << std::endl;
@@ -705,6 +744,95 @@ std::unordered_map<Thread_maze::Point, int> Thread_maze::tag_cells() {
 }
 
 
+/* * * * * * * * * * * * * *          Prim's Algorithm           * * * * * * * * * * * * * * * * */
+
+
+void Thread_maze::generate_randomized_prim_maze() {
+    std::unordered_map<Point,int> cell_cost = randomize_cell_costs();
+    Point odd_point = pick_random_odd_point();
+    Priority_cell start = {odd_point, cell_cost[odd_point]};
+    std::priority_queue<Priority_cell,
+                        std::vector<Priority_cell>, std::greater<Priority_cell>> cells;
+    cells.push(start);
+    while (!cells.empty()) {
+        const Point& cur = cells.top().cell;
+        maze_[cur.row][cur.col] |= builder_bit_;
+        Point min_neighbor = {};
+        int min_weight = INT_MAX;
+        for (const Point& p : generate_directions_) {
+            Point next = {cur.row + p.row, cur.col + p.col};
+            if (next.row > 0 && next.col > 0
+                    && next.row < maze_row_size_ - 1 && next.col < maze_col_size_ - 1
+                        && !(maze_[next.row][next.col] & builder_bit_)) {
+                int weight = cell_cost[next];
+                if (weight < min_weight) {
+                    min_weight = weight;
+                    min_neighbor = next;
+                }
+            }
+        }
+        if (min_neighbor.row) {
+            join_squares(cur, min_neighbor);
+            cells.push({min_neighbor, min_weight});
+        } else {
+            cells.pop();
+        }
+    }
+}
+
+void Thread_maze::generate_randomized_prim_maze_animated() {
+    std::unordered_map<Point,int> cell_cost = randomize_cell_costs();
+    Point odd_point = pick_random_odd_point();
+    Priority_cell start = {odd_point, cell_cost[odd_point]};
+    std::priority_queue<Priority_cell,
+                        std::vector<Priority_cell>, std::greater<Priority_cell>> cells;
+    cells.push(start);
+    while (!cells.empty()) {
+        const Point& cur = cells.top().cell;
+        maze_[cur.row][cur.col] |= builder_bit_;
+        Point min_neighbor = {};
+        int min_weight = INT_MAX;
+        for (const Point& p : generate_directions_) {
+            Point next = {cur.row + p.row, cur.col + p.col};
+            if (next.row > 0 && next.col > 0
+                    && next.row < maze_row_size_ - 1 && next.col < maze_col_size_ - 1
+                        && !(maze_[next.row][next.col] & builder_bit_)) {
+                int weight = cell_cost[next];
+                if (weight < min_weight) {
+                    min_weight = weight;
+                    min_neighbor = next;
+                }
+            }
+        }
+        if (min_neighbor.row) {
+            join_squares_animated(cur, min_neighbor);
+            cells.push({min_neighbor, min_weight});
+        } else {
+            cells.pop();
+        }
+    }
+}
+
+std::unordered_map<Thread_maze::Point,int> Thread_maze::randomize_cell_costs() {
+    std::unordered_map<Point,int> cell_cost = {};
+    std::uniform_int_distribution<int> random_cost(0, 100);
+    for (int row = 1; row < maze_row_size_; row += 2) {
+        for (int col = 1; col < maze_col_size_; col += 2) {
+            cell_cost[{row, col}] = random_cost(generator_);
+        }
+    }
+    return cell_cost;
+}
+
+Thread_maze::Point Thread_maze::pick_random_odd_point() {
+    std::uniform_int_distribution<int> rand_row(1, (maze_row_size_ - 2) / 2);
+    std::uniform_int_distribution<int> rand_col(1, (maze_col_size_ - 2) / 2);
+    int odd_row = 2 * rand_row(generator_) + 1;
+    int odd_col = 2 * rand_col(generator_) + 1;
+    return {odd_row, odd_col};
+}
+
+
 /* * * * * * * * * * * * * *       Recursive Subdivision         * * * * * * * * * * * * * * * * */
 
 
@@ -737,34 +865,6 @@ void Thread_maze::generate_randomized_fractal_maze() {
         maze_[row][col] |= wall;
     };
 
-    /* All my squares are lumped together so wall logic must always be even and passage logic must
-     * but odd or vice versa. Change here if needed but they must not interfere with each other.
-     */
-
-    auto choose_division = [&](int axis_limit) -> int {
-        std::uniform_int_distribution<int> divider(1, axis_limit - 2);
-        int divide = divider(generator_);
-        if (divide % 2 != 0) {
-            divide++;
-        }
-        if (divide >= axis_limit - 1) {
-            divide -= 2;
-        }
-        return divide;
-    };
-
-    auto choose_passage = [&](int axis_limit) -> int {
-        std::uniform_int_distribution<int> random_passage(1, axis_limit - 2);
-        int passage = random_passage(generator_);
-        if (passage % 2 == 0) {
-            passage++;
-        }
-        if (passage >= axis_limit - 1) {
-            passage -= 2;
-        }
-        return passage;
-    };
-
     for (int row = 1; row < maze_row_size_ - 1; row++) {
         for (int col = 1; col < maze_col_size_ - 1; col++) {
             build_path(row, col);
@@ -778,8 +878,8 @@ void Thread_maze::generate_randomized_fractal_maze() {
         int chamber_height = std::get<1>(chamber);
         int chamber_width = std::get<2>(chamber);
         if (chamber_height >= chamber_width && chamber_width > 3) {
-            int divide = choose_division(chamber_height);
-            int passage = choose_passage(chamber_width);
+            int divide = random_even_division(chamber_height);
+            int passage = random_odd_passage(chamber_width);
             for (int col = 0; col < chamber_width; col++) {
                 if (col != passage) {
                     maze_[chamber_offset.row + divide][chamber_offset.col + col] &= ~path_bit_;
@@ -791,8 +891,8 @@ void Thread_maze::generate_randomized_fractal_maze() {
             Point offset = {chamber_offset.row + divide, chamber_offset.col};
             chamber_stack.push(std::make_tuple(offset, chamber_height - divide, chamber_width));
         } else if (chamber_width > chamber_height && chamber_height > 3){
-            int divide = choose_division(chamber_width);
-            int passage = choose_passage(chamber_height);
+            int divide = random_even_division(chamber_width);
+            int passage = random_odd_passage(chamber_height);
             for (int row = 0; row < chamber_height; row++) {
                 if (row != passage) {
                     maze_[chamber_offset.row + row][chamber_offset.col + divide] &= ~path_bit_;
@@ -848,30 +948,6 @@ void Thread_maze::generate_randomized_fractal_maze_animated() {
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     };
 
-    auto choose_division = [&](int axis_limit) -> int {
-        std::uniform_int_distribution<int> divider(1, axis_limit - 2);
-        int divide = divider(generator_);
-        if (divide % 2 != 0) {
-            divide++;
-        }
-        if (divide >= axis_limit - 1) {
-            divide -= 2;
-        }
-        return divide;
-    };
-
-    auto choose_passage = [&](int axis_limit) -> int {
-        std::uniform_int_distribution<int> random_passage(1, axis_limit - 2);
-        int passage = random_passage(generator_);
-        if (passage % 2 == 0) {
-            passage++;
-        }
-        if (passage >= axis_limit - 1) {
-            passage -= 2;
-        }
-        return passage;
-    };
-
     for (int row = 1; row < maze_row_size_ - 1; row++) {
         for (int col = 1; col < maze_col_size_ - 1; col++) {
             build_path(row, col);
@@ -886,8 +962,8 @@ void Thread_maze::generate_randomized_fractal_maze_animated() {
         int chamber_height = std::get<1>(chamber);
         int chamber_width = std::get<2>(chamber);
         if (chamber_height >= chamber_width && chamber_width > 3) {
-            int divide = choose_division(chamber_height);
-            int passage = choose_passage(chamber_width);
+            int divide = random_even_division(chamber_height);
+            int passage = random_odd_passage(chamber_width);
             for (int col = 0; col < chamber_width; col++) {
                 if (col != passage) {
                     maze_[chamber_offset.row + divide][chamber_offset.col + col] &= ~path_bit_;
@@ -899,8 +975,8 @@ void Thread_maze::generate_randomized_fractal_maze_animated() {
             Point offset = {chamber_offset.row + divide, chamber_offset.col};
             chamber_stack.push(std::make_tuple(offset, chamber_height - divide, chamber_width));
         } else if (chamber_width > chamber_height && chamber_height > 3){
-            int divide = choose_division(chamber_width);
-            int passage = choose_passage(chamber_height);
+            int divide = random_even_division(chamber_width);
+            int passage = random_odd_passage(chamber_height);
             for (int row = 0; row < chamber_height; row++) {
                 if (row != passage) {
                     maze_[chamber_offset.row + row][chamber_offset.col + divide] &= ~path_bit_;
@@ -922,6 +998,20 @@ void Thread_maze::generate_randomized_fractal_maze_animated() {
             }
         }
     }
+}
+
+/* All my squares are lumped together so wall logic must always be even and passage logic must
+ * but odd or vice versa. Change here if needed but they must not interfere with each other.
+ */
+
+int Thread_maze::random_even_division(int axis_limit) {
+    std::uniform_int_distribution<int> divider(1, (axis_limit - 2) / 2);
+    return 2 * divider(generator_);
+}
+
+int Thread_maze::random_odd_passage(int axis_limit) {
+    std::uniform_int_distribution<int> divider(1, (axis_limit - 2) / 2);
+    return 2 * divider(generator_) + 1;
 }
 
 
@@ -1250,7 +1340,9 @@ void Thread_maze::print_builder() const {
     } else if (builder_ == Builder_algorithm::randomized_fractal) {
         std::cout << "Randomized Recursive Subdivision\n";
     } else if (builder_ == Builder_algorithm::randomized_kruskal) {
-        std::cout << "Randomized Disjoint Sets\n";
+        std::cout << "Randomized Kruskal's Algorithm\n";
+    } else if (builder_ == Builder_algorithm::randomized_prim) {
+        std::cout << "Randomized Prim's Algorithm\n";
     } else if (builder_ == Builder_algorithm::randomized_grid) {
         std::cout << "Randomized Grid Runs\n";
     } else if (builder_ == Builder_algorithm::arena) {

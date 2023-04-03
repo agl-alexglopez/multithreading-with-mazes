@@ -15,6 +15,7 @@ const std::unordered_map<std::string,Thread_maze::Builder_algorithm> builder_tab
     {"wilson", Thread_maze::Builder_algorithm::randomized_loop_erased},
     {"fractal", Thread_maze::Builder_algorithm::randomized_fractal},
     {"kruskal", Thread_maze::Builder_algorithm::randomized_kruskal},
+    {"prim", Thread_maze::Builder_algorithm::randomized_prim},
     {"grid", Thread_maze::Builder_algorithm::randomized_grid},
     {"arena", Thread_maze::Builder_algorithm::arena},
 };

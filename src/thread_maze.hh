@@ -21,6 +21,7 @@ public:
         randomized_loop_erased,
         randomized_fractal,
         randomized_kruskal,
+        randomized_prim,
         randomized_grid,
         arena,
     };
@@ -211,7 +212,7 @@ private:
     };
 
     static constexpr std::array<int,8> builder_speeds_ = {
-        0, 5000, 2500, 1000, 500, 250, 100, 0
+        0, 5000, 2500, 1000, 500, 250, 100, 1
     };
 
     Builder_algorithm builder_;
@@ -231,8 +232,14 @@ private:
     void generate_randomized_kruskal_maze_animated();
     std::vector<Point> load_shuffled_walls();
     std::unordered_map<Point, int> tag_cells();
+    void generate_randomized_prim_maze();
+    void generate_randomized_prim_maze_animated();
+    std::unordered_map<Thread_maze::Point,int> randomize_cell_costs();
+    Point pick_random_odd_point();
     void generate_randomized_fractal_maze();
     void generate_randomized_fractal_maze_animated();
+    int random_even_division(int axis_limit);
+    int random_odd_passage(int axis_limit);
     void generate_randomized_loop_erased_maze();
     void generate_randomized_loop_erased_maze_animated();
     Point choose_arbitrary_point(Wilson_point start) const;
