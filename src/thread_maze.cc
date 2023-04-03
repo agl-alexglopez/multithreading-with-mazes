@@ -116,36 +116,19 @@ Thread_maze::Thread_maze(const Thread_maze::Maze_args& args)
       modification_(args.modification),
       style_(args.style),
       builder_speed_(builder_speeds_[static_cast<size_t>(args.builder_speed)]),
-      maze_(args.odd_rows, std::vector<Square>(args.odd_cols, 0)),
+      maze_(args.odd_rows, std::vector<Square>(args.odd_cols, path_bit_)),
       maze_row_size_(maze_.size()),
       maze_col_size_(maze_[0].size()),
       generator_(std::random_device{}()),
       row_random_(1, maze_row_size_ - 2),
       col_random_(1, maze_col_size_ - 2) {
-    if (builder_ != Builder_algorithm::randomized_fractal
-            && modification_ != Maze_modification::none
-                && builder_speed_) {
-        clear_screen();
-        for (int row = 0; row < maze_row_size_; row++) {
-            for (int col = 0; col < maze_col_size_; col++) {
-                build_wall(row, col);
-                if (builder_ != Builder_algorithm::randomized_fractal
-                        && modification_ != Maze_modification::none) {
-                    add_modification_animated(row, col);
-                }
-            }
-        }
-
+    if (builder_ == Builder_algorithm::randomized_loop_erased_walls
+            || builder_ == Builder_algorithm::randomized_fractal) {
+        build_wall_outline();
+    } else if (modification_ != Maze_modification::none && builder_speed_) {
+        fill_maze_with_walls_animated();
     } else {
-        for (int row = 0; row < maze_row_size_; row++) {
-            for (int col = 0; col < maze_col_size_; col++) {
-                build_wall(row, col);
-                if (builder_ != Builder_algorithm::randomized_fractal
-                        && modification_ != Maze_modification::none) {
-                    add_modification(row, col);
-                }
-            }
-        }
+        fill_maze_with_walls();
     }
     generate_maze(args.builder);
 }
@@ -265,7 +248,7 @@ void Thread_maze::add_modification_animated(int row, int col) {
 
 
 void Thread_maze::generate_maze(Builder_algorithm algorithm) {
-    if (builder_speed_ && builder_ != Builder_algorithm::randomized_fractal) {
+    if (builder_speed_) {
         clear_and_flush_grid();
     }
     if (algorithm == Builder_algorithm::randomized_depth_first) {
@@ -279,6 +262,12 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm) {
             generate_randomized_loop_erased_maze_animated();
         } else {
             generate_randomized_loop_erased_maze();
+        }
+    } else if (algorithm == Builder_algorithm::randomized_loop_erased_walls) {
+        if (builder_speed_) {
+            generate_randomized_loop_erased_walls_animated();
+        } else {
+            generate_randomized_loop_erased_walls();
         }
     } else if (algorithm == Builder_algorithm::arena) {
         if (builder_speed_) {
@@ -314,6 +303,7 @@ void Thread_maze::generate_maze(Builder_algorithm algorithm) {
         std::cerr << "Builder algorithm not set? Check for new builder algorithm." << std::endl;
         std::abort();
     }
+    check_for_modifications();
 }
 
 
@@ -343,7 +333,6 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
     auto connect_walk_to_maze = [&] (const Point& walk) {
         Point cur = walk;
         while (maze_[cur.row][cur.col] & markers_mask_) {
-            // It is now desirable to run into this path as we complete future random walks.
             maze_[cur.row][cur.col] &= ~start_bit_;
             Backtrack_marker mark = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
             const Point& direction = backtracking_marks_[mark];
@@ -359,7 +348,6 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
     };
 
     auto erase_loop = [&] (const Point& walk, const Point& loop_root) {
-        // We will forget we ever saw this loop as it may be part of a good walk later.
         Point cur = walk;
         while (cur != loop_root) {
             maze_[cur.row][cur.col] &= ~start_bit_;
@@ -384,15 +372,13 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
     };
 
     /* Important to remember that this maze builds by jumping two squares at a time. Therefore for
-     * Wilson's algorithm to work two points must both be even or odd to find each other.
+     * Wilson's algorithm to work two points must both be even or odd to find each other. For any
+     * number N, 2 * N + 1 is always odd, 2 * N is always even.
      */
-    Point start = {maze_row_size_ / 2, maze_col_size_ / 2};
-    if (start.row % 2 == 0) {
-        start.row++;
-    }
-    if (start.col % 2 == 0) {
-        start.col++;
-    }
+    std::uniform_int_distribution<int> row_rand(2, maze_row_size_ - 2);
+    std::uniform_int_distribution<int> col_rand(2, maze_col_size_ - 2);
+    Point start = { 2 * (row_rand(generator_) / 2) + 1, 2 * (col_rand(generator_) / 2) + 1};
+
     build_path(start.row, start.col);
     maze_[start.row][start.col] |= builder_bit_;
     Point walk = {1, 1};
@@ -402,13 +388,11 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
 
     Point previous_square = {};
     for (;;) {
-        // Mark our progress on our current random walk. If we see this again we have looped.
         maze_[walk.row][walk.col] |= start_bit_;
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         for (const int& i : random_direction_indices) {
             const Point& p = generate_directions_[i];
             Point next = {walk.row + p.row, walk.col + p.col};
-            // Do not check for seen squares, only valid moves and the direction we just came from.
             if (next.row <= 0 || next.row >= maze_row_size_ - 1
                         || next.col <= 0 || next.col >= maze_col_size_ - 1
                             || next == previous_square) {
@@ -420,7 +404,6 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
                 connect_walk_to_maze(walk);
                 walk = choose_arbitrary_point(Wilson_point::odd);
 
-                // This is the only way out of the wilson algorithm! Everything is connected.
                 if (!walk.row) {
                     return;
                 }
@@ -439,7 +422,6 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
                 previous_square = walk;
                 walk = next;
             }
-            // Our walk needs to be depth first, so break after selection.
             break;
         }
     }
@@ -459,7 +441,6 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
         } else {
             std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
         }
-        // Otherwise the cursor will print current and next squares excess times.
         maze_[wall.row][wall.col] |= path_bit_;
         maze_[next.row][next.col] |= path_bit_;
         maze_[next.row][next.col] &= ~start_bit_;
@@ -471,7 +452,6 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
     auto connect_walk_to_maze = [&] (const Point& walk) {
         Point cur = walk;
         while (maze_[cur.row][cur.col] & markers_mask_) {
-            // It is now desirable to run into this path as we complete future random walks.
             maze_[cur.row][cur.col] &= ~start_bit_;
             Backtrack_marker mark = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
             const Point& direction = backtracking_marks_[mark];
@@ -491,7 +471,6 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
     };
 
     auto erase_loop = [&] (const Point& walk, const Point& loop_root) {
-        // We will forget we ever saw this loop as it may be part of a good walk later.
         Point cur = walk;
         while (cur != loop_root) {
             maze_[cur.row][cur.col] &= ~start_bit_;
@@ -519,13 +498,10 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     };
 
-    Point start = {maze_row_size_ / 2, maze_col_size_ / 2};
-    if (start.row % 2 == 0) {
-        start.row++;
-    }
-    if (start.col % 2 == 0) {
-        start.col++;
-    }
+    std::uniform_int_distribution<int> row_rand(2, maze_row_size_ - 2);
+    std::uniform_int_distribution<int> col_rand(2, maze_col_size_ - 2);
+    Point start = { 2 * (row_rand(generator_) / 2) + 1, 2 * (col_rand(generator_) / 2) + 1};
+
     maze_[start.row][start.col] |= builder_bit_;
     carve_path_walls_animated(start.row, start.col);
     Point walk = {1, 1};
@@ -533,13 +509,11 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
     Point previous_square = {};
     for (;;) {
-        // Mark our progress on our current random walk. If we see this again we have looped.
         maze_[walk.row][walk.col] |= start_bit_;
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         for (const int& i : random_direction_indices) {
             const Point& p = generate_directions_[i];
             Point next = {walk.row + p.row, walk.col + p.col};
-            // Do not check for seen squares, only valid moves and the direction we just came from.
             if (next.row <= 0 || next.row >= maze_row_size_ - 1
                         || next.col <= 0 || next.col >= maze_col_size_ - 1
                             || next == previous_square) {
@@ -551,7 +525,6 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
                 connect_walk_to_maze(walk);
                 walk = choose_arbitrary_point(Wilson_point::odd);
 
-                // This is the only way out of the wilson algorithm! Everything is connected.
                 if (!walk.row) {
                     return;
                 }
@@ -589,14 +562,344 @@ Thread_maze::Point Thread_maze::choose_arbitrary_point(Wilson_point start) const
 }
 
 
+/* * * * * * * * * * * * * * *      Wilson's  Wall Adder      * * * * * * * * * * * * * * * * * * */
+
+
+void Thread_maze::generate_randomized_loop_erased_walls() {
+    auto join_walk_walls = [&](const Point& cur, const Point& next) {
+        Point wall = cur;
+        if (next.row < cur.row) {
+            wall.row--;
+        } else if (next.row > cur.row) {
+            wall.row++;
+        } else if (next.col < cur.col) {
+            wall.col--;
+        } else if (next.col > cur.col) {
+            wall.col++;
+        } else {
+            std::cerr << "Wall join error. Step through wall didn't work" << std::endl;
+            std::abort();
+        }
+        maze_[cur.row][cur.col] &= ~start_bit_;
+        maze_[next.row][next.col] &= ~start_bit_;
+        build_wall_line(cur.row, cur.col);
+        build_wall_line(wall.row, wall.col);
+        build_wall_line(next.row, next.col);
+    };
+
+    auto connect_walk_to_maze = [&] (const Point& walk) {
+        Point cur = walk;
+        while (maze_[cur.row][cur.col] & markers_mask_) {
+            Backtrack_marker mark = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
+            const Point& direction = backtracking_marks_[mark];
+            Point next = {cur.row + direction.row, cur.col + direction.col};
+            join_walk_walls(cur, next);
+            // Clean up after ourselves and leave no marks behind for the maze solvers.
+            maze_[cur.row][cur.col] &= ~markers_mask_;
+            cur = next;
+        }
+        maze_[cur.row][cur.col] &= ~start_bit_;
+        maze_[cur.row][cur.col] &= ~markers_mask_;
+        build_wall_line(cur.row, cur.col);
+    };
+
+    auto erase_loop = [&] (const Point& walk, const Point& loop_root) {
+        Point cur = walk;
+        while (cur != loop_root) {
+            maze_[cur.row][cur.col] &= ~start_bit_;
+            Backtrack_marker mark = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
+            const Point& direction = backtracking_marks_[mark];
+            Point next = {cur.row + direction.row, cur.col + direction.col};
+            maze_[cur.row][cur.col] &= ~markers_mask_;
+            cur = next;
+        }
+    };
+
+    auto mark_origin = [&] (const Point& walk, const Point& next) {
+        if (next.row > walk.row) {
+            maze_[next.row][next.col] |= from_north_;
+        } else if (next.row < walk.row) {
+            maze_[next.row][next.col] |= from_south_;
+        } else if (next.col < walk.col) {
+            maze_[next.row][next.col] |= from_east_;
+        } else if (next.col > walk.col) {
+            maze_[next.row][next.col] |= from_west_;
+        }
+    };
+
+    // Walls must start and connect between even squares.
+    std::uniform_int_distribution<int> row_rand(2, maze_row_size_ - 2);
+    std::uniform_int_distribution<int> col_rand(2, maze_col_size_ - 2);
+    Point walk = { 2 * (row_rand(generator_) / 2), 2 * (col_rand(generator_) / 2)};
+
+    std::vector<int> random_direction_indices(generate_directions_.size());
+    std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
+    Point previous_square = {};
+    for (;;) {
+        // Every walk is distinguished from the maze with the start bit.
+        maze_[walk.row][walk.col] |= start_bit_;
+        shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
+        for (const int& i : random_direction_indices) {
+            const Point& p = generate_directions_[i];
+            Point next = {walk.row + p.row, walk.col + p.col};
+            if (next.row < 0 || next.row >= maze_row_size_
+                        || next.col < 0 || next.col >= maze_col_size_
+                            || next == previous_square) {
+                continue;
+            }
+
+            if (maze_[next.row][next.col] & builder_bit_) {
+                join_walk_walls(walk, next);
+                connect_walk_to_maze(walk);
+                walk = choose_arbitrary_point(Wilson_point::even);
+
+                if (!walk.row) {
+                    return;
+                }
+
+                maze_[walk.row][walk.col] &= ~markers_mask_;
+                previous_square = {};
+            } else if (maze_[next.row][next.col] & start_bit_) {
+                erase_loop(walk, next);
+                walk = next;
+                previous_square = {};
+                Backtrack_marker mark = (maze_[walk.row][walk.col] & markers_mask_) >> marker_shift_;
+                const Point& direction = backtracking_marks_[mark];
+                previous_square = {walk.row + direction.row, walk.col + direction.col};
+            } else {
+                mark_origin(walk, next);
+                previous_square = walk;
+                walk = next;
+            }
+            break;
+        }
+    }
+}
+
+void Thread_maze::generate_randomized_loop_erased_walls_animated() {
+    auto join_walls_animated = [&](const Point& cur, const Point& next) {
+        Point wall = cur;
+        if (next.row < cur.row) {
+            wall.row--;
+        } else if (next.row > cur.row) {
+            wall.row++;
+        } else if (next.col < cur.col) {
+            wall.col--;
+        } else if (next.col > cur.col) {
+            wall.col++;
+        } else {
+            std::cerr << "Wall join error. Step through wall didn't work" << std::endl;
+            std::abort();
+        }
+        maze_[cur.row][cur.col] &= ~start_bit_;
+        maze_[next.row][next.col] &= ~start_bit_;
+        build_wall_line_animated(cur.row, cur.col);
+        build_wall_line_animated(wall.row, wall.col);
+        build_wall_line_animated(next.row, next.col);
+
+    };
+
+    auto connect_walk_to_maze = [&] (const Point& walk) {
+        Point cur = walk;
+        while (maze_[cur.row][cur.col] & markers_mask_) {
+            Backtrack_marker mark = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
+            const Point& direction = backtracking_marks_[mark];
+            Point next = {cur.row + direction.row, cur.col + direction.col};
+            join_walls_animated(cur, next);
+            // Clean up after ourselves and leave no marks behind for the maze solvers.
+            maze_[cur.row][cur.col] &= ~markers_mask_;
+            flush_cursor_maze_coordinate(cur.row, cur.col);
+            std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
+            cur = next;
+        }
+        maze_[cur.row][cur.col] &= ~start_bit_;
+        maze_[cur.row][cur.col] &= ~markers_mask_;
+        build_wall_line_animated(cur.row, cur.col);
+    };
+
+    auto erase_loop = [&] (const Point& walk, const Point& loop_root) {
+        Point cur = walk;
+        while (cur != loop_root) {
+            maze_[cur.row][cur.col] &= ~start_bit_;
+            Backtrack_marker mark = (maze_[cur.row][cur.col] & markers_mask_) >> marker_shift_;
+            const Point& direction = backtracking_marks_[mark];
+            Point next = {cur.row + direction.row, cur.col + direction.col};
+            maze_[cur.row][cur.col] &= ~markers_mask_;
+            flush_cursor_maze_coordinate(cur.row, cur.col);
+            std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
+            cur = next;
+        }
+    };
+
+    auto mark_origin = [&] (const Point& walk, const Point& next) {
+        if (next.row > walk.row) {
+            maze_[next.row][next.col] |= from_north_;
+        } else if (next.row < walk.row) {
+            maze_[next.row][next.col] |= from_south_;
+        } else if (next.col < walk.col) {
+            maze_[next.row][next.col] |= from_east_;
+        } else if (next.col > walk.col) {
+            maze_[next.row][next.col] |= from_west_;
+        }
+        flush_cursor_maze_coordinate(next.row, next.col);
+        std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
+    };
+
+    // Walls must start and connect between even squares.
+    std::uniform_int_distribution<int> row_rand(2, maze_row_size_ - 2);
+    std::uniform_int_distribution<int> col_rand(2, maze_col_size_ - 2);
+    Point walk = { 2 * (row_rand(generator_) / 2), 2 * (col_rand(generator_) / 2)};
+
+    std::vector<int> random_direction_indices(generate_directions_.size());
+    std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
+    Point previous_square = {};
+    for (;;) {
+        // Every walk is distinguished from the maze with the start bit.
+        maze_[walk.row][walk.col] |= start_bit_;
+        shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
+        for (const int& i : random_direction_indices) {
+            const Point& p = generate_directions_[i];
+            Point next = {walk.row + p.row, walk.col + p.col};
+            if (next.row < 0 || next.row >= maze_row_size_
+                        || next.col < 0 || next.col >= maze_col_size_
+                            || next == previous_square) {
+                continue;
+            }
+
+            if (maze_[next.row][next.col] & builder_bit_) {
+                join_walls_animated(walk, next);
+                connect_walk_to_maze(walk);
+                walk = choose_arbitrary_point(Wilson_point::even);
+
+                if (!walk.row) {
+                    return;
+                }
+
+                maze_[walk.row][walk.col] &= ~markers_mask_;
+                previous_square = {};
+            } else if (maze_[next.row][next.col] & start_bit_) {
+                erase_loop(walk, next);
+                walk = next;
+                previous_square = {};
+                Backtrack_marker mark = (maze_[walk.row][walk.col] & markers_mask_) >> marker_shift_;
+                const Point& direction = backtracking_marks_[mark];
+                previous_square = {walk.row + direction.row, walk.col + direction.col};
+            } else {
+                mark_origin(walk, next);
+                previous_square = walk;
+                walk = next;
+            }
+            break;
+        }
+    }
+}
+
+
+/* * * * * * * * * * * * * *       Recursive Subdivision         * * * * * * * * * * * * * * * * */
+
+
+// I made an iterative implementation because I've never seen one for this algorithm.
+void Thread_maze::generate_randomized_fractal_maze() {
+
+    std::stack<std::tuple<Point,Height,Width>> chamber_stack({{{0,0},maze_row_size_,maze_col_size_}});
+    while (!chamber_stack.empty()) {
+        std::tuple<Point,Height,Width>& chamber = chamber_stack.top();
+        const Point& chamber_offset = std::get<0>(chamber);
+        int chamber_height = std::get<1>(chamber);
+        int chamber_width = std::get<2>(chamber);
+        if (chamber_height >= chamber_width && chamber_width > 3) {
+            int divide = random_even_division(chamber_height);
+            int passage = random_odd_passage(chamber_width);
+            for (int col = 0; col < chamber_width; col++) {
+                if (col != passage) {
+                    maze_[chamber_offset.row + divide][chamber_offset.col + col] &= ~path_bit_;
+                    build_wall_line(chamber_offset.row + divide, chamber_offset.col + col);
+                }
+            }
+            // Remember to shrink height of this branch before we continue down next branch.
+            std::get<1>(chamber) = divide + 1;
+            Point offset = {chamber_offset.row + divide, chamber_offset.col};
+            chamber_stack.push(std::make_tuple(offset, chamber_height - divide, chamber_width));
+        } else if (chamber_width > chamber_height && chamber_height > 3){
+            int divide = random_even_division(chamber_width);
+            int passage = random_odd_passage(chamber_height);
+            for (int row = 0; row < chamber_height; row++) {
+                if (row != passage) {
+                    maze_[chamber_offset.row + row][chamber_offset.col + divide] &= ~path_bit_;
+                    build_wall_line(chamber_offset.row + row, chamber_offset.col + divide);
+                }
+            }
+            // In this case, we are shrinking the width.
+            std::get<2>(chamber) = divide + 1;
+            Point offset = {chamber_offset.row, chamber_offset.col + divide};
+            chamber_stack.push(std::make_tuple(offset, chamber_height, chamber_width - divide));
+        } else {
+            chamber_stack.pop();
+        }
+    }
+}
+
+void Thread_maze::generate_randomized_fractal_maze_animated() {
+
+    std::stack<std::tuple<Point,Height,Width>> chamber_stack({{{0,0},maze_row_size_,maze_col_size_}});
+    while (!chamber_stack.empty()) {
+        std::tuple<Point,Height,Width>& chamber = chamber_stack.top();
+        const Point& chamber_offset = std::get<0>(chamber);
+        int chamber_height = std::get<1>(chamber);
+        int chamber_width = std::get<2>(chamber);
+        if (chamber_height >= chamber_width && chamber_width > 3) {
+            int divide = random_even_division(chamber_height);
+            int passage = random_odd_passage(chamber_width);
+            for (int col = 0; col < chamber_width; col++) {
+                if (col != passage) {
+                    maze_[chamber_offset.row + divide][chamber_offset.col + col] &= ~path_bit_;
+                    build_wall_line_animated(chamber_offset.row + divide,
+                                             chamber_offset.col + col);
+                }
+            }
+            std::get<1>(chamber) = divide + 1;
+            Point offset = {chamber_offset.row + divide, chamber_offset.col};
+            chamber_stack.push(std::make_tuple(offset, chamber_height - divide, chamber_width));
+        } else if (chamber_width > chamber_height && chamber_height > 3){
+            int divide = random_even_division(chamber_width);
+            int passage = random_odd_passage(chamber_height);
+            for (int row = 0; row < chamber_height; row++) {
+                if (row != passage) {
+                    maze_[chamber_offset.row + row][chamber_offset.col + divide] &= ~path_bit_;
+                    build_wall_line_animated(chamber_offset.row + row,
+                                             chamber_offset.col + divide);
+                }
+            }
+            std::get<2>(chamber) = divide + 1;
+            Point offset = {chamber_offset.row, chamber_offset.col + divide};
+            chamber_stack.push(std::make_tuple(offset, chamber_height, chamber_width - divide));
+        } else {
+            chamber_stack.pop();
+        }
+    }
+}
+
+/* All my squares are lumped together so wall logic must always be even and passage logic must
+ * but odd or vice versa. Change here if needed but they must not interfere with each other.
+ */
+
+int Thread_maze::random_even_division(int axis_limit) {
+    std::uniform_int_distribution<int> divider(1, (axis_limit - 2) / 2);
+    return 2 * divider(generator_);
+}
+
+int Thread_maze::random_odd_passage(int axis_limit) {
+    std::uniform_int_distribution<int> divider(1, (axis_limit - 2) / 2);
+    return 2 * divider(generator_) + 1;
+}
+
+
+
 /* * * * * * * * * * * * * *    Randomized Depth First Search     * * * * * * * * * * * * * * * * */
 
 
 void Thread_maze::generate_randomized_dfs_maze() {
-    /* Thanks the the bits that the maze provides, we only need O(1) auxillary storage to complete
-     * our recursive depth first search maze building. We will mark our current branch and complete
-     * any backtracking by leaving backtracking instructions in the bits of path squares.
-     */
+    // Note that backtracking occurs by encoding directions into path bits. No stack needed.
     Point start = {row_random_(generator_), col_random_(generator_)};
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
@@ -637,7 +940,6 @@ void Thread_maze::generate_randomized_dfs_maze_animated() {
     Point cur = start;
     bool branches_remain = true;
     while (branches_remain) {
-        // The unvisited neighbor is always random because array is re-shuffled each time.
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         branches_remain = false;
         for (const int& i : random_direction_indices) {
@@ -839,198 +1141,12 @@ Thread_maze::Point Thread_maze::pick_random_odd_point() {
 }
 
 
-/* * * * * * * * * * * * * *       Recursive Subdivision         * * * * * * * * * * * * * * * * */
-
-
-// I made an iterative implementation because I've never seen one for this algorithm.
-void Thread_maze::generate_randomized_fractal_maze() {
-
-    /* So far these are only relevant functions to this algorithm. If they become useful elsewhere
-     * we can extract them out as member functions.
-     */
-
-    // All the other algorithms tunnel out passages. This one draws walls instead.
-    auto connect_wall = [&](int row, int col) {
-        Wall_line wall = 0b0;
-        if (row - 1 >= 0 && !(maze_[row - 1][col] & path_bit_)) {
-            wall |= north_wall_;
-            maze_[row - 1][col] |= south_wall_;
-        }
-        if (row + 1 < maze_row_size_ && !(maze_[row + 1][col] & path_bit_)) {
-            wall |= south_wall_;
-            maze_[row + 1][col] |= north_wall_;
-        }
-        if (col - 1 >= 0 && !(maze_[row][col - 1] & path_bit_)) {
-            wall |= west_wall_;
-            maze_[row][col - 1] |= east_wall_;
-        }
-        if (col + 1 < maze_col_size_ && !(maze_[row][col + 1] & path_bit_)) {
-            wall |= east_wall_;
-            maze_[row][col + 1] |= west_wall_;
-        }
-        maze_[row][col] |= wall;
-    };
-
-    for (int row = 1; row < maze_row_size_ - 1; row++) {
-        for (int col = 1; col < maze_col_size_ - 1; col++) {
-            build_path(row, col);
-        }
-    }
-    // "Recursion" is replaced by tuple for each chamber. <chamber coordinates,height,width>.
-    std::stack<std::tuple<Point,Height,Width>> chamber_stack({{{0,0},maze_row_size_,maze_col_size_}});
-    while (!chamber_stack.empty()) {
-        std::tuple<Point,Height,Width>& chamber = chamber_stack.top();
-        const Point& chamber_offset = std::get<0>(chamber);
-        int chamber_height = std::get<1>(chamber);
-        int chamber_width = std::get<2>(chamber);
-        if (chamber_height >= chamber_width && chamber_width > 3) {
-            int divide = random_even_division(chamber_height);
-            int passage = random_odd_passage(chamber_width);
-            for (int col = 0; col < chamber_width; col++) {
-                if (col != passage) {
-                    maze_[chamber_offset.row + divide][chamber_offset.col + col] &= ~path_bit_;
-                    connect_wall(chamber_offset.row + divide, chamber_offset.col + col);
-                }
-            }
-            // Remember to shrink height of this branch before we continue down next branch.
-            std::get<1>(chamber) = divide + 1;
-            Point offset = {chamber_offset.row + divide, chamber_offset.col};
-            chamber_stack.push(std::make_tuple(offset, chamber_height - divide, chamber_width));
-        } else if (chamber_width > chamber_height && chamber_height > 3){
-            int divide = random_even_division(chamber_width);
-            int passage = random_odd_passage(chamber_height);
-            for (int row = 0; row < chamber_height; row++) {
-                if (row != passage) {
-                    maze_[chamber_offset.row + row][chamber_offset.col + divide] &= ~path_bit_;
-                    connect_wall(chamber_offset.row + row, chamber_offset.col + divide);
-                }
-            }
-            // In this case, we are shrinking the width.
-            std::get<2>(chamber) = divide + 1;
-            Point offset = {chamber_offset.row, chamber_offset.col + divide};
-            chamber_stack.push(std::make_tuple(offset, chamber_height, chamber_width - divide));
-        } else {
-            chamber_stack.pop();
-        }
-    }
-    if (modification_ != Maze_modification::none) {
-        for (int row = 0; row < maze_row_size_; row++) {
-            for (int col = 0; col < maze_col_size_; col++) {
-                add_modification(row, col);
-            }
-        }
-    }
-}
-
-void Thread_maze::generate_randomized_fractal_maze_animated() {
-    auto connect_wall_animated = [&](int row, int col) {
-        Wall_line wall = 0b0;
-        if (row - 1 >= 0 && !(maze_[row - 1][col] & path_bit_)) {
-            wall |= north_wall_;
-            maze_[row - 1][col] |= south_wall_;
-            flush_cursor_maze_coordinate(row - 1, col);
-            std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
-        }
-        if (row + 1 < maze_row_size_ && !(maze_[row + 1][col] & path_bit_)) {
-            wall |= south_wall_;
-            maze_[row + 1][col] |= north_wall_;
-            flush_cursor_maze_coordinate(row + 1, col);
-            std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
-        }
-        if (col - 1 >= 0 && !(maze_[row][col - 1] & path_bit_)) {
-            wall |= west_wall_;
-            maze_[row][col - 1] |= east_wall_;
-            flush_cursor_maze_coordinate(row, col - 1);
-            std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
-        }
-        if (col + 1 < maze_col_size_ && !(maze_[row][col + 1] & path_bit_)) {
-            wall |= east_wall_;
-            maze_[row][col + 1] |= west_wall_;
-            flush_cursor_maze_coordinate(row, col + 1);
-            std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
-        }
-        maze_[row][col] |= wall;
-        flush_cursor_maze_coordinate(row, col);
-        std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
-    };
-
-    for (int row = 1; row < maze_row_size_ - 1; row++) {
-        for (int col = 1; col < maze_col_size_ - 1; col++) {
-            build_path(row, col);
-        }
-    }
-    clear_and_flush_grid();
-
-    std::stack<std::tuple<Point,Height,Width>> chamber_stack({{{0,0},maze_row_size_,maze_col_size_}});
-    while (!chamber_stack.empty()) {
-        std::tuple<Point,Height,Width>& chamber = chamber_stack.top();
-        const Point& chamber_offset = std::get<0>(chamber);
-        int chamber_height = std::get<1>(chamber);
-        int chamber_width = std::get<2>(chamber);
-        if (chamber_height >= chamber_width && chamber_width > 3) {
-            int divide = random_even_division(chamber_height);
-            int passage = random_odd_passage(chamber_width);
-            for (int col = 0; col < chamber_width; col++) {
-                if (col != passage) {
-                    maze_[chamber_offset.row + divide][chamber_offset.col + col] &= ~path_bit_;
-                    connect_wall_animated(chamber_offset.row + divide,
-                                          chamber_offset.col + col);
-                }
-            }
-            std::get<1>(chamber) = divide + 1;
-            Point offset = {chamber_offset.row + divide, chamber_offset.col};
-            chamber_stack.push(std::make_tuple(offset, chamber_height - divide, chamber_width));
-        } else if (chamber_width > chamber_height && chamber_height > 3){
-            int divide = random_even_division(chamber_width);
-            int passage = random_odd_passage(chamber_height);
-            for (int row = 0; row < chamber_height; row++) {
-                if (row != passage) {
-                    maze_[chamber_offset.row + row][chamber_offset.col + divide] &= ~path_bit_;
-                    connect_wall_animated(chamber_offset.row + row,
-                                          chamber_offset.col + divide);
-                }
-            }
-            std::get<2>(chamber) = divide + 1;
-            Point offset = {chamber_offset.row, chamber_offset.col + divide};
-            chamber_stack.push(std::make_tuple(offset, chamber_height, chamber_width - divide));
-        } else {
-            chamber_stack.pop();
-        }
-    }
-    if (modification_ != Maze_modification::none) {
-        for (int row = 0; row < maze_row_size_; row++) {
-            for (int col = 0; col < maze_col_size_; col++) {
-                add_modification_animated(row, col);
-            }
-        }
-    }
-}
-
-/* All my squares are lumped together so wall logic must always be even and passage logic must
- * but odd or vice versa. Change here if needed but they must not interfere with each other.
- */
-
-int Thread_maze::random_even_division(int axis_limit) {
-    std::uniform_int_distribution<int> divider(1, (axis_limit - 2) / 2);
-    return 2 * divider(generator_);
-}
-
-int Thread_maze::random_odd_passage(int axis_limit) {
-    std::uniform_int_distribution<int> divider(1, (axis_limit - 2) / 2);
-    return 2 * divider(generator_) + 1;
-}
-
-
 /* * * * * * * * * * * * * * * *       Randomized Grid     * * * * * * * * * * * * * * * * * * * */
 
 
 void Thread_maze::generate_randomized_grid() {
-    // We need an explicit stack. We run over previous paths so in place backtrack won't work.
     auto complete_run = [&](std::stack<Point>& dfs, Point cur, const Point& direction) {
-        /* This value is the key to this algorithm. Simply a randomized depth first search but we
-         * force the algorithm to keep running in the random direction for limited amount.
-         * Shorter run_limits converge on normal depth first search, longer create longer straights.
-         */
+        // This allows us to run over previous paths which is what makes this algorithm unique.
         const int run_limit = 4;
         Point next = {cur.row + direction.row, cur.col + direction.col};
         // Create the "grid" by running in one direction until wall or limit.
@@ -1052,13 +1168,10 @@ void Thread_maze::generate_randomized_grid() {
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
     while (!dfs.empty()) {
-        // Don't pop yet!
         Point cur = dfs.top();
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         bool branches_remain = false;
-        // Unvisited neighbor is always random because array is shuffled every time.
         for (const int& i : random_direction_indices) {
-            // Choose another square that is two spaces a way.
             const Point& direction = generate_directions_[i];
             Point next = {cur.row + direction.row, cur.col + direction.col};
             if (next.row > 0 && next.row < maze_row_size_ - 1
@@ -1097,13 +1210,10 @@ void Thread_maze::generate_randomized_grid_animated() {
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
     while (!dfs.empty()) {
-        // Don't pop yet!
         Point cur = dfs.top();
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         bool branches_remain = false;
-        // Unvisited neighbor is always random because array is shuffled every time.
         for (const int& i : random_direction_indices) {
-            // Choose another square that is two spaces a way.
             const Point& direction = generate_directions_[i];
             Point next = {cur.row + direction.row, cur.col + direction.col};
             if (next.row > 0 && next.row < maze_row_size_ - 1
@@ -1145,6 +1255,135 @@ void Thread_maze::generate_arena_animated() {
 
 /* * * * * * * * * * * * * * * * *    Maze Generation Helpers    * * * * * * * * * * * * * * * * */
 
+
+/* * * * * * * * * Wall Adders * * * * * * * */
+
+
+void Thread_maze::check_for_modifications() {
+    if (modification_ != Maze_modification::none &&
+            (builder_ == Builder_algorithm::randomized_fractal
+                || builder_ == Builder_algorithm::randomized_loop_erased_walls)) {
+        for (int row = 0; row < maze_row_size_; row++) {
+            for (int col = 0; col < maze_col_size_; col++) {
+                if (builder_speed_) {
+                    add_modification_animated(row, col);
+                } else {
+                    add_modification(row, col);
+                }
+            }
+        }
+    }
+}
+
+void Thread_maze::build_wall_outline() {
+    for (int row = 0; row < maze_row_size_; row++) {
+        for (int col = 0; col < maze_col_size_; col++) {
+            if (col == 0 || col == maze_col_size_ - 1
+                    || row == 0 || row == maze_row_size_ - 1) {
+                maze_[row][col] |= builder_bit_;
+                build_wall_carefully(row, col);
+            } else {
+                build_path(row, col);
+            }
+        }
+    }
+}
+
+void Thread_maze::build_wall_line(int row, int col) {
+    Wall_line wall = 0b0;
+    if (row - 1 >= 0 && !(maze_[row - 1][col] & path_bit_)) {
+        wall |= north_wall_;
+        maze_[row - 1][col] |= south_wall_;
+    }
+    if (row + 1 < maze_row_size_ && !(maze_[row + 1][col] & path_bit_)) {
+        wall |= south_wall_;
+        maze_[row + 1][col] |= north_wall_;
+    }
+    if (col - 1 >= 0 && !(maze_[row][col - 1] & path_bit_)) {
+        wall |= west_wall_;
+        maze_[row][col - 1] |= east_wall_;
+    }
+    if (col + 1 < maze_col_size_ && !(maze_[row][col + 1] & path_bit_)) {
+        wall |= east_wall_;
+        maze_[row][col + 1] |= west_wall_;
+    }
+    maze_[row][col] |= wall;
+    maze_[row][col] |= builder_bit_;
+    maze_[row][col] &= ~path_bit_;
+}
+
+void Thread_maze::build_wall_line_animated(int row, int col) {
+    Wall_line wall = 0b0;
+    if (row - 1 >= 0 && !(maze_[row - 1][col] & path_bit_)) {
+        wall |= north_wall_;
+        maze_[row - 1][col] |= south_wall_;
+        flush_cursor_maze_coordinate(row - 1, col);
+        std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
+    }
+    if (row + 1 < maze_row_size_ && !(maze_[row + 1][col] & path_bit_)) {
+        wall |= south_wall_;
+        maze_[row + 1][col] |= north_wall_;
+        flush_cursor_maze_coordinate(row + 1, col);
+        std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
+    }
+    if (col - 1 >= 0 && !(maze_[row][col - 1] & path_bit_)) {
+        wall |= west_wall_;
+        maze_[row][col - 1] |= east_wall_;
+        flush_cursor_maze_coordinate(row, col - 1);
+        std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
+    }
+    if (col + 1 < maze_col_size_ && !(maze_[row][col + 1] & path_bit_)) {
+        wall |= east_wall_;
+        maze_[row][col + 1] |= west_wall_;
+        flush_cursor_maze_coordinate(row, col + 1);
+        std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
+    }
+    maze_[row][col] |= wall;
+    maze_[row][col] |= builder_bit_;
+    maze_[row][col] &= ~path_bit_;
+    flush_cursor_maze_coordinate(row, col);
+    std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
+}
+
+void Thread_maze::clear_for_wall_adders() {
+    for (int row = 0; row < maze_row_size_; row++) {
+        for (int col = 0; col < maze_col_size_; col++) {
+            if (col == 0 || col == maze_col_size_ - 1 || row == 0 || row == maze_row_size_ - 1) {
+                maze_[row][col] |= builder_bit_;
+            } else {
+                build_path(row, col);
+            }
+        }
+    }
+}
+
+
+/* * * * * * * * * Path Carvers * * * * * * * */
+
+
+void Thread_maze::fill_maze_with_walls() {
+    for (int row = 0; row < maze_row_size_; row++) {
+        for (int col = 0; col < maze_col_size_; col++) {
+            build_wall(row, col);
+            if (modification_ != Maze_modification::none) {
+                add_modification(row, col);
+            }
+        }
+    }
+}
+
+void Thread_maze::fill_maze_with_walls_animated() {
+    clear_screen();
+    for (int row = 0; row < maze_row_size_; row++) {
+        for (int col = 0; col < maze_col_size_; col++) {
+            build_wall(row, col);
+            if (builder_ != Builder_algorithm::randomized_fractal
+                    && modification_ != Maze_modification::none) {
+                add_modification_animated(row, col);
+            }
+        }
+    }
+}
 
 void Thread_maze::carve_path_walls (int row, int col) {
     maze_[row][col] |= path_bit_;
@@ -1289,6 +1528,29 @@ void Thread_maze::build_wall(int row, int col) {
         wall |= east_wall_;
     }
     maze_[row][col] |= wall;
+    maze_[row][col] &= ~path_bit_;
+}
+
+void Thread_maze::build_wall_carefully(int row, int col) {
+    Wall_line wall = 0b0;
+    if (row - 1 >= 0 && !(maze_[row - 1][col] & path_bit_)) {
+        wall |= north_wall_;
+        maze_[row - 1][col] |= south_wall_;
+    }
+    if (row + 1 < maze_row_size_ && !(maze_[row + 1][col] & path_bit_)) {
+        wall |= south_wall_;
+        maze_[row + 1][col] |= north_wall_;
+    }
+    if (col - 1 >= 0 && !(maze_[row][col - 1] & path_bit_)) {
+        wall |= west_wall_;
+        maze_[row][col - 1] |= east_wall_;
+    }
+    if (col + 1 < maze_col_size_ && !(maze_[row][col + 1] & path_bit_)) {
+        wall |= east_wall_;
+        maze_[row][col + 1] |= west_wall_;
+    }
+    maze_[row][col] |= wall;
+    maze_[row][col] &= ~path_bit_;
 }
 
 void Thread_maze::build_path(int row, int col) {
@@ -1343,6 +1605,8 @@ void Thread_maze::print_builder() const {
         std::cout << "Randomized Depth First Search\n";
     } else if (builder_ == Builder_algorithm::randomized_loop_erased) {
         std::cout << "Loop-Erased Random Walks\n";
+    } else if (builder_ == Builder_algorithm::randomized_loop_erased_walls) {
+        std::cout << "Loop-Erased Random Walls\n";
     } else if (builder_ == Builder_algorithm::randomized_fractal) {
         std::cout << "Randomized Recursive Subdivision\n";
     } else if (builder_ == Builder_algorithm::randomized_kruskal) {

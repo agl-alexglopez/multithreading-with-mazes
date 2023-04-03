@@ -13,6 +13,7 @@ const std::unordered_set<std::string> argument_flags = {
 const std::unordered_map<std::string,Thread_maze::Builder_algorithm> builder_table = {
     {"rdfs", Thread_maze::Builder_algorithm::randomized_depth_first},
     {"wilson", Thread_maze::Builder_algorithm::randomized_loop_erased},
+    {"wilson-walls", Thread_maze::Builder_algorithm::randomized_loop_erased_walls},
     {"fractal", Thread_maze::Builder_algorithm::randomized_fractal},
     {"kruskal", Thread_maze::Builder_algorithm::randomized_kruskal},
     {"prim", Thread_maze::Builder_algorithm::randomized_prim},
@@ -206,8 +207,9 @@ void print_usage() {
               << "│  -b Builder flag. Set maze building algorithm.       │\n"
               << "│      rdfs - Randomized Depth First Search.           │\n"
               << "│      kruskal - Randomized Kruskal's algorithm.       │\n"
-              << "│      kruskal - Randomized Prim's algorithm.          │\n"
-              << "│      wilson - Loop-Erased Random Walk.               │\n"
+              << "│      prim - Randomized Prim's algorithm.             │\n"
+              << "│      wilson - Loop-Erased Random Path Carver.        │\n"
+              << "│      wilson-walls - Loop-Erased Random Wall Adder.   │\n"
               << "│      fractal - Randomized recursive subdivision.     │\n"
               << "│      grid - A random grid pattern.                   │\n"
               << "│      arena - Open floor with no walls.               │\n"

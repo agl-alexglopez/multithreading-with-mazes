@@ -19,6 +19,7 @@ public:
     enum class Builder_algorithm {
         randomized_depth_first,
         randomized_loop_erased,
+        randomized_loop_erased_walls,
         randomized_fractal,
         randomized_kruskal,
         randomized_prim,
@@ -236,12 +237,18 @@ private:
     void generate_randomized_prim_maze_animated();
     std::unordered_map<Thread_maze::Point,int> randomize_cell_costs();
     Point pick_random_odd_point();
-    void generate_randomized_fractal_maze();
-    void generate_randomized_fractal_maze_animated();
-    int random_even_division(int axis_limit);
-    int random_odd_passage(int axis_limit);
     void generate_randomized_loop_erased_maze();
     void generate_randomized_loop_erased_maze_animated();
+    void generate_randomized_loop_erased_walls();
+    void generate_randomized_loop_erased_walls_animated();
+    void generate_randomized_fractal_maze();
+    void generate_randomized_fractal_maze_animated();
+    void build_wall_line(int row, int col);
+    void build_wall_line_animated(int row, int col);
+    void check_for_modifications();
+    void clear_for_wall_adders();
+    int random_even_division(int axis_limit);
+    int random_odd_passage(int axis_limit);
     Point choose_arbitrary_point(Wilson_point start) const;
     void carve_path_walls(int row, int col);
     void carve_path_walls_animated(int row, int col);
@@ -251,11 +258,15 @@ private:
     void generate_randomized_grid_animated();
     void generate_arena();
     void generate_arena_animated();
+    void build_wall_outline();
+    void fill_maze_with_walls();
+    void fill_maze_with_walls_animated();
     void join_squares(const Point& cur, const Point& next);
     void join_squares_animated(const Point& cur, const Point& next);
     void build_path(int row, int col);
     void build_path_animated(int row, int col);
     void build_wall(int row, int col);
+    void build_wall_carefully(int row, int col);
     void add_modification(int row, int col);
     void add_modification_animated(int row, int col);
     Point find_nearest_square(Point choice);
