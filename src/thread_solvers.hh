@@ -151,7 +151,6 @@ private:
     std::uniform_int_distribution<int> row_random_;
     std::uniform_int_distribution<int> col_random_;
 
-
     void place_start_finish();
     void place_start_finish_animated();
     void solve_with_dfs_threads();

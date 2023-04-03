@@ -211,7 +211,7 @@ private:
     };
 
     static constexpr std::array<int,8> builder_speeds_ = {
-        0, 10000, 5000, 2500, 1000, 500, 250, 100
+        0, 5000, 2500, 1000, 500, 250, 100, 0
     };
 
     Builder_algorithm builder_;

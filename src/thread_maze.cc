@@ -226,6 +226,9 @@ void Thread_maze::add_modification_animated(int row, int col) {
 
 
 void Thread_maze::generate_maze(Builder_algorithm algorithm) {
+    if (builder_speed_ && builder_ != Builder_algorithm::randomized_fractal) {
+        clear_and_flush_grid();
+    }
     if (algorithm == Builder_algorithm::randomized_depth_first) {
         if (builder_speed_) {
             generate_randomized_dfs_maze_animated();
@@ -471,7 +474,6 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
         std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
     };
 
-    clear_and_flush_grid();
     Point start = {maze_row_size_ / 2, maze_col_size_ / 2};
     if (start.row % 2 == 0) {
         start.row++;
@@ -584,7 +586,6 @@ void Thread_maze::generate_randomized_dfs_maze() {
 }
 
 void Thread_maze::generate_randomized_dfs_maze_animated() {
-    clear_and_flush_grid();
     Point start = {row_random_(generator_), col_random_(generator_)};
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
@@ -645,7 +646,6 @@ void Thread_maze::generate_randomized_kruskal_maze() {
             }
         }
     }
-    std::cout << sets.parent_set_.size() << std::endl;
 }
 
 void Thread_maze::generate_randomized_kruskal_maze_animated() {
@@ -655,7 +655,6 @@ void Thread_maze::generate_randomized_kruskal_maze_animated() {
     std::iota(begin(indices), end(indices), 0);
     Disjoint_set sets(indices);
 
-    clear_and_flush_grid();
     for (const Point& p : walls) {
         if (p.row % 2 == 0) {
             Point above_cell = {p.row - 1, p.col};
@@ -704,6 +703,7 @@ std::unordered_map<Thread_maze::Point, int> Thread_maze::tag_cells() {
     }
     return set_ids;
 }
+
 
 /* * * * * * * * * * * * * *       Recursive Subdivision         * * * * * * * * * * * * * * * * */
 
@@ -877,8 +877,8 @@ void Thread_maze::generate_randomized_fractal_maze_animated() {
             build_path(row, col);
         }
     }
-
     clear_and_flush_grid();
+
     std::stack<std::tuple<Point,Height,Width>> chamber_stack({{{0,0},maze_row_size_,maze_col_size_}});
     while (!chamber_stack.empty()) {
         std::tuple<Point,Height,Width>& chamber = chamber_stack.top();
@@ -996,7 +996,6 @@ void Thread_maze::generate_randomized_grid_animated() {
         }
     };
 
-    clear_and_flush_grid();
     Point start = {row_random_(generator_), col_random_(generator_)};
     std::stack<Point> dfs({start});
     std::vector<int> random_direction_indices(generate_directions_.size());
@@ -1040,7 +1039,6 @@ void Thread_maze::generate_arena() {
 }
 
 void Thread_maze::generate_arena_animated() {
-    clear_and_flush_grid();
     for (int row = 2; row < maze_row_size_ - 2; row++) {
         for (int col = 2; col < maze_col_size_ - 2; col++) {
             carve_path_walls_animated(row, col);
@@ -1327,6 +1325,7 @@ void Thread_maze::print_maze() const {
 
 
 /* * * * * * * * * * *     Miscellaneous Maze Functionality and Overloads      * * * * * * * * * */
+
 
 void Thread_maze::clear_squares() {
     for (std::vector<Square>& row : maze_) {

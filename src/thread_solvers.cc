@@ -810,6 +810,7 @@ bool Thread_solvers::randomized_dfs_thread_gather_animated(Thread_maze::Point st
             maze_[cur.row][cur.col] &= ~paint;
             flush_cursor_path_coordinate(cur.row, cur.col);
             solver_mutex_.unlock();
+            std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
             dfs.pop();
         }
     }
