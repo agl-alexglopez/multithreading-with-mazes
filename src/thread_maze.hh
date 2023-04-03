@@ -263,6 +263,8 @@ private:
     void fill_maze_with_walls_animated();
     void join_squares(const Point& cur, const Point& next);
     void join_squares_animated(const Point& cur, const Point& next);
+    void mark_origin(const Point& cur, const Point& next);
+    void mark_origin_animated(const Point& cur, const Point& next);
     void build_path(int row, int col);
     void build_path_animated(int row, int col);
     void build_wall(int row, int col);

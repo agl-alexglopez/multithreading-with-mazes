@@ -359,18 +359,6 @@ void Thread_maze::generate_randomized_loop_erased_maze() {
         }
     };
 
-    auto mark_origin = [&] (const Point& walk, const Point& next) {
-        if (next.row > walk.row) {
-            maze_[next.row][next.col] |= from_north_;
-        } else if (next.row < walk.row) {
-            maze_[next.row][next.col] |= from_south_;
-        } else if (next.col < walk.col) {
-            maze_[next.row][next.col] |= from_east_;
-        } else if (next.col > walk.col) {
-            maze_[next.row][next.col] |= from_west_;
-        }
-    };
-
     /* Important to remember that this maze builds by jumping two squares at a time. Therefore for
      * Wilson's algorithm to work two points must both be even or odd to find each other. For any
      * number N, 2 * N + 1 is always odd, 2 * N is always even.
@@ -484,20 +472,6 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
         }
     };
 
-    auto mark_origin = [&] (const Point& walk, const Point& next) {
-        if (next.row > walk.row) {
-            maze_[next.row][next.col] |= from_north_;
-        } else if (next.row < walk.row) {
-            maze_[next.row][next.col] |= from_south_;
-        } else if (next.col < walk.col) {
-            maze_[next.row][next.col] |= from_east_;
-        } else if (next.col > walk.col) {
-            maze_[next.row][next.col] |= from_west_;
-        }
-        flush_cursor_maze_coordinate(next.row, next.col);
-        std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
-    };
-
     std::uniform_int_distribution<int> row_rand(2, maze_row_size_ - 2);
     std::uniform_int_distribution<int> col_rand(2, maze_col_size_ - 2);
     Point start = { 2 * (row_rand(generator_) / 2) + 1, 2 * (col_rand(generator_) / 2) + 1};
@@ -539,7 +513,7 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated() {
                 const Point& direction = backtracking_marks_[mark];
                 previous_square = {walk.row + direction.row, walk.col + direction.col};
             } else {
-                mark_origin(walk, next);
+                mark_origin_animated(walk, next);
                 previous_square = walk;
                 walk = next;
             }
@@ -566,6 +540,7 @@ Thread_maze::Point Thread_maze::choose_arbitrary_point(Wilson_point start) const
 
 
 void Thread_maze::generate_randomized_loop_erased_walls() {
+
     auto join_walk_walls = [&](const Point& cur, const Point& next) {
         Point wall = cur;
         if (next.row < cur.row) {
@@ -612,18 +587,6 @@ void Thread_maze::generate_randomized_loop_erased_walls() {
             Point next = {cur.row + direction.row, cur.col + direction.col};
             maze_[cur.row][cur.col] &= ~markers_mask_;
             cur = next;
-        }
-    };
-
-    auto mark_origin = [&] (const Point& walk, const Point& next) {
-        if (next.row > walk.row) {
-            maze_[next.row][next.col] |= from_north_;
-        } else if (next.row < walk.row) {
-            maze_[next.row][next.col] |= from_south_;
-        } else if (next.col < walk.col) {
-            maze_[next.row][next.col] |= from_east_;
-        } else if (next.col > walk.col) {
-            maze_[next.row][next.col] |= from_west_;
         }
     };
 
@@ -731,20 +694,6 @@ void Thread_maze::generate_randomized_loop_erased_walls_animated() {
         }
     };
 
-    auto mark_origin = [&] (const Point& walk, const Point& next) {
-        if (next.row > walk.row) {
-            maze_[next.row][next.col] |= from_north_;
-        } else if (next.row < walk.row) {
-            maze_[next.row][next.col] |= from_south_;
-        } else if (next.col < walk.col) {
-            maze_[next.row][next.col] |= from_east_;
-        } else if (next.col > walk.col) {
-            maze_[next.row][next.col] |= from_west_;
-        }
-        flush_cursor_maze_coordinate(next.row, next.col);
-        std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
-    };
-
     // Walls must start and connect between even squares.
     std::uniform_int_distribution<int> row_rand(2, maze_row_size_ - 2);
     std::uniform_int_distribution<int> col_rand(2, maze_col_size_ - 2);
@@ -785,7 +734,7 @@ void Thread_maze::generate_randomized_loop_erased_walls_animated() {
                 const Point& direction = backtracking_marks_[mark];
                 previous_square = {walk.row + direction.row, walk.col + direction.col};
             } else {
-                mark_origin(walk, next);
+                mark_origin_animated(walk, next);
                 previous_square = walk;
                 walk = next;
             }
@@ -1355,6 +1304,32 @@ void Thread_maze::clear_for_wall_adders() {
             }
         }
     }
+}
+
+void Thread_maze::mark_origin(const Point& walk, const Point& next) {
+    if (next.row > walk.row) {
+        maze_[next.row][next.col] |= from_north_;
+    } else if (next.row < walk.row) {
+        maze_[next.row][next.col] |= from_south_;
+    } else if (next.col < walk.col) {
+        maze_[next.row][next.col] |= from_east_;
+    } else if (next.col > walk.col) {
+        maze_[next.row][next.col] |= from_west_;
+    }
+}
+
+void Thread_maze::mark_origin_animated(const Point& walk, const Point& next) {
+    if (next.row > walk.row) {
+        maze_[next.row][next.col] |= from_north_;
+    } else if (next.row < walk.row) {
+        maze_[next.row][next.col] |= from_south_;
+    } else if (next.col < walk.col) {
+        maze_[next.row][next.col] |= from_east_;
+    } else if (next.col > walk.col) {
+        maze_[next.row][next.col] |= from_west_;
+    }
+    flush_cursor_maze_coordinate(next.row, next.col);
+    std::this_thread::sleep_for(std::chrono::microseconds(builder_speed_));
 }
 
 
