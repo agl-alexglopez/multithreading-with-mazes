@@ -17,9 +17,9 @@ Here is the help message that comes with the `-h` flag to get started.
 Use flags, followed by arguments, in any order:
 
 - `-r` Rows flag. Set rows for the maze.
-	  - Any number > 7. Zoom out for larger mazes!
+	- Any number > 7. Zoom out for larger mazes!
 - `-c` Columns flag. Set columns for the maze.
-	  - Any number > 7. Zoom out for larger mazes!
+	- Any number > 7. Zoom out for larger mazes!
 - `-b` Builder flag. Set maze building algorithm.
 	- `rdfs` - Randomized Depth First Search.
 	- `kruskal` - Randomized Kruskal's algorithm.
