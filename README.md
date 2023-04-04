@@ -6,7 +6,7 @@
 
 ## Quick Start Guide
 
-This project is a command line application that can be run with various combinations of commands. The basic principle behind the commands is that you can ask for any combination of settings, include any settings, exclude any settings, and the program will just work. There are sensible defaults for every flag so experiment with different combinations and tweaks until you get what you are looking for. To start, you should focus mainly on how big you want the maze to be, what algorithm you want to generate it, what algorithm you want to solve it, and if any of these algorithms should be animated in real time. For now, building the project is simple if you have a compiler that supports c++20. From the root directory of this project run make.
+This project is a command line application that can be run with various combinations of commands. The basic principle behind the commands is that you can ask for any combination of settings, include any settings, exclude any settings, and the program will just work. There are sensible defaults for every flag so experiment with different combinations and tweaks until you get what you are looking for. To start, you should focus mainly on how big you want the maze to be, what algorithm you want to generate it, what algorithm you want to solve it, and if any of these algorithms should be animated in real time. For now, building the project is simple if you have a compiler that supports C++20. From the root directory of this project run make.
 
 ```zsh
 $ make
@@ -350,3 +350,8 @@ while the stack is not empty
 ![arena-loop](/images/arena-loop.gif)
 
 This is just a simple arena of paths. Try different solver algorithms to see some pretty colors.
+
+## References
+
+- *Mazes for Programmers* by Jamis Buck was a great starting point for many of the core ideas behind the algorithms that build these mazes. However, writing in C++ required me to often take a different approaches than those used by Buck.
+- The [Maze Generation Algorithm](https://en.wikipedia.org/wiki/Maze_generation_algorithm) Wikipedia page is very helpful in outlining some pseudocode for most of these algorithms.
