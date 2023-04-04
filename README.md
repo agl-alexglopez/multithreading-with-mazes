@@ -230,7 +230,7 @@ This algorithm spreads out nicely as it builds like clusters all over the grid. 
 
 ![wilson-loop](/images/wilson-loop.gif)
 
-The wilson algorithms are my favorite. They are a much more visually interesting and fun to implement approach at producing a minimum spanning tree. This algorithm, as I have implemented it goes as follows.
+The wilson algorithms are my favorite. They are a much more visually interesting and fun to implement approach at producing perfect mazes. This algorithm, as I have implemented it goes as follows.
 
 ```txt
 pick a random square and make it a path that is part of a maze
