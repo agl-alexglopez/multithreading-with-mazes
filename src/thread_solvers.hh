@@ -1,6 +1,7 @@
 #ifndef THREAD_SOLVERS_HH
 #define THREAD_SOLVERS_HH
 #include "thread_maze.hh"
+#include "my_queue.hh"
 #include <vector>
 #include <unordered_map>
 #include <queue>
@@ -94,7 +95,7 @@ private:
     static constexpr Thread_cache two_seen_ =    0b0100'0000'0000;
     static constexpr Thread_cache three_seen_ =  0b1000'0000'0000;
 
-    static constexpr int starting_path_len_ = 4096;
+    static constexpr int starting_path_len_ = 2048;
     static constexpr const char *const ansi_clear_screen_ = "\033[2J\033[1;1H";
     static constexpr const char *const ansi_red_ = "\033[38;5;1m█\033[0m";
     static constexpr const char *const ansi_grn_ = "\033[38;5;2m█\033[0m";
@@ -153,7 +154,7 @@ private:
     int escape_path_index_;
     // Allocate these in the constructor and threads will reference them for light thread switches.
     std::vector<std::vector<Thread_maze::Point>> thread_paths_;
-    std::vector<std::queue<Thread_maze::Point>> thread_queues_;
+    std::vector<My_queue<Thread_maze::Point>> thread_queues_;
     std::vector<std::unordered_map<Thread_maze::Point,Thread_maze::Point>> thread_bfs_maps;
     std::mt19937 generator_;
     std::uniform_int_distribution<int> row_random_;
@@ -167,18 +168,18 @@ private:
     void animate_with_randomized_dfs_threads();
     void solve_with_bfs_threads();
     void animate_with_bfs_threads();
-    bool dfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint);
-    bool dfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint);
-    bool randomized_dfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint);
-    bool randomized_dfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint);
-    bool dfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint);
-    bool dfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint);
-    bool randomized_dfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint);
-    bool randomized_dfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint);
-    bool bfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint);
-    bool bfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint);
-    bool bfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint);
-    bool bfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint);
+    void dfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint);
+    void dfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint);
+    void randomized_dfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint);
+    void randomized_dfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint);
+    void dfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint);
+    void dfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint);
+    void randomized_dfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint);
+    void randomized_dfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint);
+    void bfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint);
+    void bfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint);
+    void bfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint);
+    void bfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint);
     Thread_maze::Point pick_random_point();
     Thread_maze::Point find_nearest_square(Thread_maze::Point choice);
     void print_solver() const;

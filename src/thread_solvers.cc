@@ -17,9 +17,9 @@ Thread_solvers::Thread_solvers(Thread_maze& maze, const Solver_args& args)
       generator_(std::random_device{}()),
       row_random_(1, maze_.row_size() - 2),
       col_random_(1, maze_.col_size() - 2) {
-    // If threads need to rely on heap for thread safe resizing, we slow parallelism.
-    for (std::vector<Thread_maze::Point>& vec : thread_paths_) {
-        vec.reserve(starting_path_len_);
+    for (size_t i = 0; i < thread_paths_.size(); i++) {
+        thread_paths_[i].reserve(starting_path_len_);
+        thread_queues_[i].reserve(starting_path_len_);
     }
 }
 
@@ -260,7 +260,7 @@ void Thread_solvers::animate_with_dfs_threads() {
     }
 }
 
-bool Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint) {
+void Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     /* We have useful bits in a square. Each square can use a unique bit to track seen threads.
      * Each thread could maintain its own hashset, but this is much more space efficient. Use
      * the space the maze already occupies and provides.
@@ -269,13 +269,11 @@ bool Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index,
     // Each thread only needs enough space for an O(current path length) stack.
     std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
     dfs.push_back(start);
-    bool result = false;
     Thread_maze::Point cur = start;
     while (!dfs.empty()) {
         // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
         if (escape_path_index_ != -1) {
-            result = false;
-            break;
+            return;
         }
 
         // Don't pop() yet!
@@ -283,15 +281,14 @@ bool Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index,
 
         if (maze_[cur.row][cur.col] & finish_bit_) {
             solver_mutex_.lock();
-            bool tie_break = escape_path_index_ == -1;
-            if (tie_break) {
+            if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
             solver_mutex_.unlock();
-            result = tie_break;
             dfs.pop_back();
             break;
         }
+
         solver_mutex_.lock();
         maze_[cur.row][cur.col] |= seen;
         solver_mutex_.unlock();
@@ -318,26 +315,23 @@ bool Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index,
             dfs.pop_back();
         }
     }
+    solver_mutex_.lock();
     // Another benefit of true depth first search is our stack holds path to exact location.
     for (const Thread_maze::Point& p : dfs) {
-        solver_mutex_.lock();
         maze_[p.row][p.col] |= paint;
-        solver_mutex_.unlock();
     }
-    return result;
+    solver_mutex_.unlock();
 }
 
-bool Thread_solvers::dfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
+void Thread_solvers::dfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
     std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
     dfs.push_back(start);
-    bool result = false;
     Thread_maze::Point cur = start;
     while (!dfs.empty()) {
         // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
         if (escape_path_index_ != -1) {
-            result = false;
-            break;
+            return;
         }
 
         // Don't pop() yet!
@@ -345,14 +339,12 @@ bool Thread_solvers::dfs_thread_hunt_animated(Thread_maze::Point start, int thre
 
         if (maze_[cur.row][cur.col] & finish_bit_) {
             solver_mutex_.lock();
-            bool tie_break = escape_path_index_ == -1;
-            if (tie_break) {
+            if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
             solver_mutex_.unlock();
-            result = tie_break;
             dfs.pop_back();
-            break;
+            return;
         }
         solver_mutex_.lock();
         maze_[cur.row][cur.col] |= seen;
@@ -388,14 +380,12 @@ bool Thread_solvers::dfs_thread_hunt_animated(Thread_maze::Point start, int thre
             dfs.pop_back();
         }
     }
-    return result;
 }
 
-bool Thread_solvers::dfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint) {
+void Thread_solvers::dfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
     std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
     dfs.push_back(start);
-    bool result = false;
     Thread_maze::Point cur = start;
     while (!dfs.empty()) {
         cur = dfs.back();
@@ -405,13 +395,16 @@ bool Thread_solvers::dfs_thread_gather(Thread_maze::Point start, int thread_inde
         if (maze_[cur.row][cur.col] & finish_bit_
                 && !(maze_[cur.row][cur.col] & cache_mask_)){
             maze_[cur.row][cur.col] |= seen;
-            solver_mutex_.unlock();
             dfs.pop_back();
-            break;
+            for (const Thread_maze::Point& p : dfs) {
+                maze_[p.row][p.col] |= paint;
+            }
+            solver_mutex_.unlock();
+            return;
         }
-        // Shoot, another thread beat us here. Mark and move on to another finish.
         maze_[cur.row][cur.col] |= seen;
         solver_mutex_.unlock();
+
         // Bias each thread's first choice towards orginal dispatch direction. More coverage.
         int direction_index = thread_index;
         bool found_branch_to_explore = false;
@@ -433,40 +426,30 @@ bool Thread_solvers::dfs_thread_gather(Thread_maze::Point start, int thread_inde
             dfs.pop_back();
         }
     }
-    for (const Thread_maze::Point& p : dfs) {
-        solver_mutex_.lock();
-        maze_[p.row][p.col] |= paint;
-        solver_mutex_.unlock();
-    }
-    return result;
 }
 
-bool Thread_solvers::dfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
+void Thread_solvers::dfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
     std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
     dfs.push_back(start);
-    bool result = false;
     Thread_maze::Point cur = start;
     while (!dfs.empty()) {
         cur = dfs.back();
 
         solver_mutex_.lock();
-        // We are the first thread to this finish! Claim it!
         if (maze_[cur.row][cur.col] & finish_bit_
                 && !(maze_[cur.row][cur.col] & cache_mask_)){
             maze_[cur.row][cur.col] |= seen;
             solver_mutex_.unlock();
             dfs.pop_back();
-            break;
+            return;
         }
-        // Shoot, another thread beat us here. Mark and move on to another finish.
         maze_[cur.row][cur.col] |= seen;
         maze_[cur.row][cur.col] |= paint;
         flush_cursor_path_coordinate(cur.row, cur.col);
         solver_mutex_.unlock();
         std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
 
-        // Bias each thread's first choice towards orginal dispatch direction. More coverage.
         int direction_index = thread_index;
         bool found_branch_to_explore = false;
         do {
@@ -492,7 +475,6 @@ bool Thread_solvers::dfs_thread_gather_animated(Thread_maze::Point start, int th
             dfs.pop_back();
         }
     }
-    return result;
 }
 
 
@@ -578,28 +560,25 @@ void Thread_solvers::solve_with_randomized_dfs_threads() {
     }
 }
 
-bool Thread_solvers::randomized_dfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint) {
+void Thread_solvers::randomized_dfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
     std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
     dfs.push_back(start);
-    bool result = false;
     Thread_maze::Point cur = start;
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
     while (!dfs.empty()) {
         if (escape_path_index_ != -1) {
-            result = false;
             break;
         }
+
         cur = dfs.back();
         if (maze_[cur.row][cur.col] & finish_bit_) {
             solver_mutex_.lock();
-            bool tie_break = escape_path_index_ == -1;
-            if (tie_break) {
+            if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
             solver_mutex_.unlock();
-            result = tie_break;
             dfs.pop_back();
             break;
         }
@@ -625,38 +604,33 @@ bool Thread_solvers::randomized_dfs_thread_hunt(Thread_maze::Point start, int th
             dfs.pop_back();
         }
     }
+    solver_mutex_.lock();
     for (const Thread_maze::Point& p : dfs) {
-        solver_mutex_.lock();
         maze_[p.row][p.col] |= paint;
-        solver_mutex_.unlock();
     }
-    return result;
+    solver_mutex_.unlock();
 }
 
-bool Thread_solvers::randomized_dfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
+void Thread_solvers::randomized_dfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
     std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
     dfs.push_back(start);
-    bool result = false;
     Thread_maze::Point cur = start;
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
     while (!dfs.empty()) {
         if (escape_path_index_ != -1) {
-            result = false;
-            break;
+            return;
         }
         cur = dfs.back();
         if (maze_[cur.row][cur.col] & finish_bit_) {
             solver_mutex_.lock();
-            bool tie_break = escape_path_index_ == -1;
-            if (tie_break) {
+            if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
             solver_mutex_.unlock();
-            result = tie_break;
             dfs.pop_back();
-            break;
+            return;
         }
         solver_mutex_.lock();
         maze_[cur.row][cur.col] |= seen;
@@ -689,14 +663,12 @@ bool Thread_solvers::randomized_dfs_thread_hunt_animated(Thread_maze::Point star
             dfs.pop_back();
         }
     }
-    return result;
 }
 
-bool Thread_solvers::randomized_dfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint) {
+void Thread_solvers::randomized_dfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
     std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
     dfs.push_back(start);
-    bool result = false;
     Thread_maze::Point cur = start;
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
@@ -706,10 +678,12 @@ bool Thread_solvers::randomized_dfs_thread_gather(Thread_maze::Point start, int 
         if (maze_[cur.row][cur.col] & finish_bit_
                 && !(maze_[cur.row][cur.col] & cache_mask_)){
             maze_[cur.row][cur.col] |= seen;
-            solver_mutex_.unlock();
-            result = true;
             dfs.pop_back();
-            break;
+            for (const Thread_maze::Point& p : dfs) {
+                maze_[p.row][p.col] |= paint;
+            }
+            solver_mutex_.unlock();
+            return;
         }
         maze_[cur.row][cur.col] |= seen;
         solver_mutex_.unlock();
@@ -732,19 +706,12 @@ bool Thread_solvers::randomized_dfs_thread_gather(Thread_maze::Point start, int 
             dfs.pop_back();
         }
     }
-    for (const Thread_maze::Point& p : dfs) {
-        solver_mutex_.lock();
-        maze_[p.row][p.col] |= paint;
-        solver_mutex_.unlock();
-    }
-    return result;
 }
 
-bool Thread_solvers::randomized_dfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
+void Thread_solvers::randomized_dfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
     std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
     dfs.push_back(start);
-    bool result = false;
     Thread_maze::Point cur = start;
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
@@ -755,9 +722,8 @@ bool Thread_solvers::randomized_dfs_thread_gather_animated(Thread_maze::Point st
                 && !(maze_[cur.row][cur.col] & cache_mask_)){
             maze_[cur.row][cur.col] |= seen;
             solver_mutex_.unlock();
-            result = true;
             dfs.pop_back();
-            break;
+            return;
         }
         maze_[cur.row][cur.col] |= seen;
         maze_[cur.row][cur.col] |= paint;
@@ -789,7 +755,6 @@ bool Thread_solvers::randomized_dfs_thread_gather_animated(Thread_maze::Point st
             dfs.pop_back();
         }
     }
-    return result;
 }
 
 
@@ -914,18 +879,16 @@ void Thread_solvers::animate_with_bfs_threads() {
     }
 }
 
-bool Thread_solvers::bfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint) {
+void Thread_solvers::bfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     // This will be how we rebuild the path because queue does not represent the current path.
     std::unordered_map<Thread_maze::Point,Thread_maze::Point>& seen = thread_bfs_maps[thread_index];
     seen[start] = {-1,-1};
-    std::queue<Thread_maze::Point>& bfs = thread_queues_[thread_index];
+    My_queue<Thread_maze::Point>& bfs = thread_queues_[thread_index];
     bfs.push(start);
-    bool result = false;
     Thread_maze::Point cur = start;
     while (!bfs.empty()) {
         // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
         if (escape_path_index_ != -1) {
-            result = false;
             break;
         }
 
@@ -934,12 +897,10 @@ bool Thread_solvers::bfs_thread_hunt(Thread_maze::Point start, int thread_index,
 
         if (maze_[cur.row][cur.col] & finish_bit_) {
             solver_mutex_.lock();
-            bool tie_break = escape_path_index_ == -1;
-            if (tie_break) {
+            if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
             solver_mutex_.unlock();
-            result = tie_break;
             break;
         }
         // This creates a nice fanning out of mixed color for each searching thread.
@@ -964,21 +925,18 @@ bool Thread_solvers::bfs_thread_hunt(Thread_maze::Point start, int thread_index,
         thread_paths_[thread_index].push_back(cur);
         cur = seen.at(cur);
     }
-    return result;
 }
 
-bool Thread_solvers::bfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
+void Thread_solvers::bfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     // This will be how we rebuild the path because queue does not represent the current path.
     std::unordered_map<Thread_maze::Point,Thread_maze::Point>& seen = thread_bfs_maps[thread_index];
     seen[start] = {-1,-1};
-    std::queue<Thread_maze::Point>& bfs = thread_queues_[thread_index];
+    My_queue<Thread_maze::Point>& bfs = thread_queues_[thread_index];
     bfs.push(start);
-    bool result = false;
     Thread_maze::Point cur = start;
     while (!bfs.empty()) {
         // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
         if (escape_path_index_ != -1) {
-            result = false;
             break;
         }
 
@@ -987,12 +945,10 @@ bool Thread_solvers::bfs_thread_hunt_animated(Thread_maze::Point start, int thre
 
         if (maze_[cur.row][cur.col] & finish_bit_) {
             solver_mutex_.lock();
-            bool tie_break = escape_path_index_ == -1;
-            if (tie_break) {
+            if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
             solver_mutex_.unlock();
-            result = tie_break;
             break;
         }
         // This creates a nice fanning out of mixed color for each searching thread.
@@ -1019,16 +975,14 @@ bool Thread_solvers::bfs_thread_hunt_animated(Thread_maze::Point start, int thre
         thread_paths_[thread_index].push_back(cur);
         cur = seen.at(cur);
     }
-    return result;
 }
 
-bool Thread_solvers::bfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint) {
+void Thread_solvers::bfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     std::unordered_map<Thread_maze::Point,Thread_maze::Point>& seen = thread_bfs_maps[thread_index];
     Thread_cache seen_bit = paint << 4;
     seen[start] = {-1,-1};
-    std::queue<Thread_maze::Point>& bfs = thread_queues_[thread_index];
+    My_queue<Thread_maze::Point>& bfs = thread_queues_[thread_index];
     bfs.push(start);
-    bool result = false;
     Thread_maze::Point cur = start;
     while (!bfs.empty()) {
         cur = bfs.front();
@@ -1063,16 +1017,14 @@ bool Thread_solvers::bfs_thread_gather(Thread_maze::Point start, int thread_inde
         cur = seen.at(cur);
     }
     escape_path_index_ = thread_index;
-    return result;
 }
 
-bool Thread_solvers::bfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
+void Thread_solvers::bfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     std::unordered_map<Thread_maze::Point,Thread_maze::Point>& seen = thread_bfs_maps[thread_index];
     Thread_cache seen_bit = paint << 4;
     seen[start] = {-1,-1};
-    std::queue<Thread_maze::Point>& bfs = thread_queues_[thread_index];
+    My_queue<Thread_maze::Point>& bfs = thread_queues_[thread_index];
     bfs.push(start);
-    bool result = false;
     Thread_maze::Point cur = start;
     while (!bfs.empty()) {
         cur = bfs.front();
@@ -1082,6 +1034,7 @@ bool Thread_solvers::bfs_thread_gather_animated(Thread_maze::Point start, int th
         if (maze_[cur.row][cur.col] & finish_bit_) {
             if (!(maze_[cur.row][cur.col] & cache_mask_)) {
                 maze_[cur.row][cur.col] |= seen_bit;
+                escape_path_index_ = thread_index;
                 solver_mutex_.unlock();
                 break;
             }
@@ -1108,8 +1061,6 @@ bool Thread_solvers::bfs_thread_gather_animated(Thread_maze::Point start, int th
         thread_paths_[thread_index].push_back(cur);
         cur = seen.at(cur);
     }
-    escape_path_index_ = thread_index;
-    return result;
 }
 
 Thread_maze::Point Thread_solvers::pick_random_point() {
