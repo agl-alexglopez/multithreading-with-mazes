@@ -52,11 +52,11 @@ void Thread_solvers::place_start_finish() {
         int middle_row = maze_.row_size() / 2;
         int middle_col = maze_.col_size() / 2;
         finish_ = {middle_row, middle_col};
+        for (const Thread_maze::Point& p : all_directions_) {
+            Thread_maze::Point next = {finish_.row + p.row, finish_.col + p.col};
+            maze_[next.row][next.col] |= Thread_maze::path_bit_;
+        }
         maze_[middle_row][middle_col] |= Thread_maze::path_bit_;
-        maze_[middle_row + 1][middle_col] |= Thread_maze::path_bit_;
-        maze_[middle_row][middle_col + 1] |= Thread_maze::path_bit_;
-        maze_[middle_row - 1][middle_col] |= Thread_maze::path_bit_;
-        maze_[middle_row][middle_col - 1] |= Thread_maze::path_bit_;
         maze_[middle_row][middle_col] |= finish_bit_;
     } else {
         start_ = pick_random_point();
@@ -273,7 +273,7 @@ void Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index,
     while (!dfs.empty()) {
         // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
         if (escape_path_index_ != -1) {
-            return;
+            break;
         }
 
         // Don't pop() yet!
