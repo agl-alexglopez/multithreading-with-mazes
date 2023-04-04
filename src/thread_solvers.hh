@@ -3,6 +3,7 @@
 #include "thread_maze.hh"
 #include <vector>
 #include <array>
+#include <random>
 #include <mutex>
 
 class Thread_solvers {
