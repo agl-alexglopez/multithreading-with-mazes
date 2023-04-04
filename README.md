@@ -100,9 +100,15 @@ The `-g` flag lets you determine the game that the thread solvers will play in t
 
 The `hunt` game randomly places a start and a finish then sets the thread loose to see who finds it first.
 
+![hunt-demo](/images/hunt-demo.gif)
+
 The `gather` game forces every thread to find a finish square and will not stop until each has found their own. This is a colorful game to watch with a breadth first search solving algorithm.
 
+![gather-demo](/images/gather-demo.gif)
+
 The `corners` game places each thread in a corner of the maze and they all race to the center to get the finish square. This is a good test to make sure the mazes that the builder algorithms produce are perfect, especially when run with a breadth first search.
+
+![corners-demo](/images/corners-demo.gif)
 
 ### Draw Flag
 
