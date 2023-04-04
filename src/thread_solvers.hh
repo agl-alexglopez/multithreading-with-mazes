@@ -1,6 +1,8 @@
 #ifndef THREAD_SOLVERS_HH
 #define THREAD_SOLVERS_HH
 #include "thread_maze.hh"
+#include <vector>
+#include <array>
 #include <mutex>
 
 class Thread_solvers {

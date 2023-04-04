@@ -1,8 +1,7 @@
 #include "thread_solvers.hh"
 #include "thread_maze.hh"
-#include <stack>
-#include <queue>
 #include <iostream>
+#include <queue>
 #include <random>
 #include <thread>
 
@@ -269,7 +268,8 @@ bool Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index,
      */
     Thread_cache seen = paint << thread_tag_offset_;
     // Each thread only needs enough space for an O(current path length) stack.
-    std::stack<Thread_maze::Point> dfs({start});
+    std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
+    dfs.push_back(start);
     bool result = false;
     Thread_maze::Point cur = start;
     while (!dfs.empty()) {
@@ -280,7 +280,7 @@ bool Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index,
         }
 
         // Don't pop() yet!
-        cur = dfs.top();
+        cur = dfs.back();
 
         if (maze_[cur.row][cur.col] & finish_bit_) {
             solver_mutex_.lock();
@@ -290,7 +290,7 @@ bool Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index,
             }
             solver_mutex_.unlock();
             result = tie_break;
-            dfs.pop();
+            dfs.pop_back();
             break;
         }
         solver_mutex_.lock();
@@ -309,23 +309,20 @@ bool Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index,
                 solver_mutex_.unlock();
                 // Emulate a true recursive dfs. Only push the current branch onto our stack.
                 found_branch_to_explore = true;
-                dfs.push(next);
+                dfs.push_back(next);
                 break;
             }
             solver_mutex_.unlock();
             ++direction_index %= cardinal_directions_.size();
         } while (direction_index != thread_index);
         if (!found_branch_to_explore) {
-            dfs.pop();
+            dfs.pop_back();
         }
     }
     // Another benefit of true depth first search is our stack holds path to exact location.
-    while (!dfs.empty()) {
-        cur = dfs.top();
-        dfs.pop();
-        thread_paths_[thread_index].push_back(cur);
+    for (const Thread_maze::Point& p : dfs) {
         solver_mutex_.lock();
-        maze_[cur.row][cur.col] |= paint;
+        maze_[p.row][p.col] |= paint;
         solver_mutex_.unlock();
     }
     return result;
@@ -333,7 +330,8 @@ bool Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index,
 
 bool Thread_solvers::dfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
-    std::stack<Thread_maze::Point> dfs({start});
+    std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
+    dfs.push_back(start);
     bool result = false;
     Thread_maze::Point cur = start;
     while (!dfs.empty()) {
@@ -344,7 +342,7 @@ bool Thread_solvers::dfs_thread_hunt_animated(Thread_maze::Point start, int thre
         }
 
         // Don't pop() yet!
-        cur = dfs.top();
+        cur = dfs.back();
 
         if (maze_[cur.row][cur.col] & finish_bit_) {
             solver_mutex_.lock();
@@ -354,7 +352,7 @@ bool Thread_solvers::dfs_thread_hunt_animated(Thread_maze::Point start, int thre
             }
             solver_mutex_.unlock();
             result = tie_break;
-            dfs.pop();
+            dfs.pop_back();
             break;
         }
         solver_mutex_.lock();
@@ -376,7 +374,7 @@ bool Thread_solvers::dfs_thread_hunt_animated(Thread_maze::Point start, int thre
                 solver_mutex_.unlock();
                 // Emulate a true recursive dfs. Only push the current branch onto our stack.
                 found_branch_to_explore = true;
-                dfs.push(next);
+                dfs.push_back(next);
                 break;
             }
             solver_mutex_.unlock();
@@ -388,25 +386,20 @@ bool Thread_solvers::dfs_thread_hunt_animated(Thread_maze::Point start, int thre
             flush_cursor_path_coordinate(cur.row, cur.col);
             solver_mutex_.unlock();
             std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
-            dfs.pop();
+            dfs.pop_back();
         }
-    }
-    // Another benefit of true depth first search is our stack holds path to exact location.
-    while (!dfs.empty()) {
-        cur = dfs.top();
-        dfs.pop();
-        thread_paths_[thread_index].push_back(cur);
     }
     return result;
 }
 
 bool Thread_solvers::dfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
-    std::stack<Thread_maze::Point> dfs({start});
+    std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
+    dfs.push_back(start);
     bool result = false;
     Thread_maze::Point cur = start;
     while (!dfs.empty()) {
-        cur = dfs.top();
+        cur = dfs.back();
 
         solver_mutex_.lock();
         // We are the first thread to this finish! Claim it!
@@ -414,7 +407,7 @@ bool Thread_solvers::dfs_thread_gather(Thread_maze::Point start, int thread_inde
                 && !(maze_[cur.row][cur.col] & cache_mask_)){
             maze_[cur.row][cur.col] |= seen;
             solver_mutex_.unlock();
-            dfs.pop();
+            dfs.pop_back();
             break;
         }
         // Shoot, another thread beat us here. Mark and move on to another finish.
@@ -431,22 +424,19 @@ bool Thread_solvers::dfs_thread_gather(Thread_maze::Point start, int thread_inde
                     && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
                 solver_mutex_.unlock();
                 found_branch_to_explore = true;
-                dfs.push(next);
+                dfs.push_back(next);
                 break;
             }
             solver_mutex_.unlock();
             ++direction_index %= cardinal_directions_.size();
         } while (direction_index != thread_index);
         if (!found_branch_to_explore) {
-            dfs.pop();
+            dfs.pop_back();
         }
     }
-    while (!dfs.empty()) {
-        cur = dfs.top();
-        dfs.pop();
-        thread_paths_[thread_index].push_back(cur);
+    for (const Thread_maze::Point& p : dfs) {
         solver_mutex_.lock();
-        maze_[cur.row][cur.col] |= paint;
+        maze_[p.row][p.col] |= paint;
         solver_mutex_.unlock();
     }
     return result;
@@ -454,11 +444,12 @@ bool Thread_solvers::dfs_thread_gather(Thread_maze::Point start, int thread_inde
 
 bool Thread_solvers::dfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
-    std::stack<Thread_maze::Point> dfs({start});
+    std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
+    dfs.push_back(start);
     bool result = false;
     Thread_maze::Point cur = start;
     while (!dfs.empty()) {
-        cur = dfs.top();
+        cur = dfs.back();
 
         solver_mutex_.lock();
         // We are the first thread to this finish! Claim it!
@@ -466,7 +457,7 @@ bool Thread_solvers::dfs_thread_gather_animated(Thread_maze::Point start, int th
                 && !(maze_[cur.row][cur.col] & cache_mask_)){
             maze_[cur.row][cur.col] |= seen;
             solver_mutex_.unlock();
-            dfs.pop();
+            dfs.pop_back();
             break;
         }
         // Shoot, another thread beat us here. Mark and move on to another finish.
@@ -487,7 +478,7 @@ bool Thread_solvers::dfs_thread_gather_animated(Thread_maze::Point start, int th
                     && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
                 solver_mutex_.unlock();
                 found_branch_to_explore = true;
-                dfs.push(next);
+                dfs.push_back(next);
                 break;
             }
             solver_mutex_.unlock();
@@ -499,13 +490,8 @@ bool Thread_solvers::dfs_thread_gather_animated(Thread_maze::Point start, int th
             flush_cursor_path_coordinate(cur.row, cur.col);
             solver_mutex_.unlock();
             std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
-            dfs.pop();
+            dfs.pop_back();
         }
-    }
-    while (!dfs.empty()) {
-        cur = dfs.top();
-        dfs.pop();
-        thread_paths_[thread_index].push_back(cur);
     }
     return result;
 }
@@ -595,7 +581,8 @@ void Thread_solvers::solve_with_randomized_dfs_threads() {
 
 bool Thread_solvers::randomized_dfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
-    std::stack<Thread_maze::Point> dfs({start});
+    std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
+    dfs.push_back(start);
     bool result = false;
     Thread_maze::Point cur = start;
     std::vector<int> random_direction_indices(generate_directions_.size());
@@ -605,7 +592,7 @@ bool Thread_solvers::randomized_dfs_thread_hunt(Thread_maze::Point start, int th
             result = false;
             break;
         }
-        cur = dfs.top();
+        cur = dfs.back();
         if (maze_[cur.row][cur.col] & finish_bit_) {
             solver_mutex_.lock();
             bool tie_break = escape_path_index_ == -1;
@@ -614,7 +601,7 @@ bool Thread_solvers::randomized_dfs_thread_hunt(Thread_maze::Point start, int th
             }
             solver_mutex_.unlock();
             result = tie_break;
-            dfs.pop();
+            dfs.pop_back();
             break;
         }
         solver_mutex_.lock();
@@ -630,22 +617,18 @@ bool Thread_solvers::randomized_dfs_thread_hunt(Thread_maze::Point start, int th
                     && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
                 solver_mutex_.unlock();
                 found_branch_to_explore = true;
-                dfs.push(next);
+                dfs.push_back(next);
                 break;
             }
             solver_mutex_.unlock();
         }
         if (!found_branch_to_explore) {
-            dfs.pop();
+            dfs.pop_back();
         }
     }
-
-    while (!dfs.empty()) {
-        cur = dfs.top();
-        dfs.pop();
-        thread_paths_[thread_index].push_back(cur);
+    for (const Thread_maze::Point& p : dfs) {
         solver_mutex_.lock();
-        maze_[cur.row][cur.col] |= paint;
+        maze_[p.row][p.col] |= paint;
         solver_mutex_.unlock();
     }
     return result;
@@ -653,7 +636,8 @@ bool Thread_solvers::randomized_dfs_thread_hunt(Thread_maze::Point start, int th
 
 bool Thread_solvers::randomized_dfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
-    std::stack<Thread_maze::Point> dfs({start});
+    std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
+    dfs.push_back(start);
     bool result = false;
     Thread_maze::Point cur = start;
     std::vector<int> random_direction_indices(generate_directions_.size());
@@ -663,7 +647,7 @@ bool Thread_solvers::randomized_dfs_thread_hunt_animated(Thread_maze::Point star
             result = false;
             break;
         }
-        cur = dfs.top();
+        cur = dfs.back();
         if (maze_[cur.row][cur.col] & finish_bit_) {
             solver_mutex_.lock();
             bool tie_break = escape_path_index_ == -1;
@@ -672,7 +656,7 @@ bool Thread_solvers::randomized_dfs_thread_hunt_animated(Thread_maze::Point star
             }
             solver_mutex_.unlock();
             result = tie_break;
-            dfs.pop();
+            dfs.pop_back();
             break;
         }
         solver_mutex_.lock();
@@ -692,7 +676,7 @@ bool Thread_solvers::randomized_dfs_thread_hunt_animated(Thread_maze::Point star
                     && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
                 solver_mutex_.unlock();
                 found_branch_to_explore = true;
-                dfs.push(next);
+                dfs.push_back(next);
                 break;
             }
             solver_mutex_.unlock();
@@ -703,34 +687,29 @@ bool Thread_solvers::randomized_dfs_thread_hunt_animated(Thread_maze::Point star
             flush_cursor_path_coordinate(cur.row, cur.col);
             solver_mutex_.unlock();
             std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
-            dfs.pop();
+            dfs.pop_back();
         }
-    }
-
-    while (!dfs.empty()) {
-        cur = dfs.top();
-        dfs.pop();
-        thread_paths_[thread_index].push_back(cur);
     }
     return result;
 }
 
 bool Thread_solvers::randomized_dfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
-    std::stack<Thread_maze::Point> dfs({start});
+    std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
+    dfs.push_back(start);
     bool result = false;
     Thread_maze::Point cur = start;
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
     while (!dfs.empty()) {
-        cur = dfs.top();
+        cur = dfs.back();
         solver_mutex_.lock();
         if (maze_[cur.row][cur.col] & finish_bit_
                 && !(maze_[cur.row][cur.col] & cache_mask_)){
             maze_[cur.row][cur.col] |= seen;
             solver_mutex_.unlock();
             result = true;
-            dfs.pop();
+            dfs.pop_back();
             break;
         }
         maze_[cur.row][cur.col] |= seen;
@@ -745,22 +724,18 @@ bool Thread_solvers::randomized_dfs_thread_gather(Thread_maze::Point start, int 
                     && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
                 solver_mutex_.unlock();
                 found_branch_to_explore = true;
-                dfs.push(next);
+                dfs.push_back(next);
                 break;
             }
             solver_mutex_.unlock();
         };
         if (!found_branch_to_explore) {
-            dfs.pop();
+            dfs.pop_back();
         }
     }
-
-    while (!dfs.empty()) {
-        cur = dfs.top();
-        dfs.pop();
-        thread_paths_[thread_index].push_back(cur);
+    for (const Thread_maze::Point& p : dfs) {
         solver_mutex_.lock();
-        maze_[cur.row][cur.col] |= paint;
+        maze_[p.row][p.col] |= paint;
         solver_mutex_.unlock();
     }
     return result;
@@ -768,20 +743,21 @@ bool Thread_solvers::randomized_dfs_thread_gather(Thread_maze::Point start, int 
 
 bool Thread_solvers::randomized_dfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     Thread_cache seen = paint << thread_tag_offset_;
-    std::stack<Thread_maze::Point> dfs({start});
+    std::vector<Thread_maze::Point>& dfs = thread_paths_[thread_index];
+    dfs.push_back(start);
     bool result = false;
     Thread_maze::Point cur = start;
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
     while (!dfs.empty()) {
-        cur = dfs.top();
+        cur = dfs.back();
         solver_mutex_.lock();
         if (maze_[cur.row][cur.col] & finish_bit_
                 && !(maze_[cur.row][cur.col] & cache_mask_)){
             maze_[cur.row][cur.col] |= seen;
             solver_mutex_.unlock();
             result = true;
-            dfs.pop();
+            dfs.pop_back();
             break;
         }
         maze_[cur.row][cur.col] |= seen;
@@ -800,7 +776,7 @@ bool Thread_solvers::randomized_dfs_thread_gather_animated(Thread_maze::Point st
                     && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
                 solver_mutex_.unlock();
                 found_branch_to_explore = true;
-                dfs.push(next);
+                dfs.push_back(next);
                 break;
             }
             solver_mutex_.unlock();
@@ -811,14 +787,8 @@ bool Thread_solvers::randomized_dfs_thread_gather_animated(Thread_maze::Point st
             flush_cursor_path_coordinate(cur.row, cur.col);
             solver_mutex_.unlock();
             std::this_thread::sleep_for(std::chrono::microseconds(solver_speed_));
-            dfs.pop();
+            dfs.pop_back();
         }
-    }
-
-    while (!dfs.empty()) {
-        cur = dfs.top();
-        dfs.pop();
-        thread_paths_[thread_index].push_back(cur);
     }
     return result;
 }
