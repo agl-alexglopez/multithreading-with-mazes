@@ -237,13 +237,13 @@ pick a random square and make it a path that is part of a maze
 
 pick a random WALK point for a random walk
 
-mark the PREVIOUS cell in this walk as empty
+creat a cell called PREVIOUS that starts as nil.
 
 while we have selected a starting square for a random walk
 
-	for each neighbor in random order
+	for each neighbor NEXT in random order
 	
-		if the NEXT is not PREVIOUS and is in bounds
+		if the NEXT != PREVIOUS and is in bounds
 
 			select NEXT for consideration
 
@@ -253,11 +253,11 @@ while we have selected a starting square for a random walk
 
 			else if NEXT is part of the maze
 
-				join our walk to the maze using backtracking
+				join our walk to the maze using backtracking to carve a path.
 
 			else
 
-				mark the direction we came from for backtracking
+				mark NEXT with the direction it needs for backtracking
 
 				PREVIOUS = WALK
 
