@@ -326,17 +326,21 @@ set LIMIT to be the maximum length to travel in one direction
 
 while the stack is not empty
 
-	mark the current square as visited
+	mark the CURRENT square as visited
 	
 	for every neighboring square divided by a wall in random order
 
-		if the neighbor is valid and not seen
+		if the neighbor NEXT is valid and not seen
 		
-			while run is less than LIMIT and is valid
+			while run is less than LIMIT and CURRENT is valid
 
-				break wall between current and next
+				break wall between CURRENT and NEXT
+				
+				mark NEXT as visited
 
 				push next onto the stack
+				
+				CURRENT becomes NEXT
 
 			continue outer loop
 
