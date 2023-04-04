@@ -171,7 +171,7 @@ for every wall in the maze
 
 			break the wall between these squares and join them
 
-	if the current wall seperates a square left and right
+	else if the current wall seperates a square left and right
 
 		if a disjoint set union find by rank merges these squares
 
