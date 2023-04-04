@@ -289,7 +289,7 @@ while the stack of chambers is not empty
 	
 		push the chamber after the divide onto the stack
 		
-	if chamber width >= chamber width and height meets min requirement
+	if chamber width >= chamber height and height meets min requirement
 	
 		choose a random width and divide the chamber by that width
 		
