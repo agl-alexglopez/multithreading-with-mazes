@@ -243,7 +243,7 @@ while we have selected a starting square for a random walk
 
 	for each neighbor in random order
 	
-		if the neighbor is not PREVIOUS and is in bounds
+		if the NEXT is not PREVIOUS and is in bounds
 
 			select NEXT for consideration
 
@@ -291,7 +291,7 @@ while the stack of chambers is not empty
 		
 		choose a random point in the divide for a path gap
 		
-		update the current cell's height
+		update the current chamber's height
 	
 		push the chamber after the divide onto the stack
 		
@@ -301,7 +301,7 @@ while the stack of chambers is not empty
 		
 		choose a random point in the divide for a path gap
 		
-		update the current cell's width
+		update the current chamber's width
 		
 		push the chamber after the divide onto the stack
 		
