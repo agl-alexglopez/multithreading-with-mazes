@@ -272,7 +272,7 @@ While the previous version of Wilson's algorithm is like trying to find a needle
 
 ![fractal-loop](/images/fractal-loop.gif)
 
-This algorithm technically produces fractals due to the recursive nature of the technique. It is a recursive algorithm, but I will try to describe the iterative approach. Note that I describe pushing chambers or mazes onto a stack. However, in reality the implementation only needs to push the coordinates of the corner of a chamber, its heigh, and its width onto a stack, not all the cells. This starts with a maze of all paths and we draw walls.
+This algorithm technically produces fractals due to the recursive nature of the technique. It is a recursive algorithm, but I will try to describe the iterative approach. Note that I describe pushing chambers or mazes onto a stack. However, in reality the implementation only needs to push the coordinates of the corner of a chamber, its height, and its width onto a stack, not all the cells. This starts with a maze of all paths and we draw walls.
 
 ```txt
 push the entire maze onto a stack of chambers
