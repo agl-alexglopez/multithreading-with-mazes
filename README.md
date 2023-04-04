@@ -98,7 +98,7 @@ An important detail for the solvers is that you can trace the exact path of ever
 
 The `-g` flag lets you determine the game that the thread solvers will play in the maze. 
 
-The `hunt` game randomly places a start and a finish then sets the thread loose to see who finds it first.
+The `hunt` game randomly places a start and a finish then sets the threads loose to see who finds it first.
 
 ![hunt-demo](/images/hunt-demo.gif)
 
