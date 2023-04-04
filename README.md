@@ -122,16 +122,225 @@ When I started this project I was most interested in multithreading the maze sol
 
 ### Randomized Recursive Depth First Search
 
+![rdfs-loop](/images/rdfs-loop.gif)
+
+This is the classic maze building algorithm. It works by randomly carving out valid walls into passages until it can no longer progress down its current branch. Then it takes one step back and repeats the process. More formally here is the pseudocode.
+
+```txt
+mark a random starting point as the origin of all paths
+
+while there are valid maze paths to carve
+
+	mark the current square as visited
+	
+	for every neighboring square divided by a wall in random order
+
+		if the neighbor is valid and not seen
+		
+			break the wall between current and neighbor
+			
+			mark neighbor with the direction you came from
+
+			current becomes next
+		
+			continue the outer while loop
+
+	if we are not at the origin 
+	
+		backtrack to the previous square
+```
+
+This is an algorithm that has many optimization possibilities. The most notable actually makes an appearance in the gif that you see above. I encode the directions for backtracking into the bits of a square. In fact, we only need three bits to know how to backtrack and we use them to index into a table with the row and column directions we need to step to. Fortunately for the animation we can also encode those backtracking directions as color coded arrows with those same three bits so you can actually see the markers that we are leaving on the squares. Overall, this is a great algorithm to watch and solve. It is especially fun to watch zoomed out on massive mazes. 
+
 ### Kruskal's Algorithm
+
+![kruskal-loop](/images/kruskal-loop.gif)
+
+I lump Kruskal and Prim together as quite similar but their visual animations are different. Kruskal reasons about the cells and walls in a maze in terms of Disjoint Sets. In fact, I was able to learn about this data structure through this algorithm. I will not go into full detail on what it is, only explain how it is used in this algorithm. The algorithm goes something like this.
+
+```txt
+load all square into a disjoint set as single unique sets
+
+shuffle all the walls in the maze randomly
+
+for every wall in the maze
+
+	if the current wall seperates a square above and below
+
+		if a disjoint set union find by rank merges these squares
+
+			break the wall between these squares and join them
+
+	if the current wall seperates a square left and right
+
+		if a disjoint set union find by rank merges these squares
+
+			break the wall between these squares and join them
+
+```
+
+I am not doing a good job of respecting my space efficiency restriction with this algorithm. I will have to learn more about different approaches because the Disjoint set, walls, and lookup table for squares and their Disjoint set ids takes much space. This is a fun algorithm to watch, however, because of the popping in of maze paths all over the grid.
 
 ### Prim's Algorithm
 
+![prim-loop](/images/prim-loop.gif)
+
+There are many versions of Prim's algorithm: simplified, true, and truest are three that I am aware of. I went with true Prim's algorithm and here is how it works.
+
+```txt
+load all path cell into a lookup table and give each a random cost
+
+choose a random starting cell
+
+enqueue this cell into a min priority queue by cost
+
+while the min priority queue is not empty
+
+	mark the current cell as visited
+
+	set cell MIN with cost = INFINITY
+
+	for each valid neighbor
+	
+		if this neighbor has a lower cost than MIN
+
+			MIN = neighbor
+
+	if MIN is not equal to INFINITY
+
+		break the wall between current and MIN joining squares
+
+		push MIN into the min priority queue
+
+	else
+
+		pop from the min priority
+		
+```
+
+This algorithm spreads out nicely as it builds like clusters all over the grid. It is also space inefficient at this time. I hear there are optimizations and will try to learn more.
+
 ### Wilson's Path Carver
+
+![wilson-loop](/images/wilson-loop.gif)
+
+The wilson algorithms are my favorite. They are a much more visually interesting and fun to implement approach at producing a minimum spanning tree. This algorithm, as I have implemented it goes as follows.
+
+```txt
+pick a random square and make it a path that is part of a maze
+
+pick a random WALK point for a random walk
+
+mark the PREVIOUS cell in this walk as empty
+
+while we have selected a starting square for a random walk
+
+	for each neighbor in random order
+	
+		if the neighbor is not PREVIOUS and is in bounds
+
+			select NEXT for consideration
+
+			if NEXT is part of our own walk
+
+				erase the loop we have formed using backtracking
+
+			else if NEXT is part of the maze
+
+				join our walk to the maze using backtracking
+
+			else
+
+				mark the direction we came from for backtracking
+
+				PREVIOUS = WALK
+
+				WALK = NEXT
+
+		continue outer while loop
+```
+
+Watching this is one live is very fun and frustrating. Sometimes, you wish the flailing walk path would just find the square sitting out there in the grid but it won't. The starting maze point is a needle in a haystack and we eventually find it but it can just take some time. These are very well balanced mazes with interesting twists and turns and unexpected long paths that can sometimes weave through the maze.
 
 ### Wilson's Wall Adder
 
+![wilson-walls-loop](/images/wilson-walls-loop.gif)
+
+While the previous version of Wilson's algorithm is like trying to find a needle in a haystack, we can flip this concept and be the needle surrounded by a haystack. Instead of starting the random walk by trying to find one path point in the maze and then carve a path out when we find it, we can become the walls of the maze. We then surround ourselves with the perimeter walls of the maze and it becomes trivial to find a maze wall. The algorithm is identical. While it is possible it could take a while for a random walk to find a wall at first, in practice this algorithm is extremely fast. I have not done time tests yet, but I am sure that it is much faster than the other version of Wilson's algorithm and can compete with any algorithm discussed so far. Wilson's algorithm is also one that I want to attempt to make multithreaded.
+
 ### Randomized Recursive Subdivision
+
+![fractal-loop](/images/fractal-loop.gif)
+
+This algorithm technically produces fractals due to the recursive nature of the technique. It is a recursive algorithm, but I will try to describe the iterative approach. Note that I describe pushing chambers or mazes onto a stack. However, in reality the implementation only needs to push the coordinates of the corner of a chamber, its heigh, and its width onto a stack, not all the cells. This starts with a maze of all paths and we draw walls.
+
+```txt
+push the entire maze onto a stack of chambers
+
+while the stack of chambers is not empty
+
+	if chamber height > chamber width and width meets min requirement
+	
+		choose a random height and divide the chamber by that height
+		
+		choose a random point in the divide for a path gap
+		
+		update the current cell's height
+	
+		push the chamber after the divide onto the stack
+		
+	if chamber width >= chamber width and height meets min requirement
+	
+		choose a random width and divide the chamber by that width
+		
+		choose a random point in the divide for a path gap
+		
+		update the current cell's width
+		
+		push the chamber after the divide onto the stack
+		
+	else
+	
+		pop chamber from the stack.
+	
+```
+
+This is a great algorithm because the mazes it produces are completely different from anything esle that you see. I appreciate the interesting flow patterns that breadth first searches produce.
 
 ### Randomized Grid
 
+![grid-loop](/images/grid-loop.gif)
+
+This algorithm is my own addition to the repository because I wanted something chaotic for the threads to race through. This algorithm is a modified recursive depth first search. It works as follows.
+
+```txt
+mark a random starting point and push it onto a stack
+
+set LIMIT to be the maximum length to travel in one direction
+
+while the stack is not empty
+
+	mark the current square as visited
+	
+	for every neighboring square divided by a wall in random order
+
+		if the neighbor is valid and not seen
+		
+			while run is less than LIMIT and is valid
+
+				break wall between current and next
+
+				push next onto the stack
+
+			continue outer loop
+
+	if no neighbor was found
+
+		pop from the stack
+```
+
 ### Arena
+
+![arena-loop](/images/arena-loop.gif)
+
+This is just a simple arena of paths. Try different solver algorithms to see some pretty colors.

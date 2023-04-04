@@ -849,7 +849,7 @@ int Thread_maze::random_odd_passage(int axis_limit) {
 
 void Thread_maze::generate_randomized_dfs_maze() {
     // Note that backtracking occurs by encoding directions into path bits. No stack needed.
-    Point start = {row_random_(generator_), col_random_(generator_)};
+    Point start = {2 * (row_random_(generator_) / 2) + 1, 2 * (col_random_(generator_) / 2) + 1};
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
     Point cur = start;
@@ -883,7 +883,7 @@ void Thread_maze::generate_randomized_dfs_maze() {
 }
 
 void Thread_maze::generate_randomized_dfs_maze_animated() {
-    Point start = {row_random_(generator_), col_random_(generator_)};
+    Point start = {2 * (row_random_(generator_) / 2) + 1, 2 * (col_random_(generator_) / 2) + 1};
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
     Point cur = start;
@@ -1112,7 +1112,7 @@ void Thread_maze::generate_randomized_grid() {
         }
     };
 
-    Point start = {row_random_(generator_), col_random_(generator_)};
+    Point start = {2 * (row_random_(generator_) / 2) + 1, 2 * (col_random_(generator_) / 2) + 1};
     std::stack<Point> dfs({start});
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
@@ -1154,7 +1154,7 @@ void Thread_maze::generate_randomized_grid_animated() {
         }
     };
 
-    Point start = {row_random_(generator_), col_random_(generator_)};
+    Point start = {2 * (row_random_(generator_) / 2) + 1, 2 * (col_random_(generator_) / 2) + 1};
     std::stack<Point> dfs({start});
     std::vector<int> random_direction_indices(generate_directions_.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices), 0);
