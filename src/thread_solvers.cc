@@ -1,8 +1,5 @@
 #include "thread_solvers.hh"
-#include "thread_maze.hh"
 #include <iostream>
-#include <queue>
-#include <random>
 #include <thread>
 
 Thread_solvers::Thread_solvers(Thread_maze& maze, const Solver_args& args)
@@ -15,6 +12,8 @@ Thread_solvers::Thread_solvers(Thread_maze& maze, const Solver_args& args)
       corner_starts_({}),
       escape_path_index_(-1),
       thread_paths_(num_threads_),
+      thread_queues_(num_threads_),
+      thread_bfs_maps(num_threads_),
       generator_(std::random_device{}()),
       row_random_(1, maze_.row_size() - 2),
       col_random_(1, maze_.col_size() - 2) {
@@ -917,9 +916,10 @@ void Thread_solvers::animate_with_bfs_threads() {
 
 bool Thread_solvers::bfs_thread_hunt(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     // This will be how we rebuild the path because queue does not represent the current path.
-    std::unordered_map<Thread_maze::Point,Thread_maze::Point> seen;
+    std::unordered_map<Thread_maze::Point,Thread_maze::Point>& seen = thread_bfs_maps[thread_index];
     seen[start] = {-1,-1};
-    std::queue<Thread_maze::Point> bfs({start});
+    std::queue<Thread_maze::Point>& bfs = thread_queues_[thread_index];
+    bfs.push(start);
     bool result = false;
     Thread_maze::Point cur = start;
     while (!bfs.empty()) {
@@ -969,9 +969,10 @@ bool Thread_solvers::bfs_thread_hunt(Thread_maze::Point start, int thread_index,
 
 bool Thread_solvers::bfs_thread_hunt_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
     // This will be how we rebuild the path because queue does not represent the current path.
-    std::unordered_map<Thread_maze::Point,Thread_maze::Point> seen;
+    std::unordered_map<Thread_maze::Point,Thread_maze::Point>& seen = thread_bfs_maps[thread_index];
     seen[start] = {-1,-1};
-    std::queue<Thread_maze::Point> bfs({start});
+    std::queue<Thread_maze::Point>& bfs = thread_queues_[thread_index];
+    bfs.push(start);
     bool result = false;
     Thread_maze::Point cur = start;
     while (!bfs.empty()) {
@@ -1022,10 +1023,11 @@ bool Thread_solvers::bfs_thread_hunt_animated(Thread_maze::Point start, int thre
 }
 
 bool Thread_solvers::bfs_thread_gather(Thread_maze::Point start, int thread_index, Thread_paint paint) {
-    std::unordered_map<Thread_maze::Point,Thread_maze::Point> seen;
+    std::unordered_map<Thread_maze::Point,Thread_maze::Point>& seen = thread_bfs_maps[thread_index];
     Thread_cache seen_bit = paint << 4;
     seen[start] = {-1,-1};
-    std::queue<Thread_maze::Point> bfs({start});
+    std::queue<Thread_maze::Point>& bfs = thread_queues_[thread_index];
+    bfs.push(start);
     bool result = false;
     Thread_maze::Point cur = start;
     while (!bfs.empty()) {
@@ -1065,10 +1067,11 @@ bool Thread_solvers::bfs_thread_gather(Thread_maze::Point start, int thread_inde
 }
 
 bool Thread_solvers::bfs_thread_gather_animated(Thread_maze::Point start, int thread_index, Thread_paint paint) {
-    std::unordered_map<Thread_maze::Point,Thread_maze::Point> seen;
+    std::unordered_map<Thread_maze::Point,Thread_maze::Point>& seen = thread_bfs_maps[thread_index];
     Thread_cache seen_bit = paint << 4;
     seen[start] = {-1,-1};
-    std::queue<Thread_maze::Point> bfs({start});
+    std::queue<Thread_maze::Point>& bfs = thread_queues_[thread_index];
+    bfs.push(start);
     bool result = false;
     Thread_maze::Point cur = start;
     while (!bfs.empty()) {

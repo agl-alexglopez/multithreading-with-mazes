@@ -2,6 +2,8 @@
 #define THREAD_SOLVERS_HH
 #include "thread_maze.hh"
 #include <vector>
+#include <unordered_map>
+#include <queue>
 #include <array>
 #include <random>
 #include <mutex>
@@ -149,7 +151,10 @@ private:
     Thread_maze::Point finish_;
     std::array<Thread_maze::Point,4> corner_starts_;
     int escape_path_index_;
+    // Allocate these in the constructor and threads will reference them for light thread switches.
     std::vector<std::vector<Thread_maze::Point>> thread_paths_;
+    std::vector<std::queue<Thread_maze::Point>> thread_queues_;
+    std::vector<std::unordered_map<Thread_maze::Point,Thread_maze::Point>> thread_bfs_maps;
     std::mt19937 generator_;
     std::uniform_int_distribution<int> row_random_;
     std::uniform_int_distribution<int> col_random_;
