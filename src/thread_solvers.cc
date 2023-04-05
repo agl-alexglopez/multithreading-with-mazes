@@ -1,4 +1,5 @@
 #include "thread_solvers.hh"
+#include <algorithm>
 #include <iostream>
 #include <thread>
 

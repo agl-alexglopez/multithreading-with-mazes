@@ -11,6 +11,7 @@
 #ifndef MY_QUEUE_HH
 #define MY_QUEUE_HH
 #include <stdio.h>
+#include <memory>
 #include <stdexcept>
 
 template<class Value_type>
@@ -19,25 +20,19 @@ class My_queue {
 public:
 
     My_queue()
-        : logical_size_(0),
+        : elems_(new Value_type[initial_size_]),
+          logical_size_(0),
           allocated_size_(initial_size_),
           front_(0),
           back_(0) {
-        elems_ = new Value_type[initial_size_];
     }
 
     void reserve(size_t capacity) {
-        Value_type *reserved_space = new Value_type[capacity];
-        delete [] elems_;
+        elems_.reset(new Value_type[capacity]);
+        allocated_size_ = capacity;
         logical_size_ = 0;
         front_ = 0;
         back_ = 0;
-        allocated_size_ = capacity;
-        elems_ = reserved_space;
-    }
-
-    ~My_queue() {
-        delete [] elems_;
     }
 
     size_t size() const {
@@ -83,13 +78,13 @@ private:
 
     const size_t initial_size_ = 2;
     const size_t full_queue_ = 1UL << 63;
-    Value_type *elems_;
+    std::unique_ptr<Value_type[]> elems_;
     size_t logical_size_;
     size_t allocated_size_;
     size_t front_;
     size_t back_;
     void grow(){
-        Value_type *new_elems = new Value_type[allocated_size_ * 2];
+        std::unique_ptr<Value_type[]> new_elems(new Value_type[allocated_size_ * 2]);
         for(size_t i = 0; i < logical_size_; i++){
             new_elems[i] = elems_[front_];
             ++front_ %= allocated_size_;
@@ -97,8 +92,7 @@ private:
         allocated_size_ *= 2;
         front_ = 0;
         back_ = logical_size_;
-        delete [] elems_;
-        elems_ = new_elems;
+        elems_ = std::move(new_elems);
     }
 };
 
