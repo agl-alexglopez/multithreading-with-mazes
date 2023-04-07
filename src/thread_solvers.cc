@@ -280,8 +280,8 @@ void Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index,
         // Don't pop() yet!
         cur = dfs.back();
 
+        solver_mutex_.lock();
         if (maze_[cur.row][cur.col] & finish_bit_) {
-            solver_mutex_.lock();
             if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
@@ -289,8 +289,6 @@ void Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index,
             dfs.pop_back();
             break;
         }
-
-        solver_mutex_.lock();
         maze_[cur.row][cur.col] |= seen;
         solver_mutex_.unlock();
 
@@ -301,15 +299,14 @@ void Thread_solvers::dfs_thread_hunt(Thread_maze::Point start, int thread_index,
             const Thread_maze::Point& p = cardinal_directions_[direction_index];
             Thread_maze::Point next = {cur.row + p.row, cur.col + p.col};
             solver_mutex_.lock();
-            if (!(maze_[next.row][next.col] & seen)
-                    && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
-                solver_mutex_.unlock();
-                // Emulate a true recursive dfs. Only push the current branch onto our stack.
+            bool push_next = !(maze_[next.row][next.col] & seen)
+                                && (maze_[next.row][next.col] & Thread_maze::path_bit_);
+            solver_mutex_.unlock();
+            if (push_next) {
                 found_branch_to_explore = true;
                 dfs.push_back(next);
                 break;
             }
-            solver_mutex_.unlock();
             ++direction_index %= cardinal_directions_.size();
         } while (direction_index != thread_index);
         if (!found_branch_to_explore) {
@@ -338,8 +335,8 @@ void Thread_solvers::dfs_thread_hunt_animated(Thread_maze::Point start, int thre
         // Don't pop() yet!
         cur = dfs.back();
 
+        solver_mutex_.lock();
         if (maze_[cur.row][cur.col] & finish_bit_) {
-            solver_mutex_.lock();
             if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
@@ -347,7 +344,6 @@ void Thread_solvers::dfs_thread_hunt_animated(Thread_maze::Point start, int thre
             dfs.pop_back();
             return;
         }
-        solver_mutex_.lock();
         maze_[cur.row][cur.col] |= seen;
         maze_[cur.row][cur.col] |= paint;
         flush_cursor_path_coordinate(cur.row, cur.col);
@@ -361,15 +357,14 @@ void Thread_solvers::dfs_thread_hunt_animated(Thread_maze::Point start, int thre
             const Thread_maze::Point& p = cardinal_directions_[direction_index];
             Thread_maze::Point next = {cur.row + p.row, cur.col + p.col};
             solver_mutex_.lock();
-            if (!(maze_[next.row][next.col] & seen)
-                    && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
-                solver_mutex_.unlock();
-                // Emulate a true recursive dfs. Only push the current branch onto our stack.
+            bool push_next = !(maze_[next.row][next.col] & seen)
+                                && (maze_[next.row][next.col] & Thread_maze::path_bit_);
+            solver_mutex_.unlock();
+            if (push_next) {
                 found_branch_to_explore = true;
                 dfs.push_back(next);
                 break;
             }
-            solver_mutex_.unlock();
             ++direction_index %= cardinal_directions_.size();
         } while (direction_index != thread_index);
         if (!found_branch_to_explore) {
@@ -413,14 +408,14 @@ void Thread_solvers::dfs_thread_gather(Thread_maze::Point start, int thread_inde
             const Thread_maze::Point& p = cardinal_directions_[direction_index];
             Thread_maze::Point next = {cur.row + p.row, cur.col + p.col};
             solver_mutex_.lock();
-            if (!(maze_[next.row][next.col] & seen)
-                    && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
-                solver_mutex_.unlock();
+            bool push_next = !(maze_[next.row][next.col] & seen)
+                                && (maze_[next.row][next.col] & Thread_maze::path_bit_);
+            solver_mutex_.unlock();
+            if (push_next) {
                 found_branch_to_explore = true;
                 dfs.push_back(next);
                 break;
             }
-            solver_mutex_.unlock();
             ++direction_index %= cardinal_directions_.size();
         } while (direction_index != thread_index);
         if (!found_branch_to_explore) {
@@ -457,14 +452,14 @@ void Thread_solvers::dfs_thread_gather_animated(Thread_maze::Point start, int th
             const Thread_maze::Point& p = cardinal_directions_[direction_index];
             Thread_maze::Point next = {cur.row + p.row, cur.col + p.col};
             solver_mutex_.lock();
-            if (!(maze_[next.row][next.col] & seen)
-                    && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
-                solver_mutex_.unlock();
+            bool push_next = !(maze_[next.row][next.col] & seen)
+                                && (maze_[next.row][next.col] & Thread_maze::path_bit_);
+            solver_mutex_.unlock();
+            if (push_next) {
                 found_branch_to_explore = true;
                 dfs.push_back(next);
                 break;
             }
-            solver_mutex_.unlock();
             ++direction_index %= cardinal_directions_.size();
         } while (direction_index != thread_index);
         if (!found_branch_to_explore) {
@@ -574,8 +569,8 @@ void Thread_solvers::randomized_dfs_thread_hunt(Thread_maze::Point start, int th
         }
 
         cur = dfs.back();
+        solver_mutex_.lock();
         if (maze_[cur.row][cur.col] & finish_bit_) {
-            solver_mutex_.lock();
             if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
@@ -583,23 +578,23 @@ void Thread_solvers::randomized_dfs_thread_hunt(Thread_maze::Point start, int th
             dfs.pop_back();
             break;
         }
-        solver_mutex_.lock();
         maze_[cur.row][cur.col] |= seen;
         solver_mutex_.unlock();
+
         shuffle(begin(random_direction_indices), end(random_direction_indices), generator_);
         bool found_branch_to_explore = false;
         for (const int& i : random_direction_indices) {
             const Thread_maze::Point& p = cardinal_directions_[i];
             Thread_maze::Point next = {cur.row + p.row, cur.col + p.col};
             solver_mutex_.lock();
-            if (!(maze_[next.row][next.col] & seen)
-                    && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
-                solver_mutex_.unlock();
+            bool push_next = !(maze_[next.row][next.col] & seen)
+                                && (maze_[next.row][next.col] & Thread_maze::path_bit_);
+            solver_mutex_.unlock();
+            if (push_next) {
                 found_branch_to_explore = true;
                 dfs.push_back(next);
                 break;
             }
-            solver_mutex_.unlock();
         }
         if (!found_branch_to_explore) {
             dfs.pop_back();
@@ -624,8 +619,8 @@ void Thread_solvers::randomized_dfs_thread_hunt_animated(Thread_maze::Point star
             return;
         }
         cur = dfs.back();
+        solver_mutex_.lock();
         if (maze_[cur.row][cur.col] & finish_bit_) {
-            solver_mutex_.lock();
             if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
@@ -633,7 +628,6 @@ void Thread_solvers::randomized_dfs_thread_hunt_animated(Thread_maze::Point star
             dfs.pop_back();
             return;
         }
-        solver_mutex_.lock();
         maze_[cur.row][cur.col] |= seen;
         maze_[cur.row][cur.col] |= paint;
         flush_cursor_path_coordinate(cur.row, cur.col);
@@ -646,14 +640,14 @@ void Thread_solvers::randomized_dfs_thread_hunt_animated(Thread_maze::Point star
             const Thread_maze::Point& p = cardinal_directions_[i];
             Thread_maze::Point next = {cur.row + p.row, cur.col + p.col};
             solver_mutex_.lock();
-            if (!(maze_[next.row][next.col] & seen)
-                    && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
-                solver_mutex_.unlock();
+            bool push_next = !(maze_[next.row][next.col] & seen)
+                                && (maze_[next.row][next.col] & Thread_maze::path_bit_);
+            solver_mutex_.unlock();
+            if (push_next) {
                 found_branch_to_explore = true;
                 dfs.push_back(next);
                 break;
             }
-            solver_mutex_.unlock();
         }
         if (!found_branch_to_explore) {
             solver_mutex_.lock();
@@ -676,8 +670,7 @@ void Thread_solvers::randomized_dfs_thread_gather(Thread_maze::Point start, int 
     while (!dfs.empty()) {
         cur = dfs.back();
         solver_mutex_.lock();
-        if (maze_[cur.row][cur.col] & finish_bit_
-                && !(maze_[cur.row][cur.col] & cache_mask_)){
+        if (maze_[cur.row][cur.col] & finish_bit_ && !(maze_[cur.row][cur.col] & cache_mask_)){
             maze_[cur.row][cur.col] |= seen;
             dfs.pop_back();
             for (const Thread_maze::Point& p : dfs) {
@@ -694,14 +687,14 @@ void Thread_solvers::randomized_dfs_thread_gather(Thread_maze::Point start, int 
             const Thread_maze::Point& p = cardinal_directions_[i];
             Thread_maze::Point next = {cur.row + p.row, cur.col + p.col};
             solver_mutex_.lock();
-            if (!(maze_[next.row][next.col] & seen)
-                    && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
-                solver_mutex_.unlock();
+            bool push_next = !(maze_[next.row][next.col] & seen)
+                                && (maze_[next.row][next.col] & Thread_maze::path_bit_);
+            solver_mutex_.unlock();
+            if (push_next) {
                 found_branch_to_explore = true;
                 dfs.push_back(next);
                 break;
             }
-            solver_mutex_.unlock();
         };
         if (!found_branch_to_explore) {
             dfs.pop_back();
@@ -719,8 +712,7 @@ void Thread_solvers::randomized_dfs_thread_gather_animated(Thread_maze::Point st
     while (!dfs.empty()) {
         cur = dfs.back();
         solver_mutex_.lock();
-        if (maze_[cur.row][cur.col] & finish_bit_
-                && !(maze_[cur.row][cur.col] & cache_mask_)){
+        if (maze_[cur.row][cur.col] & finish_bit_ && !(maze_[cur.row][cur.col] & cache_mask_)){
             maze_[cur.row][cur.col] |= seen;
             solver_mutex_.unlock();
             dfs.pop_back();
@@ -738,14 +730,14 @@ void Thread_solvers::randomized_dfs_thread_gather_animated(Thread_maze::Point st
             const Thread_maze::Point& p = cardinal_directions_[i];
             Thread_maze::Point next = {cur.row + p.row, cur.col + p.col};
             solver_mutex_.lock();
-            if (!(maze_[next.row][next.col] & seen)
-                    && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
-                solver_mutex_.unlock();
+            bool push_next = !(maze_[next.row][next.col] & seen)
+                                && (maze_[next.row][next.col] & Thread_maze::path_bit_);
+            solver_mutex_.unlock();
+            if (push_next) {
                 found_branch_to_explore = true;
                 dfs.push_back(next);
                 break;
             }
-            solver_mutex_.unlock();
         };
         if (!found_branch_to_explore) {
             solver_mutex_.lock();
@@ -896,8 +888,8 @@ void Thread_solvers::bfs_thread_hunt(Thread_maze::Point start, int thread_index,
         cur = bfs.front();
         bfs.pop();
 
+        solver_mutex_.lock();
         if (maze_[cur.row][cur.col] & finish_bit_) {
-            solver_mutex_.lock();
             if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
@@ -905,7 +897,6 @@ void Thread_solvers::bfs_thread_hunt(Thread_maze::Point start, int thread_index,
             break;
         }
         // This creates a nice fanning out of mixed color for each searching thread.
-        solver_mutex_.lock();
         maze_[cur.row][cur.col] |= paint;
         solver_mutex_.unlock();
 
@@ -914,7 +905,11 @@ void Thread_solvers::bfs_thread_hunt(Thread_maze::Point start, int thread_index,
         do {
             const Thread_maze::Point& p = cardinal_directions_[direction_index];
             Thread_maze::Point next = {cur.row + p.row, cur.col + p.col};
-            if (!seen.count(next) && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
+            bool seen_next = seen.count(next);
+            solver_mutex_.lock();
+            bool push_next = !seen_next && (maze_[next.row][next.col] & Thread_maze::path_bit_);
+            solver_mutex_.unlock();
+            if (push_next) {
                 seen[next] = cur;
                 bfs.push(next);
             }
@@ -944,8 +939,8 @@ void Thread_solvers::bfs_thread_hunt_animated(Thread_maze::Point start, int thre
         cur = bfs.front();
         bfs.pop();
 
+        solver_mutex_.lock();
         if (maze_[cur.row][cur.col] & finish_bit_) {
-            solver_mutex_.lock();
             if (escape_path_index_ == -1) {
                 escape_path_index_ = thread_index;
             }
@@ -953,7 +948,6 @@ void Thread_solvers::bfs_thread_hunt_animated(Thread_maze::Point start, int thre
             break;
         }
         // This creates a nice fanning out of mixed color for each searching thread.
-        solver_mutex_.lock();
         maze_[cur.row][cur.col] |= paint;
         flush_cursor_path_coordinate(cur.row, cur.col);
         solver_mutex_.unlock();
@@ -964,7 +958,11 @@ void Thread_solvers::bfs_thread_hunt_animated(Thread_maze::Point start, int thre
         do {
             const Thread_maze::Point& p = cardinal_directions_[direction_index];
             Thread_maze::Point next = {cur.row + p.row, cur.col + p.col};
-            if (!seen.count(next) && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
+            bool seen_next = seen.count(next);
+            solver_mutex_.lock();
+            bool push_next = !seen_next && (maze_[next.row][next.col] & Thread_maze::path_bit_);
+            solver_mutex_.unlock();
+            if (push_next) {
                 seen[next] = cur;
                 bfs.push(next);
             }
@@ -990,12 +988,10 @@ void Thread_solvers::bfs_thread_gather(Thread_maze::Point start, int thread_inde
         bfs.pop();
 
         solver_mutex_.lock();
-        if (maze_[cur.row][cur.col] & finish_bit_) {
-            if (!(maze_[cur.row][cur.col] & cache_mask_)) {
-                maze_[cur.row][cur.col] |= seen_bit;
-                solver_mutex_.unlock();
-                break;
-            }
+        if (maze_[cur.row][cur.col] & finish_bit_ && !(maze_[cur.row][cur.col] & cache_mask_)) {
+            maze_[cur.row][cur.col] |= seen_bit;
+            solver_mutex_.unlock();
+            break;
         }
         maze_[cur.row][cur.col] |= paint;
         maze_[cur.row][cur.col] |= seen_bit;
@@ -1005,7 +1001,11 @@ void Thread_solvers::bfs_thread_gather(Thread_maze::Point start, int thread_inde
         do {
             const Thread_maze::Point& p = cardinal_directions_[direction_index];
             Thread_maze::Point next = {cur.row + p.row, cur.col + p.col};
-            if (!seen.count(next) && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
+            bool seen_next = seen.count(next);
+            solver_mutex_.lock();
+            bool push_next = !seen_next && (maze_[next.row][next.col] & Thread_maze::path_bit_);
+            solver_mutex_.unlock();
+            if (push_next) {
                 seen[next] = cur;
                 bfs.push(next);
             }
@@ -1032,13 +1032,11 @@ void Thread_solvers::bfs_thread_gather_animated(Thread_maze::Point start, int th
         bfs.pop();
 
         solver_mutex_.lock();
-        if (maze_[cur.row][cur.col] & finish_bit_) {
-            if (!(maze_[cur.row][cur.col] & cache_mask_)) {
-                maze_[cur.row][cur.col] |= seen_bit;
-                escape_path_index_ = thread_index;
-                solver_mutex_.unlock();
-                break;
-            }
+        if (maze_[cur.row][cur.col] & finish_bit_ && !(maze_[cur.row][cur.col] & cache_mask_)) {
+            maze_[cur.row][cur.col] |= seen_bit;
+            escape_path_index_ = thread_index;
+            solver_mutex_.unlock();
+            break;
         }
         maze_[cur.row][cur.col] |= paint;
         maze_[cur.row][cur.col] |= seen_bit;
@@ -1050,7 +1048,11 @@ void Thread_solvers::bfs_thread_gather_animated(Thread_maze::Point start, int th
         do {
             const Thread_maze::Point& p = cardinal_directions_[direction_index];
             Thread_maze::Point next = {cur.row + p.row, cur.col + p.col};
-            if (!seen.count(next) && (maze_[next.row][next.col] & Thread_maze::path_bit_)) {
+            bool seen_next = seen.count(next);
+            solver_mutex_.lock();
+            bool push_next = !seen_next && (maze_[next.row][next.col] & Thread_maze::path_bit_);
+            solver_mutex_.unlock();
+            if (push_next) {
                 seen[next] = cur;
                 bfs.push(next);
             }
