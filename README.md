@@ -6,10 +6,12 @@
 
 ## Quick Start Guide
 
-This project is a command line application that can be run with various combinations of commands. The basic principle behind the commands is that you can ask for any combination of settings, include any settings, exclude any settings, and the program will just work. There are sensible defaults for every flag so experiment with different combinations and tweaks until you get what you are looking for. To start, you should focus mainly on how big you want the maze to be, what algorithm you want to generate it, what algorithm you want to solve it, and if any of these algorithms should be animated in real time. For now, building the project is simple if you have a compiler that supports C++20. From the root directory of this project run make.
+This project is a command line application that can be run with various combinations of commands. The basic principle behind the commands is that you can ask for any combination of settings, include any settings, exclude any settings, and the program will just work. There are sensible defaults for every flag so experiment with different combinations and tweaks until you get what you are looking for. To start, you should focus mainly on how big you want the maze to be, what algorithm you want to generate it, what algorithm you want to solve it, and if any of these algorithms should be animated in real time. For now, building the project is simple if you have a compiler that supports C++20. You will need CMake and pthreads installed. To get started run the following commands in sequence.
 
 ```zsh
-$ make
+$ cmake -S . -B build/
+$ cmake --build build
+$ ./build/bin/run_maze_optimized
 ```
 
 Here is the help message that comes with the `-h` flag to get started.
@@ -58,12 +60,12 @@ If any flags are omitted, defaults are used.
 Examples:
 
 ```zsh
-./run_maze
-./run_maze -r 51 -c 111 -b rdfs -s bfs -g hunt
-./run_maze -c 111 -s bfs -g gather
-./run_maze -s bfs -g corners -d round -b fractal
-./run_maze -s dfs -ba 4 -sa 5 -b wilson-walls -m x
-./run_maze -h
+./build/bin/run_maze_optimized
+./build/bin/run_maze_optimized -r 51 -c 111 -b rdfs -s bfs -g hunt
+./build/bin/run_maze_optimized -c 111 -s bfs -g gather
+./build/bin/run_maze_optimized -s bfs -g corners -d round -b fractal
+./build/bin/run_maze_optimized -s dfs -ba 4 -sa 5 -b wilson-walls -m x
+./build/bin/run_maze_optimized -h
 ```
 
 ## Settings Detailed
@@ -72,7 +74,7 @@ Examples:
 
 ![dimension-showcase](/images/dimension-showcase.png)
 
-The `-r` and `-c` flags let you set the dimensions of the maze. Note that my programs enforce that rows and columns must be odd, and it will enforce this by incrementing an even value, but this does not affect your usage of the program. As the image above demonstrates, zooming out with `<CTRL-(-)>`, or `CTRL-(+)` allows you to test huge mazes. Note that performance will decrease with size and WSL2 on Windows seems to struggle the most, while MacOS runs quite smoothly regardless of size. Try the `-d contrast` option as pictured if performance is an issue. This options seems to provide smooth performance on all tested platforms. 
+The `-r` and `-c` flags let you set the dimensions of the maze. Note that my programs enforce that rows and columns must be odd, and it will enforce this by incrementing an even value, but this does not affect your usage of the program. As the image above demonstrates, zooming out with `<CTRL-(-)>`, or `CTRL-(+)` allows you to test huge mazes. Note that performance will decrease with size and WSL2 on Windows seems to struggle the most, while MacOS runs quite smoothly regardless of size. Try the `-d contrast` option as pictured if performance is an issue. This options seems to provide smooth performance on all tested platforms.
 
 ### Builder Flag
 
@@ -96,7 +98,7 @@ An important detail for the solvers is that you can trace the exact path of ever
 
 ![games-showcase](/images/games-showcase.png)
 
-The `-g` flag lets you determine the game that the thread solvers will play in the maze. 
+The `-g` flag lets you determine the game that the thread solvers will play in the maze.
 
 The `hunt` game randomly places a start and a finish then sets the threads loose to see who finds it first.
 
@@ -138,25 +140,25 @@ mark a random starting point as the origin of all paths
 while there are valid maze paths to carve
 
 	mark the current square as visited
-	
+
 	for every neighboring square divided by a wall in random order
 
 		if the neighbor is valid and not seen
-		
+
 			break the wall between current and neighbor
-			
+
 			mark neighbor with the direction you came from
 
 			current becomes next
-		
+
 			continue the outer while loop
 
-	if we are not at the origin 
-	
+	if we are not at the origin
+
 		backtrack to the previous square
 ```
 
-This is an algorithm that has many optimization possibilities. The most notable actually makes an appearance in the gif that you see above. I encode the directions for backtracking into the bits of a square. In fact, we only need three bits to know how to backtrack and we use them to index into a table with the row and column directions we need to step to. Fortunately for the animation we can also encode those backtracking directions as color coded arrows with those same three bits so you can actually see the markers that we are leaving on the squares. Overall, this is a great algorithm to watch and solve. It is especially fun to watch zoomed out on massive mazes. 
+This is an algorithm that has many optimization possibilities. The most notable actually makes an appearance in the gif that you see above. I encode the directions for backtracking into the bits of a square. In fact, we only need three bits to know how to backtrack and we use them to index into a table with the row and column directions we need to step to. Fortunately for the animation we can also encode those backtracking directions as color coded arrows with those same three bits so you can actually see the markers that we are leaving on the squares. Overall, this is a great algorithm to watch and solve. It is especially fun to watch zoomed out on massive mazes.
 
 ### Kruskal's Algorithm
 
@@ -207,7 +209,7 @@ while the min priority queue is not empty
 	set cell MIN with cost = INFINITY
 
 	for each valid neighbor
-	
+
 		if this neighbor has a lower cost than MIN
 
 			MIN = neighbor
@@ -221,7 +223,7 @@ while the min priority queue is not empty
 	else
 
 		pop from the min priority
-		
+
 ```
 
 This algorithm spreads out nicely as it builds like clusters all over the grid. It is also space inefficient at this time. I hear there are optimizations and will try to learn more.
@@ -242,7 +244,7 @@ creat a cell called PREVIOUS that starts as nil.
 while we have selected a starting square for a random walk
 
 	for each neighbor NEXT in random order
-	
+
 		if the NEXT != PREVIOUS and is in bounds
 
 			select NEXT for consideration
@@ -286,29 +288,29 @@ push the entire maze onto a stack of chambers
 while the stack of chambers is not empty
 
 	if chamber height > chamber width and width meets min requirement
-	
+
 		choose a random height and divide the chamber by that height
-		
+
 		choose a random point in the divide for a path gap
-		
+
 		update the current chamber's height
-	
+
 		push the chamber after the divide onto the stack
-		
+
 	else if chamber width >= chamber height and height meets min requirement
-	
+
 		choose a random width and divide the chamber by that width
-		
+
 		choose a random point in the divide for a path gap
-		
+
 		update the current chamber's width
-		
+
 		push the chamber after the divide onto the stack
-		
+
 	else
-	
+
 		pop chamber from the stack.
-	
+
 ```
 
 This is a great algorithm because the mazes it produces are completely different from anything esle that you see. I appreciate the interesting flow patterns that breadth first searches produce.
@@ -327,19 +329,19 @@ set LIMIT to be the maximum length to travel in one direction
 while the stack is not empty
 
 	mark the CURRENT square as visited
-	
+
 	for every neighboring square divided by a wall in random order
 
 		if the neighbor NEXT is valid and not seen
-		
+
 			while run is less than LIMIT and CURRENT is valid
 
 				break wall between CURRENT and NEXT
-				
+
 				mark NEXT as visited
 
 				push next onto the stack
-				
+
 				CURRENT becomes NEXT
 
 			continue outer loop
