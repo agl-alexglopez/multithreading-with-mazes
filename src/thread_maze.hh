@@ -119,7 +119,7 @@ public:
   static constexpr Square path_bit_ = 0b0010'0000'0000'0000;
   static constexpr Square clear_available_bits_ = 0b0001'1111'1111'0000;
 
-  Thread_maze( const Maze_args& args );
+  explicit Thread_maze( const Maze_args& args );
   void new_maze();
   void new_maze( Builder_algorithm builder, size_t odd_rows, size_t odd_cols );
   int row_size() const;
@@ -311,7 +311,7 @@ private:
   void generate_randomized_kruskal_maze();
   void generate_randomized_kruskal_maze_animated();
   std::vector<Point> load_shuffled_walls();
-  std::unordered_map<Point, int> tag_cells();
+  std::unordered_map<Point, int> tag_cells() const;
   void generate_randomized_prim_maze();
   void generate_randomized_prim_maze_animated();
   std::unordered_map<Thread_maze::Point, int> randomize_cell_costs();
@@ -337,27 +337,35 @@ private:
   void generate_randomized_grid_animated();
   void generate_arena();
   void generate_arena_animated();
+  bool is_square_inside_perimeter_walls( const Point& next ) const;
+  bool is_square_inside_vector_bounds( const Point& next ) const;
+  bool is_built_square( const Point& next ) const;
   void build_wall_outline();
   void fill_maze_with_walls();
   void fill_maze_with_walls_animated();
   void join_squares( const Point& cur, const Point& next );
   void join_squares_animated( const Point& cur, const Point& next );
-  void mark_origin( const Point& cur, const Point& next );
-  void mark_origin_animated( const Point& cur, const Point& next );
+  void mark_origin( const Point& walk, const Point& next );
+  void mark_origin_animated( const Point& walk, const Point& next );
   void build_path( int row, int col );
   void build_path_animated( int row, int col );
   void build_wall( int row, int col );
   void build_wall_carefully( int row, int col );
   void add_modification( int row, int col );
   void add_modification_animated( int row, int col );
+  void add_positive_slope( int row, int col );
+  void add_positive_slope_animated( int row, int col );
+  void add_negative_slope( int row, int col );
+  void add_negative_slope_animated( int row, int col );
   Point find_nearest_square( Point choice );
   void set_squares( const std::vector<std::vector<Square>>& tiles );
-  void clear_and_flush_grid() const;
-  void clear_screen() const;
   void flush_cursor_maze_coordinate( int row, int col ) const;
-  void set_cursor_position( int row, int col ) const;
+  void clear_and_flush_grid() const;
   void print_square( int row, int col ) const;
   void print_maze() const;
+
+  static void set_cursor_position( int row, int col );
+  static void clear_screen();
 
 }; // class Thread_maze
 

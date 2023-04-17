@@ -18,6 +18,6 @@ foreach (tidy_target ${ALL_SRC_FILES})
   endif ()
 endforeach (tidy_target)
 
-add_custom_target (tidy DEPENDS ${MINNOW_TIDY_TARGETS})
+add_custom_target (tidy DEPENDS ${MAZE_TIDY_TARGETS})
 
 add_custom_target (tidy-all DEPENDS ${ALL_TIDY_TARGETS})

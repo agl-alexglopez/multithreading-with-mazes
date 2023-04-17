@@ -107,10 +107,10 @@ Thread_maze::Thread_maze( const Thread_maze::Maze_args& args )
   : builder_( args.builder )
   , modification_( args.modification )
   , style_( args.style )
-  , builder_speed_( builder_speeds_[static_cast<size_t>( args.builder_speed )] )
+  , builder_speed_( builder_speeds_.at( static_cast<size_t>( args.builder_speed ) ) )
   , maze_( args.odd_rows, std::vector<Square>( args.odd_cols, path_bit_ ) )
-  , maze_row_size_( maze_.size() )
-  , maze_col_size_( maze_[0].size() )
+  , maze_row_size_( static_cast<int>( maze_.size() ) )
+  , maze_col_size_( static_cast<int>( maze_[0].size() ) )
   , generator_( std::random_device {}() )
   , row_random_( 1, maze_row_size_ - 2 )
   , col_random_( 1, maze_col_size_ - 2 )
@@ -126,6 +126,107 @@ Thread_maze::Thread_maze( const Thread_maze::Maze_args& args )
   generate_maze( args.builder );
 }
 
+void Thread_maze::add_positive_slope( int row, int col ) {
+  auto row_size = static_cast<float>( maze_row_size_ ) - 2.0F;
+  auto col_size = static_cast<float>( maze_col_size_ ) - 2.0F;
+  auto cur_row = static_cast<float>( row );
+  // y = mx + b. We will get the negative slope. This line goes top left to bottom right.
+  float slope = ( 2.0F - row_size ) / ( 2.0F - col_size );
+  float b = 2.0F - ( 2.0F * slope );
+  int on_line = static_cast<int>( ( cur_row - b ) / slope );
+  if ( col == on_line && col < maze_col_size_ - 2 && col > 1 ) {
+    // An X is hard to notice and might miss breaking wall lines so make it wider.
+    build_path( row, col );
+    if ( col + 1 < maze_col_size_ - 2 ) {
+      build_path( row, col + 1 );
+    }
+    if ( col - 1 > 1 ) {
+      build_path( row, col - 1 );
+    }
+    if ( col + 2 < maze_col_size_ - 2 ) {
+      build_path( row, col + 2 );
+    }
+    if ( col - 2 > 1 ) {
+      build_path( row, col - 2 );
+    }
+  }
+}
+
+void Thread_maze::add_positive_slope_animated( int row, int col ) {
+  auto row_size = static_cast<float>( maze_row_size_ ) - 2.0F;
+  auto col_size = static_cast<float>( maze_col_size_ ) - 2.0F;
+  auto cur_row = static_cast<float>( row );
+  // y = mx + b. We will get the negative slope. This line goes top left to bottom right.
+  float slope = ( 2.0F - row_size ) / ( 2.0F - col_size );
+  float b = 2.0F - ( 2.0F * slope );
+  int on_line = static_cast<int>( ( cur_row - b ) / slope );
+  if ( col == on_line && col < maze_col_size_ - 2 && col > 1 ) {
+    // An X is hard to notice and might miss breaking wall lines so make it wider.
+    build_path_animated( row, col );
+    if ( col + 1 < maze_col_size_ - 2 ) {
+      build_path_animated( row, col + 1 );
+    }
+    if ( col - 1 > 1 ) {
+      build_path_animated( row, col - 1 );
+    }
+    if ( col + 2 < maze_col_size_ - 2 ) {
+      build_path_animated( row, col + 2 );
+    }
+    if ( col - 2 > 1 ) {
+      build_path_animated( row, col - 2 );
+    }
+  }
+
+}
+
+void Thread_maze::add_negative_slope( int row, int col ) {
+  auto row_size = static_cast<float>( maze_row_size_ ) - 2.0F;
+  auto col_size = static_cast<float>( maze_col_size_ ) - 2.0F;
+  auto cur_row = static_cast<float>( row );
+  float slope = ( 2.0F - row_size ) / ( col_size - 2.0F );
+  float b = row_size - ( 2.0F * slope );
+  int on_line = static_cast<int>( ( cur_row - b ) / slope );
+  if ( col == on_line && col > 1 && col < maze_col_size_ - 2 && row < maze_row_size_ - 2 ) {
+    build_path( row, col );
+    if ( col + 1 < maze_col_size_ - 2 ) {
+      build_path( row, col + 1 );
+    }
+    if ( col - 1 > 1 ) {
+      build_path( row, col - 1 );
+    }
+    if ( col + 2 < maze_col_size_ - 2 ) {
+      build_path( row, col + 2 );
+    }
+    if ( col - 2 > 1 ) {
+      build_path( row, col - 2 );
+    }
+  }
+}
+
+void Thread_maze::add_negative_slope_animated( int row, int col ) {
+  auto row_size = static_cast<float>( maze_row_size_ ) - 2.0F;
+  auto col_size = static_cast<float>( maze_col_size_ ) - 2.0F;
+  auto cur_row = static_cast<float>( row );
+  float slope = ( 2.0F - row_size ) / ( col_size - 2.0F );
+  float b = row_size - ( 2.0F * slope );
+  int on_line = static_cast<int>( ( cur_row - b ) / slope );
+  if ( col == on_line && col > 1 && col < maze_col_size_ - 2 && row < maze_row_size_ - 2 ) {
+    build_path_animated( row, col );
+    if ( col + 1 < maze_col_size_ - 2 ) {
+      build_path_animated( row, col + 1 );
+    }
+    if ( col - 1 > 1 ) {
+      build_path_animated( row, col - 1 );
+    }
+    if ( col + 2 < maze_col_size_ - 2 ) {
+      build_path_animated( row, col + 2 );
+    }
+    if ( col - 2 > 1 ) {
+      build_path_animated( row, col - 2 );
+    }
+  }
+}
+
 void Thread_maze::add_modification( int row, int col )
 {
   if ( modification_ == Maze_modification::add_cross ) {
@@ -137,48 +238,8 @@ void Thread_maze::add_modification( int row, int col )
       }
     }
   } else if ( modification_ == Maze_modification::add_x ) {
-    float row_size = maze_row_size_ - 2.0;
-    float col_size = maze_col_size_ - 2.0;
-    float cur_row = row;
-    // y = mx + b. We will get the negative slope. This line goes top left to bottom right.
-    float slope = ( 2.0 - row_size ) / ( 2.0 - col_size );
-    float b = 2.0 - ( 2.0 * slope );
-    int on_line = ( cur_row - b ) / slope;
-    if ( col == on_line && col < maze_col_size_ - 2 && col > 1 ) {
-      // An X is hard to notice and might miss breaking wall lines so make it wider.
-      build_path( row, col );
-      if ( col + 1 < maze_col_size_ - 2 ) {
-        build_path( row, col + 1 );
-      }
-      if ( col - 1 > 1 ) {
-        build_path( row, col - 1 );
-      }
-      if ( col + 2 < maze_col_size_ - 2 ) {
-        build_path( row, col + 2 );
-      }
-      if ( col - 2 > 1 ) {
-        build_path( row, col - 2 );
-      }
-    }
-    // This line is drawn from top right to bottom left.
-    slope = ( 2.0 - row_size ) / ( col_size - 2.0 );
-    b = row_size - ( 2.0 * slope );
-    on_line = ( cur_row - b ) / slope;
-    if ( col == on_line && col > 1 && col < maze_col_size_ - 2 && row < maze_row_size_ - 2 ) {
-      build_path( row, col );
-      if ( col + 1 < maze_col_size_ - 2 ) {
-        build_path( row, col + 1 );
-      }
-      if ( col - 1 > 1 ) {
-        build_path( row, col - 1 );
-      }
-      if ( col + 2 < maze_col_size_ - 2 ) {
-        build_path( row, col + 2 );
-      }
-      if ( col - 2 > 1 ) {
-        build_path( row, col - 2 );
-      }
-    }
+    add_positive_slope( row, col );
+    add_negative_slope( row, col );
   }
 }
 
@@ -193,48 +254,8 @@ void Thread_maze::add_modification_animated( int row, int col )
       }
     }
   } else if ( modification_ == Maze_modification::add_x ) {
-    float row_size = maze_row_size_ - 2.0;
-    float col_size = maze_col_size_ - 2.0;
-    float cur_row = row;
-    // y = mx + b. We will get the negative slope. This line goes top left to bottom right.
-    float slope = ( 2.0 - row_size ) / ( 2.0 - col_size );
-    float b = 2.0 - ( 2.0 * slope );
-    int on_line = ( cur_row - b ) / slope;
-    if ( col == on_line && col < maze_col_size_ - 2 && col > 1 ) {
-      // An X is hard to notice and might miss breaking wall lines so make it wider.
-      build_path_animated( row, col );
-      if ( col + 1 < maze_col_size_ - 2 ) {
-        build_path_animated( row, col + 1 );
-      }
-      if ( col - 1 > 1 ) {
-        build_path_animated( row, col - 1 );
-      }
-      if ( col + 2 < maze_col_size_ - 2 ) {
-        build_path_animated( row, col + 2 );
-      }
-      if ( col - 2 > 1 ) {
-        build_path_animated( row, col - 2 );
-      }
-    }
-    // This line is drawn from top right to bottom left.
-    slope = ( 2.0 - row_size ) / ( col_size - 2.0 );
-    b = row_size - ( 2.0 * slope );
-    on_line = ( cur_row - b ) / slope;
-    if ( col == on_line && col > 1 && col < maze_col_size_ - 2 && row < maze_row_size_ - 2 ) {
-      build_path_animated( row, col );
-      if ( col + 1 < maze_col_size_ - 2 ) {
-        build_path_animated( row, col + 1 );
-      }
-      if ( col - 1 > 1 ) {
-        build_path_animated( row, col - 1 );
-      }
-      if ( col + 2 < maze_col_size_ - 2 ) {
-        build_path_animated( row, col + 2 );
-      }
-      if ( col - 2 > 1 ) {
-        build_path_animated( row, col - 2 );
-      }
-    }
+    add_positive_slope_animated( row, col );
+    add_negative_slope_animated( row, col );
   }
 }
 
@@ -352,6 +373,35 @@ void Thread_maze::generate_randomized_loop_erased_maze()
     }
   };
 
+  auto continue_walk_steps = [&] ( Point& prev, Point& walk, const Point& next ) -> bool {
+    if ( is_built_square( next ) ) {
+      build_with_marks( walk, next );
+      connect_walk_to_maze( walk );
+      walk = choose_arbitrary_point( Wilson_point::even );
+
+      if ( !walk.row ) {
+        return false;
+      }
+
+      maze_[walk.row][walk.col] &= ~markers_mask_;
+      prev = {};
+      return true;
+    }
+    if ( maze_[next.row][next.col] & start_bit_ ) {
+      erase_loop( walk, next );
+      walk = next;
+      prev = {};
+      Backtrack_marker mark = ( maze_[walk.row][walk.col] & markers_mask_ ) >> marker_shift_;
+      const Point& direction = backtracking_marks_.at( mark );
+      prev = { walk.row + direction.row, walk.col + direction.col };
+      return true;
+    }
+    mark_origin( walk, next );
+    prev = walk;
+    walk = next;
+    return true;
+  };
+
   /* Important to remember that this maze builds by jumping two squares at a time. Therefore for
    * Wilson's algorithm to work two points must both be even or odd to find each other. For any
    * number N, 2 * N + 1 is always odd, 2 * N is always even.
@@ -372,35 +422,15 @@ void Thread_maze::generate_randomized_loop_erased_maze()
     maze_[walk.row][walk.col] |= start_bit_;
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator_ );
     for ( const int& i : random_direction_indices ) {
-      const Point& p = generate_directions_[i];
+      const Point& p = generate_directions_.at( i );
       Point next = { walk.row + p.row, walk.col + p.col };
       if ( next.row <= 0 || next.row >= maze_row_size_ - 1 || next.col <= 0 || next.col >= maze_col_size_ - 1
            || next == previous_square ) {
         continue;
       }
 
-      if ( maze_[next.row][next.col] & builder_bit_ ) {
-        build_with_marks( walk, next );
-        connect_walk_to_maze( walk );
-        walk = choose_arbitrary_point( Wilson_point::odd );
-
-        if ( !walk.row ) {
-          return;
-        }
-
-        maze_[walk.row][walk.col] &= ~markers_mask_;
-        previous_square = {};
-      } else if ( maze_[next.row][next.col] & start_bit_ ) {
-        erase_loop( walk, next );
-        walk = next;
-        previous_square = {};
-        Backtrack_marker mark = ( maze_[walk.row][walk.col] & markers_mask_ ) >> marker_shift_;
-        const Point& direction = backtracking_marks_[mark];
-        previous_square = { walk.row + direction.row, walk.col + direction.col };
-      } else {
-        mark_origin( walk, next );
-        previous_square = walk;
-        walk = next;
+      if ( !continue_walk_steps( previous_square, walk, next ) ) {
+        return;
       }
       break;
     }
@@ -465,6 +495,36 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated()
     }
   };
 
+  auto continue_walk_steps_animated = [&] ( Point& prev, Point& walk, const Point& next ) -> bool {
+    if ( is_built_square( next ) ) {
+      build_with_marks( walk, next );
+      connect_walk_to_maze( walk );
+      walk = choose_arbitrary_point( Wilson_point::even );
+
+      if ( !walk.row ) {
+        return false;
+      }
+
+      maze_[walk.row][walk.col] &= ~markers_mask_;
+      prev = {};
+      return true;
+    }
+    if ( maze_[next.row][next.col] & start_bit_ ) {
+      erase_loop( walk, next );
+      walk = next;
+      prev = {};
+      Backtrack_marker mark = ( maze_[walk.row][walk.col] & markers_mask_ ) >> marker_shift_;
+      const Point& direction = backtracking_marks_.at( mark );
+      prev = { walk.row + direction.row, walk.col + direction.col };
+      return true;
+    }
+    mark_origin_animated( walk, next );
+    prev = walk;
+    walk = next;
+    return true;
+  };
+
+
   std::uniform_int_distribution<int> row_rand( 2, maze_row_size_ - 2 );
   std::uniform_int_distribution<int> col_rand( 2, maze_col_size_ - 2 );
   Point start = { 2 * ( row_rand( generator_ ) / 2 ) + 1, 2 * ( col_rand( generator_ ) / 2 ) + 1 };
@@ -479,35 +539,14 @@ void Thread_maze::generate_randomized_loop_erased_maze_animated()
     maze_[walk.row][walk.col] |= start_bit_;
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator_ );
     for ( const int& i : random_direction_indices ) {
-      const Point& p = generate_directions_[i];
+      const Point& p = generate_directions_.at( i );
       Point next = { walk.row + p.row, walk.col + p.col };
-      if ( next.row <= 0 || next.row >= maze_row_size_ - 1 || next.col <= 0 || next.col >= maze_col_size_ - 1
-           || next == previous_square ) {
+      if ( !is_square_inside_vector_bounds( next ) || next == previous_square ) {
         continue;
       }
 
-      if ( maze_[next.row][next.col] & builder_bit_ ) {
-        build_with_marks( walk, next );
-        connect_walk_to_maze( walk );
-        walk = choose_arbitrary_point( Wilson_point::odd );
-
-        if ( !walk.row ) {
-          return;
-        }
-
-        maze_[walk.row][walk.col] &= ~markers_mask_;
-        previous_square = {};
-      } else if ( maze_[next.row][next.col] & start_bit_ ) {
-        erase_loop( walk, next );
-        walk = next;
-        previous_square = {};
-        Backtrack_marker mark = ( maze_[walk.row][walk.col] & markers_mask_ ) >> marker_shift_;
-        const Point& direction = backtracking_marks_[mark];
-        previous_square = { walk.row + direction.row, walk.col + direction.col };
-      } else {
-        mark_origin_animated( walk, next );
-        previous_square = walk;
-        walk = next;
+      if ( !continue_walk_steps_animated( previous_square, walk, next ) ) {
+        return;
       }
       break;
     }
@@ -528,7 +567,9 @@ Thread_maze::Point Thread_maze::choose_arbitrary_point( Wilson_point start ) con
   return { 0, 0 };
 }
 
+
 /* * * * * * * * * * * * * * *      Wilson's  Wall Adder      * * * * * * * * * * * * * * * * * * */
+
 
 void Thread_maze::generate_randomized_loop_erased_walls()
 {
@@ -581,6 +622,35 @@ void Thread_maze::generate_randomized_loop_erased_walls()
     }
   };
 
+  auto continue_walk_steps = [&] ( Point& prev, Point& walk, const Point& next ) -> bool {
+    if ( is_built_square( next ) ) {
+      join_walk_walls( walk, next );
+      connect_walk_to_maze( walk );
+      walk = choose_arbitrary_point( Wilson_point::even );
+
+      if ( !walk.row ) {
+        return false;
+      }
+
+      maze_[walk.row][walk.col] &= ~markers_mask_;
+      prev = {};
+      return true;
+    }
+    if ( maze_[next.row][next.col] & start_bit_ ) {
+      erase_loop( walk, next );
+      walk = next;
+      prev = {};
+      Backtrack_marker mark = ( maze_[walk.row][walk.col] & markers_mask_ ) >> marker_shift_;
+      const Point& direction = backtracking_marks_.at( mark );
+      prev = { walk.row + direction.row, walk.col + direction.col };
+      return true;
+    }
+    mark_origin( walk, next );
+    prev = walk;
+    walk = next;
+    return true;
+  };
+
   // Walls must start and connect between even squares.
   std::uniform_int_distribution<int> row_rand( 2, maze_row_size_ - 2 );
   std::uniform_int_distribution<int> col_rand( 2, maze_col_size_ - 2 );
@@ -594,35 +664,14 @@ void Thread_maze::generate_randomized_loop_erased_walls()
     maze_[walk.row][walk.col] |= start_bit_;
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator_ );
     for ( const int& i : random_direction_indices ) {
-      const Point& p = generate_directions_[i];
+      const Point& p = generate_directions_.at( i );
       Point next = { walk.row + p.row, walk.col + p.col };
-      if ( next.row < 0 || next.row >= maze_row_size_ || next.col < 0 || next.col >= maze_col_size_
-           || next == previous_square ) {
+      if ( !is_square_inside_vector_bounds( next ) || next == previous_square ) {
         continue;
       }
 
-      if ( maze_[next.row][next.col] & builder_bit_ ) {
-        join_walk_walls( walk, next );
-        connect_walk_to_maze( walk );
-        walk = choose_arbitrary_point( Wilson_point::even );
-
-        if ( !walk.row ) {
-          return;
-        }
-
-        maze_[walk.row][walk.col] &= ~markers_mask_;
-        previous_square = {};
-      } else if ( maze_[next.row][next.col] & start_bit_ ) {
-        erase_loop( walk, next );
-        walk = next;
-        previous_square = {};
-        Backtrack_marker mark = ( maze_[walk.row][walk.col] & markers_mask_ ) >> marker_shift_;
-        const Point& direction = backtracking_marks_[mark];
-        previous_square = { walk.row + direction.row, walk.col + direction.col };
-      } else {
-        mark_origin( walk, next );
-        previous_square = walk;
-        walk = next;
+      if ( !continue_walk_steps( previous_square, walk, next ) ) {
+        return;
       }
       break;
     }
@@ -656,7 +705,7 @@ void Thread_maze::generate_randomized_loop_erased_walls_animated()
     Point cur = walk;
     while ( maze_[cur.row][cur.col] & markers_mask_ ) {
       Backtrack_marker mark = ( maze_[cur.row][cur.col] & markers_mask_ ) >> marker_shift_;
-      const Point& direction = backtracking_marks_[mark];
+      const Point& direction = backtracking_marks_.at( mark );
       Point next = { cur.row + direction.row, cur.col + direction.col };
       join_walls_animated( cur, next );
       // Clean up after ourselves and leave no marks behind for the maze solvers.
@@ -675,13 +724,42 @@ void Thread_maze::generate_randomized_loop_erased_walls_animated()
     while ( cur != loop_root ) {
       maze_[cur.row][cur.col] &= ~start_bit_;
       Backtrack_marker mark = ( maze_[cur.row][cur.col] & markers_mask_ ) >> marker_shift_;
-      const Point& direction = backtracking_marks_[mark];
+      const Point& direction = backtracking_marks_.at( mark );
       Point next = { cur.row + direction.row, cur.col + direction.col };
       maze_[cur.row][cur.col] &= ~markers_mask_;
       flush_cursor_maze_coordinate( cur.row, cur.col );
       std::this_thread::sleep_for( std::chrono::microseconds( builder_speed_ ) );
       cur = next;
     }
+  };
+
+  auto continue_walk_steps_animated = [&] ( Point& prev, Point& walk, const Point& next ) -> bool {
+    if ( is_built_square( next ) ) {
+      join_walls_animated( walk, next );
+      connect_walk_to_maze( walk );
+      walk = choose_arbitrary_point( Wilson_point::even );
+
+      if ( !walk.row ) {
+        return false;
+      }
+
+      maze_[walk.row][walk.col] &= ~markers_mask_;
+      prev = {};
+      return true;
+    }
+    if ( maze_[next.row][next.col] & start_bit_ ) {
+      erase_loop( walk, next );
+      walk = next;
+      prev = {};
+      Backtrack_marker mark = ( maze_[walk.row][walk.col] & markers_mask_ ) >> marker_shift_;
+      const Point& direction = backtracking_marks_.at( mark );
+      prev = { walk.row + direction.row, walk.col + direction.col };
+      return true;
+    }
+    mark_origin_animated( walk, next );
+    prev = walk;
+    walk = next;
+    return true;
   };
 
   // Walls must start and connect between even squares.
@@ -697,35 +775,13 @@ void Thread_maze::generate_randomized_loop_erased_walls_animated()
     maze_[walk.row][walk.col] |= start_bit_;
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator_ );
     for ( const int& i : random_direction_indices ) {
-      const Point& p = generate_directions_[i];
+      const Point& p = generate_directions_.at( i );
       Point next = { walk.row + p.row, walk.col + p.col };
-      if ( next.row < 0 || next.row >= maze_row_size_ || next.col < 0 || next.col >= maze_col_size_
-           || next == previous_square ) {
+      if ( !is_square_inside_vector_bounds( next ) || next == previous_square ) {
         continue;
       }
-
-      if ( maze_[next.row][next.col] & builder_bit_ ) {
-        join_walls_animated( walk, next );
-        connect_walk_to_maze( walk );
-        walk = choose_arbitrary_point( Wilson_point::even );
-
-        if ( !walk.row ) {
-          return;
-        }
-
-        maze_[walk.row][walk.col] &= ~markers_mask_;
-        previous_square = {};
-      } else if ( maze_[next.row][next.col] & start_bit_ ) {
-        erase_loop( walk, next );
-        walk = next;
-        previous_square = {};
-        Backtrack_marker mark = ( maze_[walk.row][walk.col] & markers_mask_ ) >> marker_shift_;
-        const Point& direction = backtracking_marks_[mark];
-        previous_square = { walk.row + direction.row, walk.col + direction.col };
-      } else {
-        mark_origin_animated( walk, next );
-        previous_square = walk;
-        walk = next;
+      if ( !continue_walk_steps_animated( previous_square, walk, next ) ) {
+        return;
       }
       break;
     }
@@ -846,10 +902,9 @@ void Thread_maze::generate_randomized_dfs_maze()
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator_ );
     branches_remain = false;
     for ( const int& i : random_direction_indices ) {
-      const Point& direction = generate_directions_[i];
+      const Point& direction = generate_directions_.at( i );
       Point next = { cur.row + direction.row, cur.col + direction.col };
-      if ( next.row > 0 && next.row < maze_row_size_ - 1 && next.col > 0 && next.col < maze_col_size_ - 1
-           && !( maze_[next.row][next.col] & builder_bit_ ) ) {
+      if ( is_square_inside_perimeter_walls( next ) && !is_built_square( next ) ) {
         branches_remain = true;
         carve_path_markings( cur, next );
         cur = next;
@@ -858,7 +913,7 @@ void Thread_maze::generate_randomized_dfs_maze()
     }
     if ( !branches_remain && cur != start ) {
       Backtrack_marker dir = ( maze_[cur.row][cur.col] & markers_mask_ ) >> marker_shift_;
-      const Point& backtracking = backtracking_marks_[dir];
+      const Point& backtracking = backtracking_marks_.at( dir );
       Point next = { cur.row + backtracking.row, cur.col + backtracking.col };
       // We are using fields the threads will use later. Clear bits as we backtrack.
       maze_[cur.row][cur.col] &= ~markers_mask_;
@@ -879,10 +934,9 @@ void Thread_maze::generate_randomized_dfs_maze_animated()
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator_ );
     branches_remain = false;
     for ( const int& i : random_direction_indices ) {
-      const Point& direction = generate_directions_[i];
+      const Point& direction = generate_directions_.at( i );
       Point next = { cur.row + direction.row, cur.col + direction.col };
-      if ( next.row > 0 && next.row < maze_row_size_ - 1 && next.col > 0 && next.col < maze_col_size_ - 1
-           && !( maze_[next.row][next.col] & builder_bit_ ) ) {
+      if ( is_square_inside_perimeter_walls( next ) && !is_built_square( next ) ) {
         carve_path_markings_animated( cur, next );
         branches_remain = true;
         cur = next;
@@ -891,7 +945,7 @@ void Thread_maze::generate_randomized_dfs_maze_animated()
     }
     if ( !branches_remain && cur != start ) {
       Backtrack_marker dir = ( maze_[cur.row][cur.col] & markers_mask_ ) >> marker_shift_;
-      const Point& backtracking = backtracking_marks_[dir];
+      const Point& backtracking = backtracking_marks_.at( dir );
       Point next = { cur.row + backtracking.row, cur.col + backtracking.col };
       // We are using fields the threads will use later. Clear bits as we backtrack.
       maze_[cur.row][cur.col] &= ~markers_mask_;
@@ -974,7 +1028,7 @@ std::vector<Thread_maze::Point> Thread_maze::load_shuffled_walls()
   return walls;
 }
 
-std::unordered_map<Thread_maze::Point, int> Thread_maze::tag_cells()
+std::unordered_map<Thread_maze::Point, int> Thread_maze::tag_cells() const
 {
   std::unordered_map<Point, int> set_ids = {};
   int id = 0;
@@ -995,7 +1049,7 @@ void Thread_maze::generate_randomized_prim_maze()
   std::unordered_map<Point, int> cell_cost = randomize_cell_costs();
   Point odd_point = pick_random_odd_point();
   Priority_cell start = { odd_point, cell_cost[odd_point] };
-  std::priority_queue<Priority_cell, std::vector<Priority_cell>, std::greater<Priority_cell>> cells;
+  std::priority_queue<Priority_cell, std::vector<Priority_cell>, std::greater<>> cells;
   cells.push( start );
   while ( !cells.empty() ) {
     const Point& cur = cells.top().cell;
@@ -1004,8 +1058,7 @@ void Thread_maze::generate_randomized_prim_maze()
     int min_weight = INT_MAX;
     for ( const Point& p : generate_directions_ ) {
       Point next = { cur.row + p.row, cur.col + p.col };
-      if ( next.row > 0 && next.col > 0 && next.row < maze_row_size_ - 1 && next.col < maze_col_size_ - 1
-           && !( maze_[next.row][next.col] & builder_bit_ ) ) {
+      if ( is_square_inside_perimeter_walls( next ) && !is_built_square( next ) ) {
         int weight = cell_cost[next];
         if ( weight < min_weight ) {
           min_weight = weight;
@@ -1027,7 +1080,7 @@ void Thread_maze::generate_randomized_prim_maze_animated()
   std::unordered_map<Point, int> cell_cost = randomize_cell_costs();
   Point odd_point = pick_random_odd_point();
   Priority_cell start = { odd_point, cell_cost[odd_point] };
-  std::priority_queue<Priority_cell, std::vector<Priority_cell>, std::greater<Priority_cell>> cells;
+  std::priority_queue<Priority_cell, std::vector<Priority_cell>, std::greater<>> cells;
   cells.push( start );
   while ( !cells.empty() ) {
     const Point& cur = cells.top().cell;
@@ -1036,8 +1089,7 @@ void Thread_maze::generate_randomized_prim_maze_animated()
     int min_weight = INT_MAX;
     for ( const Point& p : generate_directions_ ) {
       Point next = { cur.row + p.row, cur.col + p.col };
-      if ( next.row > 0 && next.col > 0 && next.row < maze_row_size_ - 1 && next.col < maze_col_size_ - 1
-           && !( maze_[next.row][next.col] & builder_bit_ ) ) {
+      if ( is_square_inside_perimeter_walls( next ) && !is_built_square( next ) ) {
         int weight = cell_cost[next];
         if ( weight < min_weight ) {
           min_weight = weight;
@@ -1085,11 +1137,9 @@ void Thread_maze::generate_randomized_grid()
     Point next = { cur.row + direction.row, cur.col + direction.col };
     // Create the "grid" by running in one direction until wall or limit.
     int cur_run = 0;
-    while ( next.row < maze_row_size_ - 1 && next.col < maze_col_size_ - 1 && next.row > 0 && next.col > 0
-            && cur_run < run_limit ) {
+    while ( is_square_inside_perimeter_walls( next ) && cur_run < run_limit ) {
       join_squares( cur, next );
       cur = next;
-
       dfs.push( next );
       next.row += direction.row;
       next.col += direction.col;
@@ -1106,10 +1156,9 @@ void Thread_maze::generate_randomized_grid()
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator_ );
     bool branches_remain = false;
     for ( const int& i : random_direction_indices ) {
-      const Point& direction = generate_directions_[i];
+      const Point& direction = generate_directions_.at( i );
       Point next = { cur.row + direction.row, cur.col + direction.col };
-      if ( next.row > 0 && next.row < maze_row_size_ - 1 && next.col > 0 && next.col < maze_col_size_ - 1
-           && !( maze_[next.row][next.col] & builder_bit_ ) ) {
+      if ( is_square_inside_perimeter_walls( next ) && !is_built_square( next ) ) {
         complete_run( dfs, cur, direction );
         branches_remain = true;
         break;
@@ -1127,8 +1176,7 @@ void Thread_maze::generate_randomized_grid_animated()
     const int run_limit = 4;
     Point next = { cur.row + direction.row, cur.col + direction.col };
     int cur_run = 0;
-    while ( next.row < maze_row_size_ - 1 && next.col < maze_col_size_ - 1 && next.row > 0 && next.col > 0
-            && cur_run < run_limit ) {
+    while ( is_square_inside_perimeter_walls( next ) && cur_run < run_limit ) {
       join_squares_animated( cur, next );
       cur = next;
       dfs.push( next );
@@ -1147,10 +1195,9 @@ void Thread_maze::generate_randomized_grid_animated()
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator_ );
     bool branches_remain = false;
     for ( const int& i : random_direction_indices ) {
-      const Point& direction = generate_directions_[i];
+      const Point& direction = generate_directions_.at( i );
       Point next = { cur.row + direction.row, cur.col + direction.col };
-      if ( next.row > 0 && next.row < maze_row_size_ - 1 && next.col > 0 && next.col < maze_col_size_ - 1
-           && !( maze_[next.row][next.col] & builder_bit_ ) ) {
+      if ( is_square_inside_perimeter_walls( next ) && !is_built_square( next ) ) {
         complete_run_animated( dfs, cur, direction );
         branches_remain = true;
         break;
@@ -1604,7 +1651,7 @@ void Thread_maze::clear_and_flush_grid() const
   std::cout << std::flush;
 }
 
-void Thread_maze::clear_screen() const
+void Thread_maze::clear_screen()
 {
   std::cout << ansi_clear_screen_;
 }
@@ -1616,7 +1663,7 @@ void Thread_maze::flush_cursor_maze_coordinate( int row, int col ) const
   std::cout << std::flush;
 }
 
-void Thread_maze::set_cursor_position( int row, int col ) const
+void Thread_maze::set_cursor_position( int row, int col )
 {
   std::string cursor_pos = "\033[" + std::to_string( row + 1 ) + ";" + std::to_string( col + 1 ) + "f";
   std::cout << cursor_pos;
@@ -1626,7 +1673,7 @@ void Thread_maze::print_maze_square( int row, int col ) const
 {
   const Square& square = maze_[row][col];
   if ( !( square & Thread_maze::path_bit_ ) ) {
-    std::cout << Thread_maze::wall_styles_[static_cast<size_t>( style_ )][square & wall_mask_];
+    std::cout << Thread_maze::wall_styles_.at( static_cast<size_t>( style_ ) ).at( square & wall_mask_ );
   } else if ( square & Thread_maze::path_bit_ ) {
     std::cout << " ";
   } else {
@@ -1640,9 +1687,9 @@ void Thread_maze::print_square( int row, int col ) const
   const Square& square = maze_[row][col];
   if ( square & markers_mask_ ) {
     Backtrack_marker mark = ( maze_[row][col] & markers_mask_ ) >> marker_shift_;
-    std::cout << backtracking_symbols_[mark];
+    std::cout << backtracking_symbols_.at(mark);
   } else if ( !( square & path_bit_ ) ) {
-    std::cout << wall_styles_[static_cast<size_t>( style_ )][square & wall_mask_];
+    std::cout << wall_styles_.at( static_cast<size_t>( style_ ) ).at( square & wall_mask_ );
   } else if ( square & path_bit_ ) {
     std::cout << " ";
   } else {
@@ -1686,6 +1733,18 @@ void Thread_maze::new_maze( Builder_algorithm builder, size_t odd_rows, size_t o
   generator_.seed( std::random_device {}() );
   builder_ = builder;
   generate_maze( builder );
+}
+
+bool Thread_maze::is_square_inside_perimeter_walls( const Point& next ) const {
+  return next.row > 0 && next.row < maze_row_size_ - 1 && next.col > 0 && next.col < maze_col_size_ - 1;
+}
+
+bool Thread_maze::is_square_inside_vector_bounds( const Point& next ) const {
+  return next.row >= 0 && next.row < maze_row_size_ && next.col >= 0 && next.col < maze_col_size_;
+}
+
+bool Thread_maze::is_built_square( const Point& next ) const {
+  return maze_.at( next.row ).at( next.col ) & builder_bit_;
 }
 
 int Thread_maze::row_size() const
