@@ -1,4 +1,5 @@
 #include "maze_algorithms.hh"
+#include "disjoint_set.hh"
 
 #include <algorithm>
 #include <chrono>
@@ -45,12 +46,12 @@ std::unordered_map<Maze::Point, int> tag_cells( Maze& maze )
 
 } // namespace
 
-void generate_kruskal_maze( Maze& maze ) {
+void generate_kruskal_maze( Maze& maze )
+{
+  maze.fill_maze_with_walls();
   std::vector<Maze::Point> walls = load_shuffled_walls( maze );
   std::unordered_map<Maze::Point, int> set_ids = tag_cells( maze );
-  std::vector<int> indices( set_ids.size() );
-  std::iota( begin( indices ), end( indices ), 0 );
-  Disjoint_set sets( indices );
+  Disjoint_set sets( set_ids.size() );
   for ( const Maze::Point& p : walls ) {
     if ( p.row % 2 == 0 ) {
       Maze::Point above_cell = { p.row - 1, p.col };
@@ -66,4 +67,29 @@ void generate_kruskal_maze( Maze& maze ) {
       }
     }
   }
+}
+
+void animate_kruskal_maze( Maze& maze )
+{
+  maze.fill_maze_with_walls_animated();
+  std::vector<Maze::Point> walls = load_shuffled_walls( maze );
+  std::unordered_map<Maze::Point, int> set_ids = tag_cells( maze );
+  Disjoint_set sets( set_ids.size() );
+
+  for ( const Maze::Point& p : walls ) {
+    if ( p.row % 2 == 0 ) {
+      Maze::Point above_cell = { p.row - 1, p.col };
+      Maze::Point below_cell = { p.row + 1, p.col };
+      if ( sets.made_union( set_ids[above_cell], set_ids[below_cell] ) ) {
+        maze.join_squares_animated( above_cell, below_cell );
+      }
+    } else {
+      Maze::Point left_cell = { p.row, p.col - 1 };
+      Maze::Point right_cell = { p.row, p.col + 1 };
+      if ( sets.made_union( set_ids[left_cell], set_ids[right_cell] ) ) {
+        maze.join_squares_animated( left_cell, right_cell );
+      }
+    }
+  }
+
 }

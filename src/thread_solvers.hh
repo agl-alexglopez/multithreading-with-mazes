@@ -1,7 +1,7 @@
 #ifndef THREAD_SOLVERS_HH
 #define THREAD_SOLVERS_HH
 #include "my_queue.hh"
-#include "thread_maze.hh"
+#include "maze.hh"
 #include <array>
 #include <mutex>
 #include <queue>
@@ -46,7 +46,7 @@ public:
     Solver_speed speed = Solver_speed::instant;
   };
 
-  Thread_solvers( Thread_maze& maze, const Solver_args& args );
+  Thread_solvers( Maze& maze, const Solver_args& args );
   void solve_maze();
   void print_overlap_key() const;
 
@@ -138,30 +138,30 @@ private:
     ansi_grn_blu_prp_,
     ansi_wit_,
   };
-  static constexpr std::array<Thread_maze::Point, 4> cardinal_directions_ = {
+  static constexpr std::array<Maze::Point, 4> cardinal_directions_ = {
     //  n      e     s      w
     { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
-  static constexpr std::array<Thread_maze::Point, 4> generate_directions_ = {
+  static constexpr std::array<Maze::Point, 4> generate_directions_ = {
     //  n      e     s      w
     { { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
-  static constexpr std::array<Thread_maze::Point, 7> all_directions_
+  static constexpr std::array<Maze::Point, 7> all_directions_
     = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };
   static constexpr int overlap_key_and_message_height = 11;
   static constexpr std::array<int, 8> solver_speeds_ = { 0, 20000, 10000, 5000, 2000, 1000, 500, 250 };
 
-  Thread_maze& maze_;
+  Maze& maze_;
   std::mutex solver_mutex_;
   Maze_game game_;
   Solver_algorithm solver_;
   int solver_speed_;
-  Thread_maze::Point start_;
-  Thread_maze::Point finish_;
-  std::array<Thread_maze::Point, 4> corner_starts_;
+  Maze::Point start_;
+  Maze::Point finish_;
+  std::array<Maze::Point, 4> corner_starts_;
   int escape_path_index_;
   // Allocate these in the constructor and threads will reference them for light thread switches.
-  std::vector<std::vector<Thread_maze::Point>> thread_paths_;
-  std::vector<My_queue<Thread_maze::Point>> thread_queues_;
-  std::vector<std::unordered_map<Thread_maze::Point, Thread_maze::Point>> thread_bfs_maps;
+  std::vector<std::vector<Maze::Point>> thread_paths_;
+  std::vector<My_queue<Maze::Point>> thread_queues_;
+  std::vector<std::unordered_map<Maze::Point, Maze::Point>> thread_bfs_maps;
   std::mt19937 generator_;
   std::uniform_int_distribution<int> row_random_;
   std::uniform_int_distribution<int> col_random_;
@@ -174,20 +174,20 @@ private:
   void animate_with_randomized_dfs_threads();
   void solve_with_bfs_threads();
   void animate_with_bfs_threads();
-  void dfs_thread_hunt( Thread_maze::Point start, int thread_index, Thread_paint paint );
-  void dfs_thread_hunt_animated( Thread_maze::Point start, int thread_index, Thread_paint paint );
-  void randomized_dfs_thread_hunt( Thread_maze::Point start, int thread_index, Thread_paint paint );
-  void randomized_dfs_thread_hunt_animated( Thread_maze::Point start, int thread_index, Thread_paint paint );
-  void dfs_thread_gather( Thread_maze::Point start, int thread_index, Thread_paint paint );
-  void dfs_thread_gather_animated( Thread_maze::Point start, int thread_index, Thread_paint paint );
-  void randomized_dfs_thread_gather( Thread_maze::Point start, int thread_index, Thread_paint paint );
-  void randomized_dfs_thread_gather_animated( Thread_maze::Point start, int thread_index, Thread_paint paint );
-  void bfs_thread_hunt( Thread_maze::Point start, int thread_index, Thread_paint paint );
-  void bfs_thread_hunt_animated( Thread_maze::Point start, int thread_index, Thread_paint paint );
-  void bfs_thread_gather( Thread_maze::Point start, int thread_index, Thread_paint paint );
-  void bfs_thread_gather_animated( Thread_maze::Point start, int thread_index, Thread_paint paint );
-  Thread_maze::Point pick_random_point();
-  Thread_maze::Point find_nearest_square( Thread_maze::Point choice );
+  void dfs_thread_hunt( Maze::Point start, int thread_index, Thread_paint paint );
+  void dfs_thread_hunt_animated( Maze::Point start, int thread_index, Thread_paint paint );
+  void randomized_dfs_thread_hunt( Maze::Point start, int thread_index, Thread_paint paint );
+  void randomized_dfs_thread_hunt_animated( Maze::Point start, int thread_index, Thread_paint paint );
+  void dfs_thread_gather( Maze::Point start, int thread_index, Thread_paint paint );
+  void dfs_thread_gather_animated( Maze::Point start, int thread_index, Thread_paint paint );
+  void randomized_dfs_thread_gather( Maze::Point start, int thread_index, Thread_paint paint );
+  void randomized_dfs_thread_gather_animated( Maze::Point start, int thread_index, Thread_paint paint );
+  void bfs_thread_hunt( Maze::Point start, int thread_index, Thread_paint paint );
+  void bfs_thread_hunt_animated( Maze::Point start, int thread_index, Thread_paint paint );
+  void bfs_thread_gather( Maze::Point start, int thread_index, Thread_paint paint );
+  void bfs_thread_gather_animated( Maze::Point start, int thread_index, Thread_paint paint );
+  Maze::Point pick_random_point();
+  Maze::Point find_nearest_square( Maze::Point choice );
   void print_solver() const;
   void print_solution_path() const;
   void clear_paths();

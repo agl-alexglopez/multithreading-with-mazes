@@ -203,8 +203,11 @@ bool animate_random_walks( Maze& maze, Random_walk& cur )
 
 } // namespace
 
+/* * * * * * * * * * * * * * * *   Wilson Wall Adder Algorithm   * * * * * * * * * * * * * * * * */
+
 void generate_wilson_wall_adder_maze( Maze& maze )
 {
+  maze.build_wall_outline();
   // Walls must start and connect between even squares.
   std::mt19937 generator( std::random_device{}() );
   std::uniform_int_distribution<int> row_rand( 2, maze.row_size() - 2 );
@@ -234,6 +237,7 @@ void generate_wilson_wall_adder_maze( Maze& maze )
 
 void animate_wilson_wall_adder_maze( Maze& maze )
 {
+  maze.build_wall_outline();
   std::mt19937 generator( std::random_device{}() );
   std::uniform_int_distribution<int> row_rand( 2, maze.row_size() - 2 );
   std::uniform_int_distribution<int> col_rand( 2, maze.col_size() - 2 );

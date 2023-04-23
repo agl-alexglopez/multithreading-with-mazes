@@ -8,6 +8,7 @@
 #include <thread>
 
 void generate_recursive_backtracker_maze( Maze& maze ) {
+  maze.fill_maze_with_walls();
   // Note that backtracking occurs by encoding directions into path bits. No stack needed.
   std::mt19937 generator_( std::random_device{}() );
   std::uniform_int_distribution<int> row_random_( 1, maze.row_size() - 2 );
@@ -45,6 +46,7 @@ void generate_recursive_backtracker_maze( Maze& maze ) {
 }
 
 void animate_recursive_backtracker_maze( Maze& maze ) {
+  maze.fill_maze_with_walls_animated();
   std::mt19937 generator_( std::random_device{}() );
   std::uniform_int_distribution<int> row_random_( 1, maze.row_size() - 2 );
   std::uniform_int_distribution<int> col_random_( 1, maze.col_size() - 2 );

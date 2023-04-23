@@ -25,6 +25,7 @@ int random_odd_passage( std::mt19937& generator, int axis_limit )
 } // namespace
 
 void generate_recursive_subdivision_maze( Maze& maze ) {
+  maze.build_wall_outline();
   std::mt19937 generator( std::random_device {} () );
   std::stack<std::tuple<Maze::Point, Height, Width>>
   chamber_stack( { { { 0, 0 }, maze.row_size(), maze.col_size() } } );
@@ -66,6 +67,7 @@ void generate_recursive_subdivision_maze( Maze& maze ) {
 }
 
 void animate_recursive_subdivision_maze( Maze& maze ) {
+  maze.build_wall_outline();
   std::mt19937 generator( std::random_device {} () );
   std::stack<std::tuple<Maze::Point, Height, Width>>
   chamber_stack( { { { 0, 0 }, maze.row_size(), maze.col_size() } } );

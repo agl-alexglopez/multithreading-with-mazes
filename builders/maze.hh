@@ -151,6 +151,7 @@ public:
   void print_maze_square( int row, int col ) const;
   bool can_build_new_square( const Point& next ) const;
   bool has_builder_bit( const Point& next ) const;
+  bool is_square_within_perimeter_walls( const Point& next ) const;
 
   static void clear_screen();
   static void set_cursor_position( int row, int col );
@@ -176,6 +177,9 @@ public:
   static constexpr const char* const from_east_mark_ = "\033[38;5;15m\033[48;5;2m→\033[0m";
   static constexpr const char* const from_south_mark_ = "\033[38;5;15m\033[48;5;3m↓\033[0m";
   static constexpr const char* const from_west_mark_ = "\033[38;5;15m\033[48;5;4m←\033[0m";
+
+  static constexpr std::array<const char* const, 5> backtracking_symbols_
+    = { { " ", from_north_mark_, from_east_mark_, from_south_mark_, from_west_mark_ } };
   static constexpr std::array<Point, 5> backtracking_marks_ = { {
     { 0, 0 },
     { -2, 0 },
@@ -183,8 +187,6 @@ public:
     { 2, 0 },
     { 0, -2 },
   } };
-  static constexpr std::array<const char* const, 5> backtracking_symbols_
-    = { { " ", from_north_mark_, from_east_mark_, from_south_mark_, from_west_mark_ } };
 
   static constexpr Wall_line wall_mask_ = 0b1111;
   static constexpr Wall_line floating_wall_ = 0b0000;
@@ -315,9 +317,9 @@ public:
   static constexpr std::array<Animation_speed, 8> builder_speeds_ = { 0, 5000, 2500, 1000, 500, 250, 100, 1 };
 
 private:
-  std::vector<std::vector<Square>> maze_;
   const int maze_row_size_;
   const int maze_col_size_;
+  std::vector<std::vector<Square>> maze_;
   const int builder_speed_units_;
   const int wall_style_index_;
   const Maze_modification modification_;

@@ -1,6 +1,8 @@
-#include "thread_maze.hh"
+#include "maze.hh"
+#include "maze_algorithms.hh"
 #include "thread_solvers.hh"
 #include <iostream>
+#include <functional>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
@@ -9,21 +11,21 @@
 const std::unordered_set<std::string> argument_flags
   = { "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-sa", "-ba" };
 
-const std::unordered_map<std::string, Thread_maze::Builder_algorithm> builder_table = {
-  { "rdfs", Thread_maze::Builder_algorithm::randomized_depth_first },
-  { "wilson", Thread_maze::Builder_algorithm::randomized_loop_erased },
-  { "wilson-walls", Thread_maze::Builder_algorithm::randomized_loop_erased_walls },
-  { "fractal", Thread_maze::Builder_algorithm::randomized_fractal },
-  { "kruskal", Thread_maze::Builder_algorithm::randomized_kruskal },
-  { "prim", Thread_maze::Builder_algorithm::randomized_prim },
-  { "grid", Thread_maze::Builder_algorithm::randomized_grid },
-  { "arena", Thread_maze::Builder_algorithm::arena },
+const std::unordered_map<std::string, std::function<void(Maze&)>> builder_table = {
+  { "rdfs", Maze::Builder_algorithm::randomized_depth_first },
+  { "wilson", Maze::Builder_algorithm::randomized_loop_erased },
+  { "wilson-walls", Maze::Builder_algorithm::randomized_loop_erased_walls },
+  { "fractal", Maze::Builder_algorithm::randomized_fractal },
+  { "kruskal", Maze::Builder_algorithm::randomized_kruskal },
+  { "prim", Maze::Builder_algorithm::randomized_prim },
+  { "grid", Maze::Builder_algorithm::randomized_grid },
+  { "arena", Maze::Builder_algorithm::arena },
 };
 
-const std::unordered_map<std::string, Thread_maze::Maze_modification> modification_table = {
-  { "none", Thread_maze::Maze_modification::none },
-  { "cross", Thread_maze::Maze_modification::add_cross },
-  { "x", Thread_maze::Maze_modification::add_x },
+const std::unordered_map<std::string, Maze::Maze_modification> modification_table = {
+  { "none", Maze::Maze_modification::none },
+  { "cross", Maze::Maze_modification::add_cross },
+  { "x", Maze::Maze_modification::add_x },
 };
 
 const std::unordered_map<std::string, Thread_solvers::Solver_algorithm> solver_table = {
@@ -32,13 +34,13 @@ const std::unordered_map<std::string, Thread_solvers::Solver_algorithm> solver_t
   { "bfs", Thread_solvers::Solver_algorithm::breadth_first_search },
 };
 
-const std::unordered_map<std::string, Thread_maze::Maze_style> style_table = {
-  { "sharp", Thread_maze::Maze_style::sharp },
-  { "round", Thread_maze::Maze_style::round },
-  { "doubles", Thread_maze::Maze_style::doubles },
-  { "bold", Thread_maze::Maze_style::bold },
-  { "contrast", Thread_maze::Maze_style::contrast },
-  { "spikes", Thread_maze::Maze_style::spikes },
+const std::unordered_map<std::string, Maze::Maze_style> style_table = {
+  { "sharp", Maze::Maze_style::sharp },
+  { "round", Maze::Maze_style::round },
+  { "doubles", Maze::Maze_style::doubles },
+  { "bold", Maze::Maze_style::bold },
+  { "contrast", Maze::Maze_style::contrast },
+  { "spikes", Maze::Maze_style::spikes },
 };
 
 const std::unordered_map<std::string, Thread_solvers::Maze_game> game_table = {
@@ -58,18 +60,18 @@ const std::unordered_map<std::string, Thread_solvers::Solver_speed> solver_anima
   { "7", Thread_solvers::Solver_speed::speed_7 },
 };
 
-const std::unordered_map<std::string, Thread_maze::Builder_speed> builder_animation_table = {
-  { "0", Thread_maze::Builder_speed::instant },
-  { "1", Thread_maze::Builder_speed::speed_1 },
-  { "2", Thread_maze::Builder_speed::speed_2 },
-  { "3", Thread_maze::Builder_speed::speed_3 },
-  { "4", Thread_maze::Builder_speed::speed_4 },
-  { "5", Thread_maze::Builder_speed::speed_5 },
-  { "6", Thread_maze::Builder_speed::speed_6 },
-  { "7", Thread_maze::Builder_speed::speed_7 },
+const std::unordered_map<std::string, Maze::Builder_speed> builder_animation_table = {
+  { "0", Maze::Builder_speed::instant },
+  { "1", Maze::Builder_speed::speed_1 },
+  { "2", Maze::Builder_speed::speed_2 },
+  { "3", Maze::Builder_speed::speed_3 },
+  { "4", Maze::Builder_speed::speed_4 },
+  { "5", Maze::Builder_speed::speed_5 },
+  { "6", Maze::Builder_speed::speed_6 },
+  { "7", Maze::Builder_speed::speed_7 },
 };
 
-void set_relevant_arg( Thread_maze::Maze_args& maze_args,
+void set_relevant_arg( Maze::Maze_args& maze_args,
                        Thread_solvers::Solver_args& solver_args,
                        std::string_view flag,
                        std::string_view arg );
@@ -77,7 +79,7 @@ void print_usage();
 
 int main( int argc, char** argv )
 {
-  Thread_maze::Maze_args maze_args = {};
+  Maze::Maze_args maze_args = {};
   Thread_solvers::Solver_args solver_args = {};
   if ( argc > 1 ) {
     const std::vector<std::string_view> args( argv + 1, argv + argc );
@@ -104,12 +106,12 @@ int main( int argc, char** argv )
       }
     }
   }
-  Thread_maze maze( maze_args );
+  Maze maze( maze_args );
   Thread_solvers( maze, solver_args ).solve_maze();
   return 0;
 }
 
-void set_relevant_arg( Thread_maze::Maze_args& maze_args,
+void set_relevant_arg( Maze::Maze_args& maze_args,
                        Thread_solvers::Solver_args& solver_args,
                        std::string_view flag,
                        std::string_view arg )

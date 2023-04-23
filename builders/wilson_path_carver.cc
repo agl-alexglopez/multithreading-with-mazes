@@ -202,6 +202,7 @@ bool animate_random_walks( Maze& maze, Random_walk& cur )
 /* * * * * * * * * * * * * * * * *   Wilson's Path Carving Algorithm  * * * * * * * * * * * * * * */
 
 void generate_wilson_path_carver_maze( Maze& maze ) {
+  maze.fill_maze_with_walls();
   /* Important to remember that this maze builds by jumping two squares at a time. Therefore for
    * Wilson's algorithm to work two points must both be even or odd to find each other. For any
    * number N, 2 * N + 1 is always odd, 2 * N is always even.
@@ -238,6 +239,7 @@ void generate_wilson_path_carver_maze( Maze& maze ) {
 }
 
 void animate_wilson_path_carver_maze( Maze& maze ) {
+  maze.fill_maze_with_walls_animated();
   std::mt19937 generator( std::random_device{}() );
   std::uniform_int_distribution<int> row_rand( 2, maze.row_size() - 2 );
   std::uniform_int_distribution<int> col_rand( 2, maze.col_size() - 2 );

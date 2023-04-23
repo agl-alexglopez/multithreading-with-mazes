@@ -17,4 +17,13 @@ void animate_wilson_wall_adder_maze( Maze& maze );
 void generate_kruskal_maze( Maze& maze );
 void animate_kruskal_maze( Maze& maze );
 
+void generate_prim_maze( Maze& maze );
+void animate_prim_maze( Maze& maze );
+
+void generate_grid_maze( Maze& maze );
+void animate_grid_maze( Maze& maze );
+
+void generate_arena( Maze& maze );
+void animate_arena( Maze& maze );
+
 #endif
