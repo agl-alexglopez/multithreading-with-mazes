@@ -2,14 +2,15 @@
 #ifndef MAZE_SOLVERS_HH
 #define MAZE_SOLVERS_HH
 #include "maze.hh"
+#include <array>
 #include <string_view>
 
 enum class Maze_game
-  {
-    hunt,
-    gather,
-    corners,
-  };
+{
+  hunt,
+  gather,
+  corners,
+};
 
 enum class Solver_speed
 {
@@ -69,28 +70,28 @@ constexpr Thread_cache two_seen_ = 0b0100'0000'0000;
 constexpr Thread_cache three_seen_ = 0b1000'0000'0000;
 
 constexpr int starting_path_len_ = 2048;
-constexpr const char* const ansi_clear_screen_ = "\033[2J\033[1;1H";
-constexpr const char* const ansi_red_ = "\033[38;5;1m█\033[0m";
-constexpr const char* const ansi_grn_ = "\033[38;5;2m█\033[0m";
-constexpr const char* const ansi_yel_ = "\033[38;5;3m█\033[0m";
-constexpr const char* const ansi_blu_ = "\033[38;5;4m█\033[0m";
-constexpr const char* const ansi_prp_ = "\033[38;5;183m█\033[0m";
-constexpr const char* const ansi_mag_ = "\033[38;5;201m█\033[0m";
-constexpr const char* const ansi_cyn_ = "\033[38;5;87m█\033[0m";
-constexpr const char* const ansi_wit_ = "\033[38;5;231m█\033[0m";
-constexpr const char* const ansi_prp_red_ = "\033[38;5;204m█\033[0m";
-constexpr const char* const ansi_blu_mag_ = "\033[38;5;105m█\033[0m";
-constexpr const char* const ansi_red_grn_blu_ = "\033[38;5;121m█\033[0m";
-constexpr const char* const ansi_grn_prp_ = "\033[38;5;106m█\033[0m";
-constexpr const char* const ansi_grn_blu_prp_ = "\033[38;5;60m█\033[0m";
-constexpr const char* const ansi_red_grn_prp_ = "\033[38;5;105m█\033[0m";
-constexpr const char* const ansi_red_blu_prp_ = "\033[38;5;89m█\033[0m";
-constexpr const char* const ansi_dark_blu_mag_ = "\033[38;5;57m█\033[0m";
-constexpr const char* const ansi_bold_ = "\033[1m";
-constexpr const char* const ansi_nil_ = "\033[0m";
-constexpr const char* const ansi_finish_ = "\033[1m\033[38;5;87mF\033[0m";
-constexpr const char* const ansi_start_ = "\033[1m\033[38;5;87mS\033[0m";
-constexpr std::array<const char* const, 16> thread_colors_ = {
+constexpr std::string_view ansi_clear_screen_ = "\033[2J\033[1;1H";
+constexpr std::string_view ansi_red_ = "\033[38;5;1m█\033[0m";
+constexpr std::string_view ansi_grn_ = "\033[38;5;2m█\033[0m";
+constexpr std::string_view ansi_yel_ = "\033[38;5;3m█\033[0m";
+constexpr std::string_view ansi_blu_ = "\033[38;5;4m█\033[0m";
+constexpr std::string_view ansi_prp_ = "\033[38;5;183m█\033[0m";
+constexpr std::string_view ansi_mag_ = "\033[38;5;201m█\033[0m";
+constexpr std::string_view ansi_cyn_ = "\033[38;5;87m█\033[0m";
+constexpr std::string_view ansi_wit_ = "\033[38;5;231m█\033[0m";
+constexpr std::string_view ansi_prp_red_ = "\033[38;5;204m█\033[0m";
+constexpr std::string_view ansi_blu_mag_ = "\033[38;5;105m█\033[0m";
+constexpr std::string_view ansi_red_grn_blu_ = "\033[38;5;121m█\033[0m";
+constexpr std::string_view ansi_grn_prp_ = "\033[38;5;106m█\033[0m";
+constexpr std::string_view ansi_grn_blu_prp_ = "\033[38;5;60m█\033[0m";
+constexpr std::string_view ansi_red_grn_prp_ = "\033[38;5;105m█\033[0m";
+constexpr std::string_view ansi_red_blu_prp_ = "\033[38;5;89m█\033[0m";
+constexpr std::string_view ansi_dark_blu_mag_ = "\033[38;5;57m█\033[0m";
+constexpr std::string_view ansi_bold_ = "\033[1m";
+constexpr std::string_view ansi_nil_ = "\033[0m";
+constexpr std::string_view ansi_finish_ = "\033[1m\033[38;5;87mF\033[0m";
+constexpr std::string_view ansi_start_ = "\033[1m\033[38;5;87mS\033[0m";
+constexpr std::array<std::string_view, 16> thread_colors_ = {
   ansi_nil_,
   // Threads Overlaps. The zero thread is the zero index bit with a value of 1.
   // 0b0001   0b0010     0b0011     0b0100     0b0101     0b0110        0b0111
@@ -112,12 +113,11 @@ constexpr std::array<const char* const, 16> thread_colors_ = {
   ansi_grn_blu_prp_,
   ansi_wit_,
 };
-constexpr std::array<Maze::Point, 4> cardinal_directions_ = {
-  //  n      e     s      w
-  { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
-constexpr std::array<Maze::Point, 4> generate_directions_ = {
-  //  n      e     s      w
-  { { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
+// north, east, south, west
+constexpr std::array<Maze::Point, 4> cardinal_directions_ = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
+// north, east, south, west
+constexpr std::array<Maze::Point, 4> generate_directions_ = { { { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
+// north, north-east, east, south-east, south, south-west, west, north-west
 constexpr std::array<Maze::Point, 7> all_directions_
   = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };
 constexpr int overlap_key_and_message_height = 11;

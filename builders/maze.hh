@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -172,13 +173,13 @@ public:
   static constexpr Backtrack_marker from_east_ = 0b0010'0000;
   static constexpr Backtrack_marker from_south_ = 0b0011'0000;
   static constexpr Backtrack_marker from_west_ = 0b0100'0000;
-  static constexpr const char* const ansi_clear_screen_ = "\033[2J\033[1;1H";
-  static constexpr const char* const from_north_mark_ = "\033[38;5;15m\033[48;5;1m↑\033[0m";
-  static constexpr const char* const from_east_mark_ = "\033[38;5;15m\033[48;5;2m→\033[0m";
-  static constexpr const char* const from_south_mark_ = "\033[38;5;15m\033[48;5;3m↓\033[0m";
-  static constexpr const char* const from_west_mark_ = "\033[38;5;15m\033[48;5;4m←\033[0m";
+  static constexpr std::string_view ansi_clear_screen_ = "\033[2J\033[1;1H";
+  static constexpr std::string_view from_north_mark_ = "\033[38;5;15m\033[48;5;1m↑\033[0m";
+  static constexpr std::string_view from_east_mark_ = "\033[38;5;15m\033[48;5;2m→\033[0m";
+  static constexpr std::string_view from_south_mark_ = "\033[38;5;15m\033[48;5;3m↓\033[0m";
+  static constexpr std::string_view from_west_mark_ = "\033[38;5;15m\033[48;5;4m←\033[0m";
 
-  static constexpr std::array<const char* const, 5> backtracking_symbols_
+  static constexpr std::array<std::string_view, 5> backtracking_symbols_
     = { { " ", from_north_mark_, from_east_mark_, from_south_mark_, from_west_mark_ } };
   static constexpr std::array<Point, 5> backtracking_marks_ = { {
     { 0, 0 },
@@ -198,7 +199,7 @@ public:
   /* Walls are constructed in terms of other walls they need to connect to. For example, read
    * 0b0011 as, "this is a wall square that must connect to other walls to the East and North."
    */
-  static constexpr std::array<const std::array<const char* const, 16>, 6> wall_styles_ = { {
+  static constexpr std::array<const std::array<std::string_view, 16>, 6> wall_styles_ = { {
     { // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall with no walls around.
       // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
       // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
