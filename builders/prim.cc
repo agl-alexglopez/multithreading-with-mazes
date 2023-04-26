@@ -86,6 +86,7 @@ void animate_prim_maze( Maze& maze, Builder_speed speed )
 {
   const Speed_unit animation_speed = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );
+  clear_and_flush_grid( maze );
   std::unordered_map<Maze::Point, int> cell_cost = randomize_cell_costs( maze );
   Maze::Point odd_point = pick_random_odd_point( maze );
   Priority_cell start = { odd_point, cell_cost[odd_point] };

@@ -221,7 +221,7 @@ void generate_wilson_wall_adder_maze( Maze& maze )
     for ( const int& i : random_direction_indices ) {
       const Maze::Point& p = Maze::generate_directions_.at( i );
       cur.next = { cur.walk.row + p.row, cur.walk.col + p.col };
-      if ( !is_valid_walk_step( maze, cur.walk, cur.prev ) ) {
+      if ( !is_valid_walk_step( maze, cur.next, cur.prev ) ) {
         continue;
       }
       if ( !continue_random_walks( maze, cur ) ) {
@@ -236,6 +236,7 @@ void animate_wilson_wall_adder_maze( Maze& maze, Builder_speed speed )
 {
   Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   build_wall_outline( maze );
+  clear_and_flush_grid( maze );
   std::mt19937 generator( std::random_device {}() );
   std::uniform_int_distribution<int> row_rand( 2, maze.row_size() - 2 );
   std::uniform_int_distribution<int> col_rand( 2, maze.col_size() - 2 );

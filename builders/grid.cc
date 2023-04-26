@@ -83,6 +83,7 @@ void animate_grid_maze( Maze& maze, Builder_speed speed )
 {
   Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );
+  clear_and_flush_grid( maze );
   std::mt19937 generator( std::random_device {}() );
   std::uniform_int_distribution row_random( 1, maze.row_size() - 2 );
   std::uniform_int_distribution col_random( 1, maze.col_size() - 2 );

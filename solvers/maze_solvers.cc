@@ -9,7 +9,7 @@ namespace {
 bool is_valid_start_or_finish( const Builder::Maze& maze, const Builder::Maze::Point& choice )
 {
   return choice.row > 0 && choice.row < maze.row_size() - 1 && choice.col > 0 && choice.col < maze.col_size() - 1
-         && maze[choice.row][choice.col] & Builder::Maze::path_bit_
+         && ( maze[choice.row][choice.col] & Builder::Maze::path_bit_ )
          && !( maze[choice.row][choice.col] & finish_bit_ ) && !( maze[choice.row][choice.col] & start_bit_ );
 }
 

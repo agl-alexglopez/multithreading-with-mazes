@@ -357,7 +357,6 @@ void carve_path_walls_animated( Maze& maze, const Maze::Point& p, Speed_unit spe
 void carve_path_markings( Maze& maze, const Maze::Point& cur, const Maze::Point& next )
 {
   Maze::Point wall = cur;
-  carve_path_walls( maze, cur );
   if ( next.row < cur.row ) {
     wall.row--;
     maze[next.row][next.col] |= Maze::from_south_;
@@ -373,6 +372,7 @@ void carve_path_markings( Maze& maze, const Maze::Point& cur, const Maze::Point&
   } else {
     std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
   }
+  carve_path_walls( maze, cur );
   carve_path_walls( maze, next );
   carve_path_walls( maze, wall );
 }
@@ -380,7 +380,6 @@ void carve_path_markings( Maze& maze, const Maze::Point& cur, const Maze::Point&
 void carve_path_markings_animated( Maze& maze, const Maze::Point& cur, const Maze::Point& next, Speed_unit speed )
 {
   Maze::Point wall = cur;
-  carve_path_walls_animated( maze, cur, speed );
   if ( next.row < cur.row ) {
     wall.row--;
     maze[next.row][next.col] |= Maze::from_south_;
@@ -396,7 +395,8 @@ void carve_path_markings_animated( Maze& maze, const Maze::Point& cur, const Maz
   } else {
     std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
   }
-  carve_path_walls_animated( maze, next, speed );
+  carve_path_walls_animated( maze, cur, speed );
+  carve_path_walls_animated( maze, wall, speed );
   carve_path_walls_animated( maze, next, speed );
 }
 
@@ -425,7 +425,6 @@ void join_squares( Maze& maze, const Maze::Point& cur, const Maze::Point& next )
 void join_squares_animated( Maze& maze, const Maze::Point& cur, const Maze::Point& next, Speed_unit speed )
 {
   Maze::Point wall = cur;
-  carve_path_walls_animated( maze, cur, speed );
   if ( next.row < cur.row ) {
     wall.row--;
   } else if ( next.row > cur.row ) {
@@ -437,6 +436,7 @@ void join_squares_animated( Maze& maze, const Maze::Point& cur, const Maze::Poin
   } else {
     std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
   }
+  carve_path_walls_animated( maze, cur, speed );
   carve_path_walls_animated( maze, wall, speed );
   carve_path_walls_animated( maze, next, speed );
 }

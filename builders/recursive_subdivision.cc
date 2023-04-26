@@ -75,6 +75,7 @@ void animate_recursive_subdivision_maze( Maze& maze, Builder_speed speed )
 {
   Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   build_wall_outline( maze );
+  clear_and_flush_grid( maze );
   std::mt19937 generator( std::random_device {}() );
   std::stack<std::tuple<Maze::Point, Height, Width>> chamber_stack(
     { { { 0, 0 }, maze.row_size(), maze.col_size() } } );

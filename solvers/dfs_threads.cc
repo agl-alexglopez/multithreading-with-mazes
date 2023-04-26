@@ -262,7 +262,8 @@ void solve_with_dfs_thread_hunt( Builder::Maze& maze )
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread] = std::thread( [&maze, &monitor, this_thread] { complete_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread]
+      = std::thread( [&maze, &monitor, this_thread] { complete_hunt( maze, monitor, this_thread ); } );
   }
 
   for ( std::thread& t : threads ) {
@@ -287,7 +288,8 @@ void solve_with_dfs_thread_gather( Builder::Maze& maze )
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread] = std::thread( [&maze, &monitor, this_thread] { complete_gather( maze, monitor, this_thread ); } );
+    threads[i_thread]
+      = std::thread( [&maze, &monitor, this_thread] { complete_gather( maze, monitor, this_thread ); } );
   }
 
   for ( std::thread& t : threads ) {
@@ -320,7 +322,8 @@ void solve_with_dfs_thread_corners( Builder::Maze& maze )
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread = { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread] = std::thread( [&maze, &monitor, this_thread] { complete_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread]
+      = std::thread( [&maze, &monitor, this_thread] { complete_hunt( maze, monitor, this_thread ); } );
   }
   for ( std::thread& t : threads ) {
     t.join();
@@ -334,20 +337,23 @@ void solve_with_dfs_thread_corners( Builder::Maze& maze )
 
 void animate_with_dfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
 {
+  clear_and_flush_paths( maze );
   Solver_monitor monitor;
   monitor.speed = solver_speeds_.at( static_cast<int>( speed ) );
-  monitor.starts.emplace_back( pick_random_point( maze ) );
+  monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit_;
   Builder::Maze::Point finish = pick_random_point( maze );
   maze[finish.row][finish.col] |= finish_bit_;
   flush_cursor_path_coordinate( maze, finish );
+  std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   set_cursor_point( { maze.row_size(), 0 } );
   print_overlap_key();
 
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread] = std::thread( [&maze, &monitor, this_thread] { animate_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread]
+      = std::thread( [&maze, &monitor, this_thread] { animate_hunt( maze, monitor, this_thread ); } );
   }
 
   for ( std::thread& t : threads ) {
@@ -360,14 +366,16 @@ void animate_with_dfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
 
 void animate_with_dfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
 {
+  clear_and_flush_paths( maze );
   Solver_monitor monitor;
   monitor.speed = solver_speeds_.at( static_cast<int>( speed ) );
-  monitor.starts.emplace_back( pick_random_point( maze ) );
+  monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit_;
   for ( int finish_square = 0; finish_square < num_gather_finishes_; finish_square++ ) {
     Builder::Maze::Point finish = pick_random_point( maze );
     maze[finish.row][finish.col] |= finish_bit_;
     flush_cursor_path_coordinate( maze, finish );
+    std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
   set_cursor_point( { maze.row_size(), 0 } );
   print_overlap_key();
@@ -375,7 +383,8 @@ void animate_with_dfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread] = std::thread( [&maze, &monitor, this_thread] { animate_gather( maze, monitor, this_thread ); } );
+    threads[i_thread]
+      = std::thread( [&maze, &monitor, this_thread] { animate_gather( maze, monitor, this_thread ); } );
   }
 
   for ( std::thread& t : threads ) {
@@ -388,21 +397,26 @@ void animate_with_dfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
 
 void animate_with_dfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
 {
+  clear_and_flush_paths( maze );
   Solver_monitor monitor;
   monitor.speed = solver_speeds_.at( static_cast<int>( speed ) );
   monitor.starts = set_corner_starts( maze );
   for ( const Builder::Maze::Point& p : monitor.starts ) {
     maze[p.row][p.col] |= start_bit_;
+    flush_cursor_path_coordinate( maze, p );
+    std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
   Builder::Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
   for ( const Builder::Maze::Point& p : all_directions_ ) {
     Builder::Maze::Point next = { finish.row + p.row, finish.col + p.col };
     maze[next.row][next.col] |= Builder::Maze::path_bit_;
     flush_cursor_path_coordinate( maze, next );
+    std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
   maze[finish.row][finish.col] |= Builder::Maze::path_bit_;
   maze[finish.row][finish.col] |= finish_bit_;
   flush_cursor_path_coordinate( maze, finish );
+  std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   set_cursor_point( { maze.row_size(), 0 } );
   print_overlap_key();
 
@@ -411,7 +425,8 @@ void animate_with_dfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread = { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread] = std::thread( [&maze, &monitor, this_thread] { complete_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread]
+      = std::thread( [&maze, &monitor, this_thread] { animate_hunt( maze, monitor, this_thread ); } );
   }
   for ( std::thread& t : threads ) {
     t.join();

@@ -75,6 +75,7 @@ void animate_kruskal_maze( Maze& maze, Builder_speed speed )
 {
   Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );
+  clear_and_flush_grid( maze );
   std::vector<Maze::Point> walls = load_shuffled_walls( maze );
   std::unordered_map<Maze::Point, int> set_ids = tag_cells( maze );
   Disjoint_set sets( set_ids.size() );

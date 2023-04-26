@@ -32,7 +32,6 @@ bool is_valid_random_step( Maze& maze, const Maze::Point& next, const Maze::Poin
 void build_with_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& next )
 {
   Maze::Point wall = cur;
-  carve_path_walls( maze, cur );
   if ( next.row < cur.row ) {
     wall.row--;
   } else if ( next.row > cur.row ) {
@@ -45,6 +44,9 @@ void build_with_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& ne
     std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
     std::abort();
   }
+  maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
+  maze[next.row][next.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
+  carve_path_walls( maze, cur );
   carve_path_walls( maze, next );
   carve_path_walls( maze, wall );
 }
@@ -63,8 +65,7 @@ void animate_with_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& 
   } else {
     std::cerr << "Wall break error. Step through wall didn't work" << std::endl;
   }
-  maze[wall.row][wall.col] |= Maze::path_bit_;
-  maze[next.row][next.col] |= Maze::path_bit_;
+  maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
   maze[next.row][next.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
   carve_path_walls_animated( maze, cur, speed );
   carve_path_walls_animated( maze, wall, speed );
@@ -75,7 +76,6 @@ void connect_walk_to_maze( Maze& maze, const Maze::Point& walk )
 {
   Maze::Point cur = walk;
   while ( maze[cur.row][cur.col] & Maze::markers_mask_ ) {
-    maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
     Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
     Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
@@ -93,7 +93,6 @@ void animate_walk_to_maze( Maze& maze, const Maze::Point& walk, Speed_unit speed
 {
   Maze::Point cur = walk;
   while ( maze[cur.row][cur.col] & Maze::markers_mask_ ) {
-    maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
     Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
     Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
@@ -144,7 +143,7 @@ bool continue_random_walks( Maze& maze, Random_walk& cur )
   if ( has_builder_bit( maze, cur.next ) ) {
     build_with_marks( maze, cur.walk, cur.next );
     connect_walk_to_maze( maze, cur.walk );
-    cur.walk = choose_arbitrary_point( maze, Parity_point::even );
+    cur.walk = choose_arbitrary_point( maze, Parity_point::odd );
 
     if ( !cur.walk.row ) {
       return false;
@@ -175,7 +174,7 @@ bool animate_random_walks( Maze& maze, Random_walk& cur, Speed_unit speed )
   if ( has_builder_bit( maze, cur.next ) ) {
     animate_with_marks( maze, cur.walk, cur.next, speed );
     animate_walk_to_maze( maze, cur.walk, speed );
-    cur.walk = choose_arbitrary_point( maze, Parity_point::even );
+    cur.walk = choose_arbitrary_point( maze, Parity_point::odd );
 
     if ( !cur.walk.row ) {
       return false;
@@ -232,7 +231,7 @@ void generate_wilson_path_carver_maze( Maze& maze )
 
       const Maze::Point& p = Maze::generate_directions_.at( i );
       cur.next = { cur.walk.row + p.row, cur.walk.col + p.col };
-      if ( !is_valid_random_step( maze, cur.walk, cur.prev ) ) {
+      if ( !is_valid_random_step( maze, cur.next, cur.prev ) ) {
         continue;
       }
       if ( !continue_random_walks( maze, cur ) ) {
@@ -247,12 +246,14 @@ void animate_wilson_path_carver_maze( Maze& maze, Builder_speed speed )
 {
   Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );
+  clear_and_flush_grid( maze );
   std::mt19937 generator( std::random_device {}() );
   std::uniform_int_distribution<int> row_rand( 2, maze.row_size() - 2 );
   std::uniform_int_distribution<int> col_rand( 2, maze.col_size() - 2 );
   Maze::Point start = { 2 * ( row_rand( generator ) / 2 ) + 1, 2 * ( col_rand( generator ) / 2 ) + 1 };
 
   build_path( maze, start );
+  flush_cursor_maze_coordinate( maze, start );
   maze[start.row][start.col] |= Maze::builder_bit_;
   Random_walk cur = { {}, { 1, 1 }, {} };
   maze[cur.walk.row][cur.walk.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
@@ -267,7 +268,7 @@ void animate_wilson_path_carver_maze( Maze& maze, Builder_speed speed )
 
       const Maze::Point& p = Maze::generate_directions_.at( i );
       cur.next = { cur.walk.row + p.row, cur.walk.col + p.col };
-      if ( !is_valid_random_step( maze, cur.walk, cur.prev ) ) {
+      if ( !is_valid_random_step( maze, cur.next, cur.prev ) ) {
         continue;
       }
       if ( !animate_random_walks( maze, cur, animation ) ) {
