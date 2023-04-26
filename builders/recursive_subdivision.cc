@@ -26,11 +26,12 @@ int random_odd_passage( std::mt19937& generator, int axis_limit )
 
 } // namespace
 
-void generate_recursive_subdivision_maze( Maze& maze ) {
+void generate_recursive_subdivision_maze( Maze& maze )
+{
   build_wall_outline( maze );
-  std::mt19937 generator( std::random_device {} () );
-  std::stack<std::tuple<Maze::Point, Height, Width>>
-  chamber_stack( { { { 0, 0 }, maze.row_size(), maze.col_size() } } );
+  std::mt19937 generator( std::random_device {}() );
+  std::stack<std::tuple<Maze::Point, Height, Width>> chamber_stack(
+    { { { 0, 0 }, maze.row_size(), maze.col_size() } } );
   while ( !chamber_stack.empty() ) {
     std::tuple<Maze::Point, Height, Width>& chamber = chamber_stack.top();
     const Maze::Point& chamber_offset = std::get<0>( chamber );
@@ -41,7 +42,8 @@ void generate_recursive_subdivision_maze( Maze& maze ) {
       int passage = random_odd_passage( generator, chamber_width );
       for ( int col = 0; col < chamber_width; col++ ) {
         if ( col != passage ) {
-          maze[chamber_offset.row + divide][chamber_offset.col + col] &= static_cast<Maze::Square>( ~Maze::path_bit_ );
+          maze[chamber_offset.row + divide][chamber_offset.col + col]
+            &= static_cast<Maze::Square>( ~Maze::path_bit_ );
           build_wall_line( maze, { chamber_offset.row + divide, chamber_offset.col + col } );
         }
       }
@@ -54,7 +56,8 @@ void generate_recursive_subdivision_maze( Maze& maze ) {
       int passage = random_odd_passage( generator, chamber_height );
       for ( int row = 0; row < chamber_height; row++ ) {
         if ( row != passage ) {
-          maze[chamber_offset.row + row][chamber_offset.col + divide] &= static_cast<Maze::Square>( ~Maze::path_bit_ );
+          maze[chamber_offset.row + row][chamber_offset.col + divide]
+            &= static_cast<Maze::Square>( ~Maze::path_bit_ );
           build_wall_line( maze, { chamber_offset.row + row, chamber_offset.col + divide } );
         }
       }
@@ -68,12 +71,13 @@ void generate_recursive_subdivision_maze( Maze& maze ) {
   }
 }
 
-void animate_recursive_subdivision_maze( Maze& maze, Builder_speed speed ) {
+void animate_recursive_subdivision_maze( Maze& maze, Builder_speed speed )
+{
   Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   build_wall_outline( maze );
-  std::mt19937 generator( std::random_device {} () );
-  std::stack<std::tuple<Maze::Point, Height, Width>>
-  chamber_stack( { { { 0, 0 }, maze.row_size(), maze.col_size() } } );
+  std::mt19937 generator( std::random_device {}() );
+  std::stack<std::tuple<Maze::Point, Height, Width>> chamber_stack(
+    { { { 0, 0 }, maze.row_size(), maze.col_size() } } );
   while ( !chamber_stack.empty() ) {
     std::tuple<Maze::Point, Height, Width>& chamber = chamber_stack.top();
     const Maze::Point& chamber_offset = std::get<0>( chamber );
@@ -84,7 +88,8 @@ void animate_recursive_subdivision_maze( Maze& maze, Builder_speed speed ) {
       int passage = random_odd_passage( generator, chamber_width );
       for ( int col = 0; col < chamber_width; col++ ) {
         if ( col != passage ) {
-          maze[chamber_offset.row + divide][chamber_offset.col + col] &= static_cast<Maze::Square>( ~Maze::path_bit_ );
+          maze[chamber_offset.row + divide][chamber_offset.col + col]
+            &= static_cast<Maze::Square>( ~Maze::path_bit_ );
           build_wall_line_animated( maze, { chamber_offset.row + divide, chamber_offset.col + col }, animation );
         }
       }
@@ -96,7 +101,8 @@ void animate_recursive_subdivision_maze( Maze& maze, Builder_speed speed ) {
       int passage = random_odd_passage( generator, chamber_height );
       for ( int row = 0; row < chamber_height; row++ ) {
         if ( row != passage ) {
-          maze[chamber_offset.row + row][chamber_offset.col + divide] &= static_cast<Maze::Square>( ~Maze::path_bit_ );
+          maze[chamber_offset.row + row][chamber_offset.col + divide]
+            &= static_cast<Maze::Square>( ~Maze::path_bit_ );
           build_wall_line_animated( maze, { chamber_offset.row + row, chamber_offset.col + divide }, animation );
         }
       }

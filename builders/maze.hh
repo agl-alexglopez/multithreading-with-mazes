@@ -11,12 +11,10 @@
 
 namespace Builder {
 
-
 class Maze
 {
 
 public:
-
   enum class Maze_modification
   {
     none,
@@ -39,7 +37,6 @@ public:
     int row;
     int col;
   };
-
 
   struct Maze_args
   {
@@ -95,13 +92,13 @@ public:
   using Wall_line = uint16_t;
   using Backtrack_marker = uint16_t;
 
-  explicit Maze(const Maze_args& args);
+  explicit Maze( const Maze_args& args );
 
   std::vector<Square>& operator[]( uint64_t index );
   const std::vector<Square>& operator[]( uint64_t index ) const;
   int row_size() const;
   int col_size() const;
-  const std::array<std::string_view,16>& wall_style() const;
+  const std::array<std::string_view, 16>& wall_style() const;
 
   static constexpr Square path_bit_ = 0b0010'0000'0000'0000;
   static constexpr Square clear_available_bits_ = 0b0001'1111'1111'0000;
@@ -141,26 +138,10 @@ public:
    * 0b0011 as, "this is a wall square that must connect to other walls to the East and North."
    */
   static constexpr std::array<const std::array<std::string_view, 16>, 6> wall_styles_ = { {
-      // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall with no walls around.
-      // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
-      // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
-    {
-      "■",
-      "╵",
-      "╶",
-      "└",
-      "╷",
-      "│",
-      "┌",
-      "├",
-      "╴",
-      "┘",
-      "─",
-      "┴",
-      "┐",
-      "┤",
-      "┬",
-      "┼" },
+    // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall with no walls around.
+    // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
+    // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
+    { "■", "╵", "╶", "└", "╷", "│", "┌", "├", "╴", "┘", "─", "┴", "┐", "┤", "┬", "┼" },
     { // Same but with rounded corners.
       "●",
       "╵",
@@ -257,22 +238,17 @@ public:
   static constexpr std::array<Point, 7> all_directions_
     = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };
 
-
 private:
-
   const int maze_row_size_;
   const int maze_col_size_;
   std::vector<std::vector<Square>> maze_;
   const int wall_style_index_;
-
 };
 
+bool operator==( const Maze::Point& lhs, const Builder::Maze::Point& rhs );
+bool operator!=( const Maze::Point& lhs, const Builder::Maze::Point& rhs );
 
 } // namespace Builder
-
-
-bool operator==( const Builder::Maze::Point& lhs, const Builder::Maze::Point& rhs );
-bool operator!=( const Builder::Maze::Point& lhs, const Builder::Maze::Point& rhs );
 
 // Points should be hashable for ease of use in most containers. Helpful for Kruskal's algorithm.
 namespace std {
@@ -286,6 +262,5 @@ struct hash<Builder::Maze::Point>
   }
 };
 } // namespace std
-
 
 #endif

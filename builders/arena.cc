@@ -2,7 +2,8 @@
 
 namespace Builder {
 
-void generate_arena( Maze& maze ) {
+void generate_arena( Maze& maze )
+{
   for ( int row = 2; row < maze.row_size() - 2; row++ ) {
     for ( int col = 2; col < maze.col_size() - 2; col++ ) {
       build_path( maze, { row, col } );
@@ -10,7 +11,8 @@ void generate_arena( Maze& maze ) {
   }
 }
 
-void animate_arena ( Maze& maze, Builder_speed speed ) {
+void animate_arena( Maze& maze, Builder_speed speed )
+{
   Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   for ( int row = 2; row < maze.row_size() - 2; row++ ) {
     for ( int col = 2; col < maze.col_size() - 2; col++ ) {

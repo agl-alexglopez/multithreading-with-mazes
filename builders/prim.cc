@@ -1,5 +1,5 @@
-#include "maze_algorithms.hh"
 #include "disjoint_set.hh"
+#include "maze_algorithms.hh"
 
 #include <climits>
 #include <queue>
@@ -29,7 +29,7 @@ Maze::Point pick_random_odd_point( Maze& maze )
 {
   std::uniform_int_distribution<int> rand_row( 1, ( maze.row_size() - 2 ) / 2 );
   std::uniform_int_distribution<int> rand_col( 1, ( maze.col_size() - 2 ) / 2 );
-  std::mt19937 generator( std::random_device {} () );
+  std::mt19937 generator( std::random_device {}() );
   int odd_row = 2 * rand_row( generator ) + 1;
   int odd_col = 2 * rand_col( generator ) + 1;
   return { odd_row, odd_col };
@@ -39,10 +39,10 @@ std::unordered_map<Maze::Point, int> randomize_cell_costs( Maze& maze )
 {
   std::unordered_map<Maze::Point, int> cell_cost = {};
   std::uniform_int_distribution<int> random_cost( 0, 100 );
-  std::mt19937 generator( std::random_device {} () );
+  std::mt19937 generator( std::random_device {}() );
   for ( int row = 1; row < maze.row_size(); row += 2 ) {
     for ( int col = 1; col < maze.col_size(); col += 2 ) {
-      cell_cost[ { row, col } ] = random_cost( generator );
+      cell_cost[{ row, col }] = random_cost( generator );
     }
   }
   return cell_cost;

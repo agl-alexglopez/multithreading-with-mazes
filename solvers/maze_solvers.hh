@@ -58,7 +58,6 @@ enum class Solver_speed
   speed_7,
 };
 
-
 /* * * * * * * * * * * * * * * * * * * *     Solving Algorithms      * * * * * * * * * * * * * * * * * * * * * * */
 
 void solve_with_dfs_thread_hunt( Builder::Maze& maze );
@@ -114,8 +113,7 @@ constexpr Thread_paint one_thread_ = 0b0010'0000;
 constexpr Thread_paint two_thread_ = 0b0100'0000;
 constexpr Thread_paint three_thread_ = 0b1000'0000;
 constexpr Thread_paint error_thread_ = 0b0000'0000;
-constexpr std::array<Thread_paint, 4> thread_masks_
-  = { zero_thread_, one_thread_, two_thread_, three_thread_ };
+constexpr std::array<Thread_paint, 4> thread_masks_ = { zero_thread_, one_thread_, two_thread_, three_thread_ };
 
 constexpr Thread_cache clear_cache_ = 0b0001'1111'1111'0000;
 constexpr Thread_cache cache_mask_ = 0b1111'0000'0000;
@@ -171,9 +169,11 @@ constexpr std::array<std::string_view, 16> thread_colors_ = {
   ansi_wit_,
 };
 // north, east, south, west
-constexpr std::array<Builder::Maze::Point, 4> cardinal_directions_ = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
+constexpr std::array<Builder::Maze::Point, 4> cardinal_directions_
+  = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
 // north, east, south, west
-constexpr std::array<Builder::Maze::Point, 4> generate_directions_ = { { { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
+constexpr std::array<Builder::Maze::Point, 4> generate_directions_
+  = { { { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
 // north, north-east, east, south-east, south, south-west, west, north-west
 constexpr std::array<Builder::Maze::Point, 7> all_directions_
   = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };

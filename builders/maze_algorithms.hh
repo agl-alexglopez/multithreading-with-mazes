@@ -1,3 +1,4 @@
+#pragma once
 #ifndef MAZE_ALGORITHMS_HH
 #define MAZE_ALGORITHMS_HH
 #include "maze_utilities.hh"
@@ -27,7 +28,6 @@ void animate_grid_maze( Maze& maze, Builder_speed speed );
 
 void generate_arena( Maze& maze );
 void animate_arena( Maze& maze, Builder_speed speed );
-
 
 } // namespace Builder
 

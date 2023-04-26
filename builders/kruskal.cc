@@ -1,5 +1,5 @@
-#include "maze_algorithms.hh"
 #include "disjoint_set.hh"
+#include "maze_algorithms.hh"
 
 #include <algorithm>
 #include <chrono>
@@ -28,7 +28,7 @@ std::vector<Maze::Point> load_shuffled_walls( Maze& maze )
       walls.push_back( { row, col } );
     }
   }
-  std::shuffle( walls.begin(), walls.end(), std::mt19937( std::random_device {} () ) );
+  std::shuffle( walls.begin(), walls.end(), std::mt19937( std::random_device {}() ) );
   return walls;
 }
 

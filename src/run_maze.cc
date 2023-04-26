@@ -13,7 +13,6 @@
 #include <unordered_set>
 #include <vector>
 
-
 constexpr int get_static = 0;
 constexpr int get_animated = 1;
 
@@ -29,15 +28,15 @@ struct Maze_runner
 
   int builder_getter { get_static };
   Builder::Builder_speed builder_speed {};
-  std::tuple<std::function<void(Builder::Maze&)>,std::function<void(Builder::Maze&, Builder::Builder_speed)>> builder
-    { Builder::generate_recursive_backtracker_maze, Builder::animate_recursive_backtracker_maze };
+  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Builder::Builder_speed )>>
+    builder { Builder::generate_recursive_backtracker_maze, Builder::animate_recursive_backtracker_maze };
 
   int solver_getter { get_static };
   Solver::Solver_speed solver_speed {};
-  std::tuple<std::function<void(Builder::Maze&)>,std::function<void(Builder::Maze&, Solver::Solver_speed)>> solver
-    { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt };
+  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Solver::Solver_speed )>>
+    solver { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt };
+  Maze_runner() : args {} {}
 };
-
 
 void set_relevant_arg( Maze_runner& runner, const Flag_arg& pairs );
 void print_usage();
@@ -47,19 +46,19 @@ int main( int argc, char** argv )
   const std::unordered_set<std::string> argument_flags
     = { "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-sa", "-ba" };
 
-  const std::unordered_map
-    <std::string,
-    std::tuple<std::function<void(Builder::Maze&)>,std::function<void(Builder::Maze&, Builder::Builder_speed)>>>
+  const std::unordered_map<std::string,
+                           std::tuple<std::function<void( Builder::Maze& )>,
+                                      std::function<void( Builder::Maze&, Builder::Builder_speed )>>>
     builder_table = {
-    { "rdfs", { Builder::generate_recursive_backtracker_maze, Builder::animate_recursive_backtracker_maze } },
-    { "wilson", { Builder::generate_wilson_path_carver_maze, Builder::animate_wilson_path_carver_maze } },
-    { "wilson-walls", { Builder::generate_wilson_wall_adder_maze, Builder::animate_wilson_wall_adder_maze } },
-    { "fractal", { Builder::generate_recursive_subdivision_maze, Builder::animate_recursive_subdivision_maze } },
-    { "kruskal", { Builder::generate_kruskal_maze, Builder::animate_kruskal_maze } },
-    { "prim", { Builder::generate_prim_maze, Builder::animate_prim_maze } },
-    { "grid", { Builder::generate_grid_maze, Builder::animate_grid_maze } },
-    { "arena", { Builder::generate_arena, Builder::animate_arena } },
-  };
+      { "rdfs", { Builder::generate_recursive_backtracker_maze, Builder::animate_recursive_backtracker_maze } },
+      { "wilson", { Builder::generate_wilson_path_carver_maze, Builder::animate_wilson_path_carver_maze } },
+      { "wilson-walls", { Builder::generate_wilson_wall_adder_maze, Builder::animate_wilson_wall_adder_maze } },
+      { "fractal", { Builder::generate_recursive_subdivision_maze, Builder::animate_recursive_subdivision_maze } },
+      { "kruskal", { Builder::generate_kruskal_maze, Builder::animate_kruskal_maze } },
+      { "prim", { Builder::generate_prim_maze, Builder::animate_prim_maze } },
+      { "grid", { Builder::generate_grid_maze, Builder::animate_grid_maze } },
+      { "arena", { Builder::generate_arena, Builder::animate_arena } },
+    };
 
   const std::unordered_map<std::string, Builder::Maze::Maze_modification> modification_table = {
     { "none", Builder::Maze::Maze_modification::none },
@@ -67,17 +66,23 @@ int main( int argc, char** argv )
     { "x", Builder::Maze::Maze_modification::add_x },
   };
 
-  const std::unordered_map<std::string, std::tuple<std::function<void(Builder::Maze&)>,std::function<void(Builder::Maze&, Solver::Solver_speed)>>> solver_table = {
-    { "dfs-hunt", { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt } },
-    { "dfs-gather", { Solver::solve_with_dfs_thread_gather, Solver::animate_with_dfs_thread_gather } },
-    { "dfs-corners", { Solver::solve_with_dfs_thread_corners, Solver::animate_with_dfs_thread_corners } },
-    { "rdfs-hunt", { Solver::solve_with_randomized_dfs_thread_hunt, Solver::animate_with_randomized_dfs_thread_hunt } },
-    { "rdfs-gather", { Solver::solve_with_randomized_dfs_thread_gather, Solver::animate_with_randomized_dfs_thread_gather } },
-    { "rdfs-corners", { Solver::solve_with_randomized_dfs_thread_corners, Solver::animate_with_randomized_dfs_thread_corners } },
-    { "bfs-hunt", { Solver::solve_with_bfs_thread_hunt, Solver::animate_with_bfs_thread_hunt } },
-    { "bfs-gather", { Solver::solve_with_bfs_thread_gather, Solver::animate_with_bfs_thread_gather } },
-    { "bfs-corners", { Solver::solve_with_bfs_thread_corners, Solver::animate_with_bfs_thread_corners } },
-  };
+  const std::unordered_map<
+    std::string,
+    std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Solver::Solver_speed )>>>
+    solver_table = {
+      { "dfs-hunt", { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt } },
+      { "dfs-gather", { Solver::solve_with_dfs_thread_gather, Solver::animate_with_dfs_thread_gather } },
+      { "dfs-corners", { Solver::solve_with_dfs_thread_corners, Solver::animate_with_dfs_thread_corners } },
+      { "rdfs-hunt",
+        { Solver::solve_with_randomized_dfs_thread_hunt, Solver::animate_with_randomized_dfs_thread_hunt } },
+      { "rdfs-gather",
+        { Solver::solve_with_randomized_dfs_thread_gather, Solver::animate_with_randomized_dfs_thread_gather } },
+      { "rdfs-corners",
+        { Solver::solve_with_randomized_dfs_thread_corners, Solver::animate_with_randomized_dfs_thread_corners } },
+      { "bfs-hunt", { Solver::solve_with_bfs_thread_hunt, Solver::animate_with_bfs_thread_hunt } },
+      { "bfs-gather", { Solver::solve_with_bfs_thread_gather, Solver::animate_with_bfs_thread_gather } },
+      { "bfs-corners", { Solver::solve_with_bfs_thread_corners, Solver::animate_with_bfs_thread_corners } },
+    };
 
   const std::unordered_map<std::string, Builder::Maze::Maze_style> style_table = {
     { "sharp", Builder::Maze::Maze_style::sharp },
@@ -112,82 +117,82 @@ int main( int argc, char** argv )
 
   Maze_runner runner;
   if ( argc > 1 ) {
-    const auto args = std::span( argv, argc );
+    const std::vector<std::string_view> args { argv + 1, argv + argc };
     bool process_current = false;
     std::string_view prev_flag = {};
-    for ( auto const* arg : args ) {
+    for ( const std::string_view arg : args ) {
       if ( process_current ) {
-      Flag_arg pairs { prev_flag, {arg} };
-      if ( pairs.flag == "-r" ) {
-        runner.args.odd_rows = std::stoi( pairs.arg.data() );
-        if ( runner.args.odd_rows % 2 == 0 ) {
-          runner.args.odd_rows++;
-        }
-        if ( runner.args.odd_rows < 7 ) {
-          std::cerr << "Smallest maze possible is 7x7" << std::endl;
-          std::abort();
-        }
-      } else if ( pairs.flag == "-c" ) {
-        runner.args.odd_cols = std::stoi( pairs.arg.data() );
-        if ( runner.args.odd_cols % 2 == 0 ) {
-          runner.args.odd_cols++;
-        }
-        if ( runner.args.odd_cols < 7 ) {
-          std::cerr << "Smallest maze possible is 3x7" << std::endl;
-          std::abort();
-        }
-      } else if ( pairs.flag == "-b" ) {
-        const auto found = builder_table.find( pairs.arg.data() );
-        if ( found == builder_table.end() ) {
-          std::cerr << "Invalid builder argument: " << pairs.arg << std::endl;
+        Flag_arg pairs { prev_flag, { arg } };
+        if ( pairs.flag == "-r" ) {
+          runner.args.odd_rows = std::stoi( pairs.arg.data() );
+          if ( runner.args.odd_rows % 2 == 0 ) {
+            runner.args.odd_rows++;
+          }
+          if ( runner.args.odd_rows < 7 ) {
+            std::cerr << "Smallest maze possible is 7x7" << std::endl;
+            std::abort();
+          }
+        } else if ( pairs.flag == "-c" ) {
+          runner.args.odd_cols = std::stoi( pairs.arg.data() );
+          if ( runner.args.odd_cols % 2 == 0 ) {
+            runner.args.odd_cols++;
+          }
+          if ( runner.args.odd_cols < 7 ) {
+            std::cerr << "Smallest maze possible is 3x7" << std::endl;
+            std::abort();
+          }
+        } else if ( pairs.flag == "-b" ) {
+          const auto found = builder_table.find( pairs.arg.data() );
+          if ( found == builder_table.end() ) {
+            std::cerr << "Invalid builder argument: " << pairs.arg << std::endl;
+            print_usage();
+            std::abort();
+          }
+          runner.builder = found->second;
+        } else if ( pairs.flag == "-m" ) {
+          // todo
+        } else if ( pairs.flag == "-s" ) {
+          const auto found = solver_table.find( pairs.arg.data() );
+          if ( found == solver_table.end() ) {
+            std::cerr << "Invalid solver argument: " << pairs.arg << std::endl;
+            print_usage();
+            std::abort();
+          }
+          runner.solver = found->second;
+        } else if ( pairs.flag == "-d" ) {
+          const auto found = style_table.find( pairs.arg.data() );
+          if ( found == style_table.end() ) {
+            std::cerr << "Invalid drawing argument: " << pairs.arg << std::endl;
+            print_usage();
+            std::abort();
+          }
+          runner.args.style = found->second;
+        } else if ( pairs.flag == "-sa" ) {
+          const auto found = solver_animation_table.find( pairs.arg.data() );
+          if ( found == solver_animation_table.end() ) {
+            std::cerr << "Invalid solver animation argument: " << pairs.arg << std::endl;
+            print_usage();
+            std::abort();
+          }
+          runner.solver_speed = found->second;
+          runner.solver_getter = get_animated;
+        } else if ( pairs.flag == "-ba" ) {
+          const auto found = builder_animation_table.find( pairs.arg.data() );
+          if ( found == builder_animation_table.end() ) {
+            std::cerr << "Invalid builder animation argument: " << pairs.arg << std::endl;
+            print_usage();
+            std::abort();
+          }
+          runner.builder_speed = found->second;
+          runner.builder_getter = get_animated;
+        } else {
+          std::cerr << "Invalid pairs.flag past the first defense? " << pairs.flag << std::endl;
           print_usage();
           std::abort();
         }
-        runner.builder = found->second;
-      } else if ( pairs.flag == "-m" ) {
-        // todo
-      } else if ( pairs.flag == "-s" ) {
-        const auto found = solver_table.find( pairs.arg.data() );
-        if ( found == solver_table.end() ) {
-          std::cerr << "Invalid solver argument: " << pairs.arg << std::endl;
-          print_usage();
-          std::abort();
-        }
-        runner.solver = found->second;
-      } else if ( pairs.flag == "-d" ) {
-        const auto found = style_table.find( pairs.arg.data() );
-        if ( found == style_table.end() ) {
-          std::cerr << "Invalid drawing argument: " << pairs.arg << std::endl;
-          print_usage();
-          std::abort();
-        }
-        runner.args.style = found->second;
-      } else if ( pairs.flag == "-sa" ) {
-        const auto found = solver_animation_table.find( pairs.arg.data() );
-        if ( found == solver_animation_table.end() ) {
-          std::cerr << "Invalid solver animation argument: " << pairs.arg << std::endl;
-          print_usage();
-          std::abort();
-        }
-        runner.solver_speed = found->second;
-        runner.solver_getter = get_animated;
-      } else if ( pairs.flag == "-ba" ) {
-        const auto found = builder_animation_table.find( pairs.arg.data() );
-        if ( found == builder_animation_table.end() ) {
-          std::cerr << "Invalid builder animation argument: " << pairs.arg << std::endl;
-          print_usage();
-          std::abort();
-        }
-        runner.builder_speed = found->second;
-        runner.builder_getter = get_animated;
-      } else {
-        std::cerr << "Invalid pairs.flag past the first defense? " << pairs.flag << std::endl;
-        print_usage();
-        std::abort();
-      }
         process_current = false;
       } else {
-        const auto& found_arg = argument_flags.find( arg );
+        const auto& found_arg = argument_flags.find( arg.data() );
         if ( found_arg == argument_flags.end() ) {
           std::cerr << "Invalid argument flag: " << arg << std::endl;
           print_usage();
@@ -203,6 +208,17 @@ int main( int argc, char** argv )
     }
   }
   Builder::Maze maze( runner.args );
+  if ( runner.builder_getter == get_animated ) {
+    std::get<get_animated>( runner.builder )( maze, runner.builder_speed );
+  } else {
+    std::get<get_static>( runner.builder )( maze );
+  }
+
+  if ( runner.solver_getter == get_animated ) {
+    std::get<get_animated>( runner.solver )( maze, runner.solver_speed );
+  } else {
+    std::get<get_static>( runner.solver )( maze );
+  }
   return 0;
 }
 

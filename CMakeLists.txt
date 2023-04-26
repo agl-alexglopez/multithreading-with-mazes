@@ -23,6 +23,6 @@ include_directories("${PROJECT_SOURCE_DIR}/solvers")
 
 add_subdirectory("${PROJECT_SOURCE_DIR}/src")
 add_subdirectory("${PROJECT_SOURCE_DIR}/builders")
-include_directories("${PROJECT_SOURCE_DIR}/solvers")
+add_subdirectory("${PROJECT_SOURCE_DIR}/solvers")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

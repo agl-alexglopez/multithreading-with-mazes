@@ -9,8 +9,8 @@ namespace {
 bool is_valid_start_or_finish( const Builder::Maze& maze, const Builder::Maze::Point& choice )
 {
   return choice.row > 0 && choice.row < maze.row_size() - 1 && choice.col > 0 && choice.col < maze.col_size() - 1
-    && maze[choice.row][choice.col] & Builder::Maze::path_bit_ &&  !( maze[choice.row][choice.col] & finish_bit_ )
-      && ! (maze[choice.row][choice.col] & start_bit_ );
+         && maze[choice.row][choice.col] & Builder::Maze::path_bit_
+         && !( maze[choice.row][choice.col] & finish_bit_ ) && !( maze[choice.row][choice.col] & start_bit_ );
 }
 
 } // namespace
@@ -38,7 +38,7 @@ std::vector<Builder::Maze::Point> set_corner_starts( const Builder::Maze& maze )
 
 Builder::Maze::Point pick_random_point( const Builder::Maze& maze )
 {
-  std::mt19937 generator( std::random_device{}() );
+  std::mt19937 generator( std::random_device {}() );
   std::uniform_int_distribution<int> row_random( 1, maze.row_size() - 2 );
   std::uniform_int_distribution<int> col_random( 1, maze.col_size() - 2 );
   Builder::Maze::Point choice = { row_random( generator ), col_random( generator ) };
@@ -60,7 +60,7 @@ Builder::Maze::Point find_nearest_square( const Builder::Maze& maze, const Build
   // Getting desperate here. We should only need this for very small mazes.
   for ( int row = 1; row < maze.row_size() - 1; row++ ) {
     for ( int col = 1; col < maze.col_size() - 1; col++ ) {
-      if ( is_valid_start_or_finish( maze, { row, col }) ) {
+      if ( is_valid_start_or_finish( maze, { row, col } ) ) {
         return { row, col };
       }
     }
@@ -105,14 +105,27 @@ void print_point( const Builder::Maze& maze, const Builder::Maze::Point& point )
   const Builder::Maze::Square& square = maze[point.row][point.col];
   if ( square & finish_bit_ ) {
     std::cout << ansi_finish_;
-  } else if ( square & start_bit_ ) {
+    return;
+  }
+  if ( square & start_bit_ ) {
     std::cout << ansi_start_;
-  } else if ( square & thread_mask_ ) {
+    return;
+  }
+  if ( square & thread_mask_ ) {
     Thread_paint thread_color = ( square & thread_mask_ ) >> thread_tag_offset_; // NOLINT
     std::cout << thread_colors_.at( thread_color );
-  } else {
-    maze.print_maze_square( point.row, point.col );
+    return;
   }
+  if ( !( square & Builder::Maze::path_bit_ ) ) {
+    std::cout << maze.wall_style().at( square & Builder::Maze::wall_mask_ );
+    return;
+  }
+  if ( square & Builder::Maze::path_bit_ ) {
+    std::cout << " ";
+    return;
+  }
+  std::cerr << "Printed maze and a square was not categorized." << std::endl;
+  abort();
 }
 
 void set_cursor_point( const Builder::Maze::Point& point )
@@ -121,7 +134,6 @@ void set_cursor_point( const Builder::Maze::Point& point )
   std::cout << cursor_pos;
 }
 
-
 void print_hunt_solution_message( std::optional<int> winning_index )
 {
   if ( !winning_index ) {
@@ -129,7 +141,7 @@ void print_hunt_solution_message( std::optional<int> winning_index )
     return;
   }
   std::cout << ( thread_colors_.at( thread_masks_.at( winning_index.value() ) >> thread_tag_offset_ ) )
-    << " thread won!\n";
+            << " thread won!\n";
 }
 
 void print_gather_solution_message()
@@ -140,21 +152,22 @@ void print_gather_solution_message()
   std::cout << " All threads found their finish squares!\n";
 }
 
-void print_overlap_key() {
+void print_overlap_key()
+{
   std::cout << "┌────────────────────────────────────────────────────────────────┐\n"
             << "│     Overlap Key: 3_THREAD | 2_THREAD | 1_THREAD | 0_THREAD     │\n"
             << "├────────────┬────────────┬────────────┬────────────┬────────────┤\n"
             << "│ " << thread_colors_.at( 1 ) << " = 0      │ " << thread_colors_.at( 2 ) << " = 1      │ "
-            << thread_colors_.at( 3 ) << " = 1|0    │ " << thread_colors_.at( 4 ) << " = 2      │ " << thread_colors_.at( 5 )
-            << " = 2|0    │\n"
+            << thread_colors_.at( 3 ) << " = 1|0    │ " << thread_colors_.at( 4 ) << " = 2      │ "
+            << thread_colors_.at( 5 ) << " = 2|0    │\n"
             << "├────────────┼────────────┼────────────┼────────────┼────────────┤\n"
             << "│ " << thread_colors_.at( 6 ) << " = 2|1    │ " << thread_colors_.at( 7 ) << " = 2|1|0  │ "
-            << thread_colors_.at( 8 ) << " = 3      │ " << thread_colors_.at( 9 ) << " = 3|0    │ " << thread_colors_.at( 10 )
-            << " = 3|1    │\n"
+            << thread_colors_.at( 8 ) << " = 3      │ " << thread_colors_.at( 9 ) << " = 3|0    │ "
+            << thread_colors_.at( 10 ) << " = 3|1    │\n"
             << "├────────────┼────────────┼────────────┼────────────┼────────────┤\n"
             << "│ " << thread_colors_.at( 11 ) << " = 3|1|0  │ " << thread_colors_.at( 12 ) << " = 3|2    │ "
-            << thread_colors_.at( 13 ) << " = 3|2|0  │ " << thread_colors_.at( 14 ) << " = 3|2|1  │ " << thread_colors_.at( 15 )
-            << " = 3|2|1|0│\n"
+            << thread_colors_.at( 13 ) << " = 3|2|0  │ " << thread_colors_.at( 14 ) << " = 3|2|1  │ "
+            << thread_colors_.at( 15 ) << " = 3|2|1|0│\n"
             << "└────────────┴────────────┴────────────┴────────────┴────────────┘\n";
 }
 

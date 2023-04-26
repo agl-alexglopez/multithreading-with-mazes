@@ -19,5 +19,4 @@ private:
   std::vector<uint64_t> set_rank_;
 };
 
-
 #endif

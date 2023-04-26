@@ -1,4 +1,5 @@
 #include "maze_algorithms.hh"
+#include "maze_utilities.hh"
 
 #include <algorithm>
 #include <chrono>
@@ -9,11 +10,11 @@
 
 namespace Builder {
 
-
-void generate_recursive_backtracker_maze( Maze& maze ) {
+void generate_recursive_backtracker_maze( Maze& maze )
+{
   fill_maze_with_walls( maze );
   // Note that backtracking occurs by encoding directions into path bits. No stack needed.
-  std::mt19937 generator_( std::random_device{}() );
+  std::mt19937 generator_( std::random_device {}() );
   std::uniform_int_distribution<int> row_random_( 1, maze.row_size() - 2 );
   std::uniform_int_distribution<int> col_random_( 1, maze.col_size() - 2 );
 
@@ -37,7 +38,8 @@ void generate_recursive_backtracker_maze( Maze& maze ) {
       }
     }
     if ( !branches_remain && cur != start ) {
-      Maze::Backtrack_marker dir = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+      Maze::Backtrack_marker dir
+        = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
       const Maze::Point& backtracking = Maze::backtracking_marks_.at( dir );
       Maze::Point next = { cur.row + backtracking.row, cur.col + backtracking.col };
       // We are using fields the threads will use later. Clear bits as we backtrack.
@@ -48,10 +50,12 @@ void generate_recursive_backtracker_maze( Maze& maze ) {
   }
 }
 
-void animate_recursive_backtracker_maze( Maze& maze, Builder_speed speed ) {
+void animate_recursive_backtracker_maze( Maze& maze, Builder_speed speed )
+{
   Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );
-  std::mt19937 generator_( std::random_device{}() );
+  clear_and_flush_grid( maze );
+  std::mt19937 generator_( std::random_device {}() );
   std::uniform_int_distribution<int> row_random_( 1, maze.row_size() - 2 );
   std::uniform_int_distribution<int> col_random_( 1, maze.col_size() - 2 );
   Maze::Point start = { 2 * ( row_random_( generator_ ) / 2 ) + 1, 2 * ( col_random_( generator_ ) / 2 ) + 1 };
@@ -73,7 +77,8 @@ void animate_recursive_backtracker_maze( Maze& maze, Builder_speed speed ) {
       }
     }
     if ( !branches_remain && cur != start ) {
-      Maze::Backtrack_marker dir = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+      Maze::Backtrack_marker dir
+        = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
       const Maze::Point& backtracking = Maze::backtracking_marks_.at( dir );
       Maze::Point next = { cur.row + backtracking.row, cur.col + backtracking.col };
       // We are using fields the threads will use later. Clear bits as we backtrack.

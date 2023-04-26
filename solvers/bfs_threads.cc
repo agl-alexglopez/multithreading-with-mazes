@@ -11,11 +11,11 @@
 
 namespace Solver {
 
-namespace
-{
+namespace {
 
-struct Solver_monitor {
-  std::mutex monitor;
+struct Solver_monitor
+{
+  std::mutex monitor {};
   std::optional<Speed_unit> speed {};
   std::vector<std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>> thread_maps;
   std::vector<My_queue<Builder::Maze::Point>> thread_queues;
@@ -23,15 +23,20 @@ struct Solver_monitor {
   std::optional<int> winning_index {};
   std::vector<std::vector<Builder::Maze::Point>> thread_paths;
   Solver_monitor()
-    : thread_maps{ num_threads_ }
-    , thread_queues{ num_threads_ }
-    , thread_paths{ num_threads_, std::vector<Builder::Maze::Point>{} } {
-    for ( std::vector<Builder::Maze::Point>& path : thread_paths ) { path.reserve( initial_path_len_ ); }
-    for ( My_queue<Builder::Maze::Point>& q : thread_queues ) { q.reserve( initial_path_len_ ); }
+    : thread_maps { num_threads_ }
+    , thread_queues { num_threads_ }
+    , thread_paths { num_threads_, std::vector<Builder::Maze::Point> {} }
+  {
+    for ( std::vector<Builder::Maze::Point>& path : thread_paths ) {
+      path.reserve( initial_path_len_ );
+    }
+    for ( My_queue<Builder::Maze::Point>& q : thread_queues ) {
+      q.reserve( initial_path_len_ );
+    }
   }
 };
 
-void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, const Thread_id& id )
+void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
 {
   // This will be how we rebuild the path because queue does not represent the current path.
   std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>& seen = monitor.thread_maps[id.index];
@@ -85,7 +90,7 @@ void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, const Thread_i
   }
 }
 
-void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, const Thread_id& id )
+void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
 {
   // This will be how we rebuild the path because queue does not represent the current path.
   std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>& seen = monitor.thread_maps[id.index];
@@ -141,12 +146,12 @@ void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, const Thread_id
   }
 }
 
-void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, const Thread_id& id )
+void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
 {
   std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>& seen = monitor.thread_maps[id.index];
   Thread_cache seen_bit = id.paint << 4;
-  seen[monitor.starts[ id.index ] ] = { -1, -1 };
-  My_queue<Builder::Maze::Point>& bfs = monitor.thread_queues[ id.index];
+  seen[monitor.starts[id.index]] = { -1, -1 };
+  My_queue<Builder::Maze::Point>& bfs = monitor.thread_queues[id.index];
   bfs.push( monitor.starts.at( id.index ) );
   Builder::Maze::Point cur = monitor.starts.at( id.index );
   while ( !bfs.empty() ) {
@@ -186,12 +191,12 @@ void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, const Thread
   monitor.winning_index = id.index;
 }
 
-void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, const Thread_id& id )
+void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
 {
   std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>& seen = monitor.thread_maps[id.index];
   Thread_cache seen_bit = id.paint << 4;
-  seen[monitor.starts[ id.index ] ] = { -1, -1 };
-  My_queue<Builder::Maze::Point>& bfs = monitor.thread_queues[ id.index];
+  seen[monitor.starts[id.index]] = { -1, -1 };
+  My_queue<Builder::Maze::Point>& bfs = monitor.thread_queues[id.index];
   bfs.push( monitor.starts.at( id.index ) );
   Builder::Maze::Point cur = monitor.starts.at( id.index );
   while ( !bfs.empty() ) {
@@ -231,11 +236,9 @@ void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, const Thread_
     cur = seen.at( cur );
   }
   monitor.winning_index = id.index;
-
 }
 
-}// namespace
-
+} // namespace
 
 /* * * * * * * * * * * *  Multithreaded Dispatcher Functions from Header Interface   * * * * * * * * * * * * * * */
 
@@ -246,10 +249,10 @@ void solve_with_bfs_thread_hunt( Builder::Maze& maze )
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit_;
   Builder::Maze::Point finish = pick_random_point( maze );
   maze[finish.row][finish.col] |= finish_bit_;
-  std::vector<std::thread> threads ( num_threads_ );
+  std::vector<std::thread> threads( num_threads_ );
   for ( int thread = 0; thread < num_threads_; thread++ ) {
     const Thread_id this_thread { thread, thread_masks_.at( thread ) };
-    threads[ thread ] = std::thread( [ & ] { complete_hunt( maze, monitor, this_thread ); } );
+    threads[thread] = std::thread( [&maze, &monitor, this_thread] { complete_hunt( maze, monitor, this_thread ); } );
   }
   for ( std::thread& t : threads ) {
     t.join();
@@ -283,10 +286,10 @@ void animate_with_bfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
   set_cursor_point( { maze.row_size(), 0 } );
   print_overlap_key();
 
-  std::vector<std::thread> threads ( num_threads_ );
+  std::vector<std::thread> threads( num_threads_ );
   for ( int thread = 0; thread < num_threads_; thread++ ) {
     const Thread_id this_thread { thread, thread_masks_.at( thread ) };
-    threads[ thread ] = std::thread( [ & ] { animate_hunt( maze, monitor, this_thread ); } );
+    threads[thread] = std::thread( [&maze, &monitor, this_thread] { animate_hunt( maze, monitor, this_thread ); } );
   }
 
   for ( std::thread& t : threads ) {
@@ -318,10 +321,10 @@ void solve_with_bfs_thread_gather( Builder::Maze& maze )
     Builder::Maze::Point finish = pick_random_point( maze );
     maze[finish.row][finish.col] |= finish_bit_;
   }
-  std::vector<std::thread> threads ( num_threads_ );
+  std::vector<std::thread> threads( num_threads_ );
   for ( int thread = 0; thread < num_threads_; thread++ ) {
     const Thread_id this_thread { thread, thread_masks_.at( thread ) };
-    threads[ thread ] = std::thread( [ & ] { complete_gather( maze, monitor, this_thread ); } );
+    threads[thread] = std::thread( [&maze, &monitor, this_thread] { complete_gather( maze, monitor, this_thread ); } );
   }
 
   for ( std::thread& t : threads ) {
@@ -357,10 +360,10 @@ void animate_with_bfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
   set_cursor_point( { maze.row_size(), 0 } );
   print_overlap_key();
 
-  std::vector<std::thread> threads ( num_threads_ );
+  std::vector<std::thread> threads( num_threads_ );
   for ( int thread = 0; thread < num_threads_; thread++ ) {
     const Thread_id this_thread { thread, thread_masks_.at( thread ) };
-    threads[ thread ] = std::thread( [ & ] { animate_gather( maze, monitor, this_thread ); } );
+    threads[thread] = std::thread( [&maze, &monitor, this_thread] { animate_gather( maze, monitor, this_thread ); } );
   }
 
   for ( std::thread& t : threads ) {
@@ -400,10 +403,10 @@ void solve_with_bfs_thread_corners( Builder::Maze& maze )
 
   std::vector<std::thread> threads( num_threads_ );
   // Randomly shuffle thread start corners so colors mix differently each time.
-  shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}()) );
+  shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
   for ( int thread = 0; thread < num_threads_; thread++ ) {
     const Thread_id this_thread = { thread, thread_masks_.at( thread ) };
-    threads[ thread ] = std::thread( [ & ] { complete_hunt( maze, monitor, this_thread ); } );
+    threads[thread] = std::thread( [&maze, &monitor, this_thread] { complete_hunt( maze, monitor, this_thread ); } );
   }
   for ( std::thread& t : threads ) {
     t.join();
@@ -436,7 +439,7 @@ void animate_with_bfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
   for ( int thread = 0; thread < num_threads_; thread++ ) {
     const Thread_id this_thread = { thread, thread_masks_.at( thread ) };
-    threads[ thread ] = std::thread( [ & ] { complete_hunt( maze, monitor, this_thread ); } );
+    threads[thread] = std::thread( [&maze, &monitor, this_thread] { complete_hunt( maze, monitor, this_thread ); } );
   }
   for ( std::thread& t : threads ) {
     t.join();
@@ -457,6 +460,5 @@ void animate_with_bfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
   print_hunt_solution_message( monitor.winning_index );
   std::cout << std::endl;
 }
-
 
 } // namespace Solver

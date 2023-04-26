@@ -6,8 +6,7 @@
 
 #include <array>
 
-namespace Builder
-{
+namespace Builder {
 
 using Speed_unit = int;
 
@@ -33,14 +32,14 @@ constexpr std::array<Speed_unit, 8> builder_speeds_ = { 0, 5000, 2500, 1000, 500
 
 void add_positive_slope( Maze& maze, const Maze::Point& p );
 void add_positive_slope_animated( Maze& maze, const Maze::Point& p, Speed_unit speed );
-void add_negative_slope( Maze& maze,  const Maze::Point& p );
-void add_negative_slope_animated( Maze& maze,  const Maze::Point& p, Speed_unit speed );
-void build_wall_line( Maze& maze,  const Maze::Point& p );
-void build_wall_line_animated( Maze& maze,  const Maze::Point& p, Speed_unit speed );
-void carve_path_walls( Maze& maze,  const Maze::Point& p );
+void add_negative_slope( Maze& maze, const Maze::Point& p );
+void add_negative_slope_animated( Maze& maze, const Maze::Point& p, Speed_unit speed );
+void build_wall_line( Maze& maze, const Maze::Point& p );
+void build_wall_line_animated( Maze& maze, const Maze::Point& p, Speed_unit speed );
+void carve_path_walls( Maze& maze, const Maze::Point& p );
 void carve_path_walls_animated( Maze& maze, const Maze::Point& p, Speed_unit speed );
-void carve_path_markings( Maze& maze,  const Maze::Point& cur, const Maze::Point& next );
-void carve_path_markings_animated( Maze& maze,  const Maze::Point& cur, const Maze::Point& next, Speed_unit speed );
+void carve_path_markings( Maze& maze, const Maze::Point& cur, const Maze::Point& next );
+void carve_path_markings_animated( Maze& maze, const Maze::Point& cur, const Maze::Point& next, Speed_unit speed );
 void build_wall_outline( Maze& maze );
 void fill_maze_with_walls( Maze& maze );
 void fill_maze_with_walls_animated( Maze& maze );
@@ -58,7 +57,7 @@ void build_wall( Maze& maze, const Maze::Point& p );
 void build_wall_carefully( Maze& maze, const Maze::Point& p );
 Maze::Point find_nearest_square( const Maze& maze, Maze::Point choice );
 Maze::Point choose_arbitrary_point( const Maze& maze, Parity_point parity );
-void clear_and_flush_grid( Maze& maze );
+void clear_and_flush_grid( const Maze& maze );
 void clear_for_wall_adders( Maze& maze );
 void flush_cursor_maze_coordinate( const Maze& maze, const Maze::Point& p );
 void print_square( const Maze& maze, const Maze::Point& p );
