@@ -6,6 +6,8 @@
 #include <random>
 #include <unordered_map>
 
+namespace Builder {
+
 namespace {
 
 struct Priority_cell
@@ -111,3 +113,5 @@ void animate_prim_maze( Maze& maze )
     }
   }
 }
+
+} // namespace Builder

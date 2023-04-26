@@ -5,6 +5,8 @@
 #include <stack>
 #include <thread>
 
+namespace Builder {
+
 namespace {
 
 using Height = int;
@@ -105,3 +107,5 @@ void animate_recursive_subdivision_maze( Maze& maze ) {
     }
   }
 }
+
+} // namespace Builder

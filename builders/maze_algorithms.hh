@@ -2,6 +2,8 @@
 #define MAZE_ALGORITHMS_HH
 #include "maze.hh"
 
+namespace Builder {
+
 void generate_recursive_backtracker_maze( Maze& maze );
 void animate_recursive_backtracker_maze( Maze& maze );
 
@@ -25,5 +27,7 @@ void animate_grid_maze( Maze& maze );
 
 void generate_arena( Maze& maze );
 void animate_arena( Maze& maze );
+
+} // namespace Builder
 
 #endif

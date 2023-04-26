@@ -7,6 +7,9 @@
 #include <random>
 #include <thread>
 
+namespace Builder {
+
+
 void generate_recursive_backtracker_maze( Maze& maze ) {
   maze.fill_maze_with_walls();
   // Note that backtracking occurs by encoding directions into path bits. No stack needed.
@@ -82,3 +85,4 @@ void animate_recursive_backtracker_maze( Maze& maze ) {
   }
 }
 
+} // namespace Builder

@@ -6,6 +6,8 @@
 #include <stack>
 #include <thread>
 
+namespace Builder {
+
 namespace {
 
 constexpr int run_limit = 4;
@@ -107,3 +109,5 @@ void animate_grid_maze( Maze& maze )
     }
   }
 }
+
+} // namespace Builder

@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <vector>
 
+namespace Builder {
+
 namespace {
 
 std::vector<Maze::Point> load_shuffled_walls( Maze& maze )
@@ -91,5 +93,6 @@ void animate_kruskal_maze( Maze& maze )
       }
     }
   }
-
 }
+
+} // namespace Builder

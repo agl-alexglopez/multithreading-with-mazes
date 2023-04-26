@@ -1,5 +1,7 @@
 #include "maze_algorithms.hh"
 
+namespace Builder {
+
 void generate_arena( Maze& maze ) {
   for ( int row = 2; row < maze.row_size() - 2; row++ ) {
     for ( int col = 2; col < maze.col_size() - 2; col++ ) {
@@ -15,3 +17,5 @@ void animate_arena ( Maze& maze ) {
     }
   }
 }
+
+} // namespace Builder

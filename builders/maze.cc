@@ -5,6 +5,8 @@
 #include <thread>
 #include <vector>
 
+namespace Builder {
+
 Maze::Maze( const Maze_args& args )
   : maze_row_size_( static_cast<int>( args.odd_rows) ),
     maze_col_size_( static_cast<int>( args.odd_cols ) ),
@@ -637,3 +639,5 @@ bool operator!=( const Maze::Point& lhs, const Maze::Point& rhs )
 {
   return !( lhs == rhs );
 }
+
+} // namespace Builder

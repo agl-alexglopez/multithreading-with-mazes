@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <iostream>
 #include <mutex>
 #include <optional>
 #include <random>
@@ -268,6 +269,7 @@ void solve_with_dfs_thread_hunt( Maze& maze )
   print_maze( maze );
   print_overlap_key();
   print_hunt_solution_message( monitor.winning_index );
+  std::cout << std::endl;
 }
 
 void solve_with_dfs_thread_gather( Maze& maze )
@@ -292,6 +294,7 @@ void solve_with_dfs_thread_gather( Maze& maze )
   print_maze( maze );
   print_overlap_key();
   print_gather_solution_message();
+  std::cout << std::endl;
 }
 
 void solve_with_dfs_thread_corners( Maze& maze )
@@ -323,6 +326,7 @@ void solve_with_dfs_thread_corners( Maze& maze )
   print_maze( maze );
   print_overlap_key();
   print_hunt_solution_message( monitor.winning_index );
+  std::cout << std::endl;
 }
 
 void animate_with_dfs_thread_hunt( Maze& maze, Solver_speed speed )
@@ -346,7 +350,9 @@ void animate_with_dfs_thread_hunt( Maze& maze, Solver_speed speed )
   for ( std::thread& t : threads ) {
     t.join();
   }
+  set_cursor_point( { maze.row_size() + overlap_key_and_message_height, 0 } );
   print_hunt_solution_message( monitor.winning_index );
+  std::cout << std::endl;
 }
 
 void animate_with_dfs_thread_gather( Maze& maze, Solver_speed speed )
@@ -372,7 +378,9 @@ void animate_with_dfs_thread_gather( Maze& maze, Solver_speed speed )
   for ( std::thread& t : threads ) {
     t.join();
   }
+  set_cursor_point( { maze.row_size() + overlap_key_and_message_height, 0 } );
   print_gather_solution_message();
+  std::cout << std::endl;
 }
 
 void animate_with_dfs_thread_corners( Maze& maze, Solver_speed speed )
@@ -405,7 +413,9 @@ void animate_with_dfs_thread_corners( Maze& maze, Solver_speed speed )
   for ( std::thread& t : threads ) {
     t.join();
   }
+  set_cursor_point( { maze.row_size() + overlap_key_and_message_height, 0 } );
   print_hunt_solution_message( monitor.winning_index );
+  std::cout << std::endl;
 }
 
 

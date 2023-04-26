@@ -6,6 +6,8 @@
 #include <random>
 #include <thread>
 
+namespace Builder {
+
 namespace {
 
 struct Loop {
@@ -270,3 +272,5 @@ void animate_wilson_path_carver_maze( Maze& maze ) {
     }
   }
 }
+
+} // namespace Builder

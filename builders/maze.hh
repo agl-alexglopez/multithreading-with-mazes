@@ -9,6 +9,9 @@
 #include <unordered_set>
 #include <vector>
 
+namespace Builder {
+
+
 class Maze
 {
 
@@ -318,6 +321,7 @@ public:
   static constexpr std::array<Animation_speed, 8> builder_speeds_ = { 0, 5000, 2500, 1000, 500, 250, 100, 1 };
 
 private:
+
   const int maze_row_size_;
   const int maze_col_size_;
   std::vector<std::vector<Square>> maze_;
@@ -327,20 +331,25 @@ private:
 
 };
 
-bool operator==( const Maze::Point& lhs, const Maze::Point& rhs );
-bool operator!=( const Maze::Point& lhs, const Maze::Point& rhs );
+
+} // namespace Builder
+
+
+bool operator==( const Builder::Maze::Point& lhs, const Builder::Maze::Point& rhs );
+bool operator!=( const Builder::Maze::Point& lhs, const Builder::Maze::Point& rhs );
 
 // Points should be hashable for ease of use in most containers. Helpful for Kruskal's algorithm.
 namespace std {
 template<>
-struct hash<Maze::Point>
+struct hash<Builder::Maze::Point>
 {
-  inline size_t operator()( const Maze::Point& p ) const
+  inline size_t operator()( const Builder::Maze::Point& p ) const
   {
     std::hash<int> hasher;
     return hasher( p.row ) ^ hasher( p.col );
   }
 };
 } // namespace std
+
 
 #endif
