@@ -23,8 +23,8 @@ void complete_run( Maze& maze, std::stack<Maze::Point>& dfs, Run_start run )
   Maze::Point next = { run.cur.row + run.direction.row, run.cur.col + run.direction.col };
   // Create the "grid" by running in one direction until wall or limit.
   int cur_run = 0;
-  while ( maze.is_square_within_perimeter_walls( next ) && cur_run < run_limit ) {
-    maze.join_squares( run.cur, next );
+  while ( is_square_within_perimeter_walls( maze, next ) && cur_run < run_limit ) {
+    join_squares( maze, run.cur, next );
     run.cur = next;
     dfs.push( next );
     next.row += run.direction.row;
@@ -33,12 +33,12 @@ void complete_run( Maze& maze, std::stack<Maze::Point>& dfs, Run_start run )
   }
 }
 
-void animate_run( Maze& maze, std::stack<Maze::Point>& dfs, Run_start run )
+void animate_run( Maze& maze, std::stack<Maze::Point>& dfs, Run_start run, Speed_unit speed )
 {
   Maze::Point next = { run.cur.row + run.direction.row, run.cur.col + run.direction.col };
   int cur_run = 0;
-  while ( maze.is_square_within_perimeter_walls( next ) && cur_run < run_limit ) {
-    maze.join_squares_animated( run.cur, next );
+  while ( is_square_within_perimeter_walls( maze, next ) && cur_run < run_limit ) {
+    join_squares_animated( maze, run.cur, next, speed );
     run.cur = next;
     dfs.push( next );
     next.row += run.direction.row;
@@ -51,7 +51,7 @@ void animate_run( Maze& maze, std::stack<Maze::Point>& dfs, Run_start run )
 
 void generate_grid_maze( Maze& maze )
 {
-  maze.fill_maze_with_walls();
+  fill_maze_with_walls( maze );
   std::mt19937 generator( std::random_device {} () );
   std::uniform_int_distribution row_random( 1, maze.row_size() - 2 );
   std::uniform_int_distribution col_random( 1, maze.col_size() - 2 );
@@ -66,7 +66,7 @@ void generate_grid_maze( Maze& maze )
     for ( const int& i : random_direction_indices ) {
       const Maze::Point& direction = Maze::generate_directions_.at( i );
       Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
-      if ( maze.can_build_new_square( next ) ) {
+      if ( can_build_new_square( maze, next ) ) {
         complete_run( maze, dfs, { cur, direction } );
         branches_remain = true;
         break;
@@ -79,9 +79,10 @@ void generate_grid_maze( Maze& maze )
 
 }
 
-void animate_grid_maze( Maze& maze )
+void animate_grid_maze( Maze& maze, Builder_speed speed )
 {
-  maze.fill_maze_with_walls_animated();
+  Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  fill_maze_with_walls_animated( maze );
   std::mt19937 generator( std::random_device {} () );
   std::uniform_int_distribution row_random( 1, maze.row_size() - 2 );
   std::uniform_int_distribution col_random( 1, maze.col_size() - 2 );
@@ -96,15 +97,15 @@ void animate_grid_maze( Maze& maze )
     for ( const int& i : random_direction_indices ) {
       const Maze::Point& direction = Maze::generate_directions_.at( i );
       Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
-      if ( maze.can_build_new_square( next ) ) {
-        animate_run( maze, dfs, { cur, direction } );
+      if ( can_build_new_square( maze, next ) ) {
+        animate_run( maze, dfs, { cur, direction }, animation );
         branches_remain = true;
         break;
       }
     }
     if ( !branches_remain ) {
-      maze.flush_cursor_maze_coordinate( cur.row, cur.col );
-      std::this_thread::sleep_for( std::chrono::microseconds( maze.build_speed() ) );
+      flush_cursor_maze_coordinate( maze, cur );
+      std::this_thread::sleep_for( std::chrono::microseconds( animation ) );
       dfs.pop();
     }
   }

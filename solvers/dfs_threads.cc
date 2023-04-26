@@ -20,15 +20,15 @@ namespace
 struct Solver_monitor {
   std::mutex monitor;
   std::optional<Speed_unit> speed {};
-  std::vector<Maze::Point> starts {};
+  std::vector<Builder::Maze::Point> starts {};
   std::optional<int> winning_index {};
-  std::vector<std::vector<Maze::Point>> thread_paths;
-  Solver_monitor() : thread_paths{ num_threads_, std::vector<Maze::Point>{} } {
-    for ( std::vector<Maze::Point>& path : thread_paths ) { path.reserve( initial_path_len_ ); }
+  std::vector<std::vector<Builder::Maze::Point>> thread_paths;
+  Solver_monitor() : thread_paths{ num_threads_, std::vector<Builder::Maze::Point>{} } {
+    for ( std::vector<Builder::Maze::Point>& path : thread_paths ) { path.reserve( initial_path_len_ ); }
   }
 };
 
-void complete_hunt( Maze& maze, Solver_monitor& monitor, const Thread_id& id )
+void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, const Thread_id& id )
 {
   /* We have useful bits in a square. Each square can use a unique bit to track seen threads.
    * Each thread could maintain its own hashset, but this is much more space efficient. Use
@@ -36,9 +36,9 @@ void complete_hunt( Maze& maze, Solver_monitor& monitor, const Thread_id& id )
    */
   Thread_cache seen = id.paint << thread_tag_offset_;
   // Each thread only needs enough space for an O(current path length) stack.
-  std::vector<Maze::Point>& dfs = monitor.thread_paths[id.index];
+  std::vector<Builder::Maze::Point>& dfs = monitor.thread_paths[id.index];
   dfs.push_back( monitor.starts.at( id.index ) );
-  Maze::Point cur = monitor.starts.at( id.index );
+  Builder::Maze::Point cur = monitor.starts.at( id.index );
   while ( !dfs.empty() ) {
     // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
     if ( monitor.winning_index ) {
@@ -64,11 +64,11 @@ void complete_hunt( Maze& maze, Solver_monitor& monitor, const Thread_id& id )
     int direction_index = id.index;
     bool found_branch_to_explore = false;
     do {
-      const Maze::Point& p = cardinal_directions_.at( direction_index );
-      Maze::Point next = { cur.row + p.row, cur.col + p.col };
+      const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
+      Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
       bool push_next
-        = !( maze[next.row][next.col] & seen ) && ( maze[next.row][next.col] & Maze::path_bit_ );
+        = !( maze[next.row][next.col] & seen ) && ( maze[next.row][next.col] & Builder::Maze::path_bit_ );
       monitor.monitor.unlock();
       if ( push_next ) {
         found_branch_to_explore = true;
@@ -83,19 +83,19 @@ void complete_hunt( Maze& maze, Solver_monitor& monitor, const Thread_id& id )
   }
   monitor.monitor.lock();
   // Another benefit of true depth first search is our stack holds path to exact location.
-  for ( const Maze::Point& p : dfs ) {
+  for ( const Builder::Maze::Point& p : dfs ) {
     maze[p.row][p.col] |= id.paint;
   }
   monitor.monitor.unlock();
 
 }
 
-void animate_hunt( Maze& maze, Solver_monitor& monitor, const Thread_id& id )
+void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, const Thread_id& id )
 {
   Thread_cache seen = id.paint << thread_tag_offset_;
-  std::vector<Maze::Point>& dfs = monitor.thread_paths.at( id.index );
+  std::vector<Builder::Maze::Point>& dfs = monitor.thread_paths.at( id.index );
   dfs.push_back( monitor.starts.at( id.index ) );
-  Maze::Point cur = monitor.starts.at( id.index );
+  Builder::Maze::Point cur = monitor.starts.at( id.index );
   while ( !dfs.empty() ) {
     // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
     if ( monitor.winning_index ) {
@@ -124,11 +124,11 @@ void animate_hunt( Maze& maze, Solver_monitor& monitor, const Thread_id& id )
     int direction_index = id.index;
     bool found_branch_to_explore = false;
     do {
-      const Maze::Point& p = cardinal_directions_.at( direction_index );
-      Maze::Point next = { cur.row + p.row, cur.col + p.col };
+      const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
+      Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
       bool push_next
-        = !( maze[next.row][next.col] & seen ) && ( maze[next.row][next.col] & Maze::path_bit_ );
+        = !( maze[next.row][next.col] & seen ) && ( maze[next.row][next.col] & Builder::Maze::path_bit_ );
       monitor.monitor.unlock();
       if ( push_next ) {
         found_branch_to_explore = true;
@@ -149,12 +149,12 @@ void animate_hunt( Maze& maze, Solver_monitor& monitor, const Thread_id& id )
   }
 }
 
-void complete_gather( Maze& maze, Solver_monitor& monitor, const Thread_id& id )
+void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, const Thread_id& id )
 {
   Thread_cache seen = id.paint << thread_tag_offset_;
-  std::vector<Maze::Point>& dfs = monitor.thread_paths[id.index];
+  std::vector<Builder::Maze::Point>& dfs = monitor.thread_paths[id.index];
   dfs.push_back( monitor.starts.at( id.index ) );
-  Maze::Point cur = monitor.starts.at( id.index );
+  Builder::Maze::Point cur = monitor.starts.at( id.index );
   while ( !dfs.empty() ) {
     cur = dfs.back();
 
@@ -163,7 +163,7 @@ void complete_gather( Maze& maze, Solver_monitor& monitor, const Thread_id& id )
     if ( maze[cur.row][cur.col] & finish_bit_ && !( maze[cur.row][cur.col] & cache_mask_ ) ) {
       maze[cur.row][cur.col] |= seen;
       dfs.pop_back();
-      for ( const Maze::Point& p : dfs ) {
+      for ( const Builder::Maze::Point& p : dfs ) {
         maze[p.row][p.col] |= id.paint;
       }
       monitor.monitor.unlock();
@@ -176,11 +176,11 @@ void complete_gather( Maze& maze, Solver_monitor& monitor, const Thread_id& id )
     int direction_index = id.index;
     bool found_branch_to_explore = false;
     do {
-      const Maze::Point& p = cardinal_directions_.at( direction_index );
-      Maze::Point next = { cur.row + p.row, cur.col + p.col };
+      const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
+      Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
       bool push_next
-        = !( maze[next.row][next.col] & seen ) && ( maze[next.row][next.col] & Maze::path_bit_ );
+        = !( maze[next.row][next.col] & seen ) && ( maze[next.row][next.col] & Builder::Maze::path_bit_ );
       monitor.monitor.unlock();
       if ( push_next ) {
         found_branch_to_explore = true;
@@ -196,12 +196,12 @@ void complete_gather( Maze& maze, Solver_monitor& monitor, const Thread_id& id )
   }
 }
 
-void animate_gather(Maze& maze, Solver_monitor& monitor, const Thread_id& id )
+void animate_gather(Builder::Maze& maze, Solver_monitor& monitor, const Thread_id& id )
 {
   Thread_cache seen = id.paint << thread_tag_offset_;
-  std::vector<Maze::Point>& dfs = monitor.thread_paths.at( id.index );
+  std::vector<Builder::Maze::Point>& dfs = monitor.thread_paths.at( id.index );
   dfs.push_back( monitor.starts.at( id.index ));
-  Maze::Point cur = monitor.starts.at( id.index );
+  Builder::Maze::Point cur = monitor.starts.at( id.index );
   while ( !dfs.empty() ) {
     cur = dfs.back();
 
@@ -221,11 +221,11 @@ void animate_gather(Maze& maze, Solver_monitor& monitor, const Thread_id& id )
     int direction_index = id.index;
     bool found_branch_to_explore = false;
     do {
-      const Maze::Point& p = cardinal_directions_.at( direction_index );
-      Maze::Point next = { cur.row + p.row, cur.col + p.col };
+      const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
+      Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
       bool push_next
-        = !( maze[next.row][next.col] & seen ) && ( maze[next.row][next.col] & Maze::path_bit_ );
+        = !( maze[next.row][next.col] & seen ) && ( maze[next.row][next.col] & Builder::Maze::path_bit_ );
       monitor.monitor.unlock();
       if ( push_next ) {
         found_branch_to_explore = true;
@@ -249,12 +249,12 @@ void animate_gather(Maze& maze, Solver_monitor& monitor, const Thread_id& id )
 
 /* * * * * * * * * * * *  Multithreaded Dispatcher Functions from Header Interface   * * * * * * * * * * * * * * */
 
-void solve_with_dfs_thread_hunt( Maze& maze )
+void solve_with_dfs_thread_hunt( Builder::Maze& maze )
 {
   Solver_monitor monitor;
-  monitor.starts = std::vector<Maze::Point>( num_threads_, pick_random_point( maze ) );
+  monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit_;
-  Maze::Point finish = pick_random_point( maze );
+  Builder::Maze::Point finish = pick_random_point( maze );
   maze[finish.row][finish.col] |= finish_bit_;
   std::vector<std::thread> threads ( num_threads_ );
   for ( int thread = 0; thread < num_threads_; thread++ ) {
@@ -272,13 +272,13 @@ void solve_with_dfs_thread_hunt( Maze& maze )
   std::cout << std::endl;
 }
 
-void solve_with_dfs_thread_gather( Maze& maze )
+void solve_with_dfs_thread_gather( Builder::Maze& maze )
 {
   Solver_monitor monitor;
-  monitor.starts = std::vector<Maze::Point>( num_threads_, pick_random_point( maze ) );
+  monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit_;
   for ( int finish_square = 0; finish_square < num_gather_finishes_; finish_square++ ) {
-    Maze::Point finish = pick_random_point( maze );
+    Builder::Maze::Point finish = pick_random_point( maze );
     maze[finish.row][finish.col] |= finish_bit_;
   }
   std::vector<std::thread> threads ( num_threads_ );
@@ -297,19 +297,19 @@ void solve_with_dfs_thread_gather( Maze& maze )
   std::cout << std::endl;
 }
 
-void solve_with_dfs_thread_corners( Maze& maze )
+void solve_with_dfs_thread_corners( Builder::Maze& maze )
 {
   Solver_monitor monitor;
   monitor.starts = set_corner_starts( maze );
-  for ( const Maze::Point& p : monitor.starts ) {
+  for ( const Builder::Maze::Point& p : monitor.starts ) {
     maze[p.row][p.col] |= start_bit_;
   }
-  Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
-  for ( const Maze::Point& p : all_directions_ ) {
-    Maze::Point next = { finish.row + p.row, finish.col + p.col };
-    maze[next.row][next.col] |= Maze::path_bit_;
+  Builder::Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
+  for ( const Builder::Maze::Point& p : all_directions_ ) {
+    Builder::Maze::Point next = { finish.row + p.row, finish.col + p.col };
+    maze[next.row][next.col] |= Builder::Maze::path_bit_;
   }
-  maze[finish.row][finish.col] |= Maze::path_bit_;
+  maze[finish.row][finish.col] |= Builder::Maze::path_bit_;
   maze[finish.row][finish.col] |= finish_bit_;
 
   std::vector<std::thread> threads( num_threads_ );
@@ -329,13 +329,13 @@ void solve_with_dfs_thread_corners( Maze& maze )
   std::cout << std::endl;
 }
 
-void animate_with_dfs_thread_hunt( Maze& maze, Solver_speed speed )
+void animate_with_dfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
 {
   Solver_monitor monitor;
   monitor.speed = solver_speeds_.at( static_cast<int>( speed ) );
   monitor.starts.emplace_back( pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit_;
-  Maze::Point finish = pick_random_point( maze );
+  Builder::Maze::Point finish = pick_random_point( maze );
   maze[finish.row][finish.col] |= finish_bit_;
   flush_cursor_path_coordinate( maze, finish );
   set_cursor_point( { maze.row_size(), 0 } );
@@ -355,14 +355,14 @@ void animate_with_dfs_thread_hunt( Maze& maze, Solver_speed speed )
   std::cout << std::endl;
 }
 
-void animate_with_dfs_thread_gather( Maze& maze, Solver_speed speed )
+void animate_with_dfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
 {
   Solver_monitor monitor;
   monitor.speed = solver_speeds_.at( static_cast<int>( speed ) );
   monitor.starts.emplace_back( pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit_;
   for ( int finish_square = 0; finish_square < num_gather_finishes_; finish_square++ ) {
-    Maze::Point finish = pick_random_point( maze );
+    Builder::Maze::Point finish = pick_random_point( maze );
     maze[finish.row][finish.col] |= finish_bit_;
     flush_cursor_path_coordinate( maze, finish );
   }
@@ -383,21 +383,21 @@ void animate_with_dfs_thread_gather( Maze& maze, Solver_speed speed )
   std::cout << std::endl;
 }
 
-void animate_with_dfs_thread_corners( Maze& maze, Solver_speed speed )
+void animate_with_dfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
 {
   Solver_monitor monitor;
   monitor.speed = solver_speeds_.at( static_cast<int>( speed ) );
   monitor.starts = set_corner_starts( maze );
-  for ( const Maze::Point& p : monitor.starts ) {
+  for ( const Builder::Maze::Point& p : monitor.starts ) {
     maze[p.row][p.col] |= start_bit_;
   }
-  Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
-  for ( const Maze::Point& p : all_directions_ ) {
-    Maze::Point next = { finish.row + p.row, finish.col + p.col };
-    maze[next.row][next.col] |= Maze::path_bit_;
+  Builder::Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
+  for ( const Builder::Maze::Point& p : all_directions_ ) {
+    Builder::Maze::Point next = { finish.row + p.row, finish.col + p.col };
+    maze[next.row][next.col] |= Builder::Maze::path_bit_;
     flush_cursor_path_coordinate( maze, next );
   }
-  maze[finish.row][finish.col] |= Maze::path_bit_;
+  maze[finish.row][finish.col] |= Builder::Maze::path_bit_;
   maze[finish.row][finish.col] |= finish_bit_;
   flush_cursor_path_coordinate( maze, finish );
   set_cursor_point( { maze.row_size(), 0 } );

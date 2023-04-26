@@ -61,41 +61,41 @@ enum class Solver_speed
 
 /* * * * * * * * * * * * * * * * * * * *     Solving Algorithms      * * * * * * * * * * * * * * * * * * * * * * */
 
-void solve_with_dfs_thread_hunt( Maze& maze );
-void solve_with_dfs_thread_gather( Maze& maze );
-void solve_with_dfs_thread_corners( Maze& maze );
+void solve_with_dfs_thread_hunt( Builder::Maze& maze );
+void solve_with_dfs_thread_gather( Builder::Maze& maze );
+void solve_with_dfs_thread_corners( Builder::Maze& maze );
 
-void animate_with_dfs_thread_hunt( Maze& maze, Solver_speed speed );
-void animate_with_dfs_thread_gather( Maze& maze, Solver_speed speed );
-void animate_with_dfs_thread_corners( Maze& maze, Solver_speed speed );
+void animate_with_dfs_thread_hunt( Builder::Maze& maze, Solver_speed speed );
+void animate_with_dfs_thread_gather( Builder::Maze& maze, Solver_speed speed );
+void animate_with_dfs_thread_corners( Builder::Maze& maze, Solver_speed speed );
 
-void solve_with_randomized_dfs_thread_hunt( Maze& maze );
-void solve_with_randomized_dfs_thread_gather( Maze& maze );
-void solve_with_randomized_dfs_thread_corners( Maze& maze );
+void solve_with_randomized_dfs_thread_hunt( Builder::Maze& maze );
+void solve_with_randomized_dfs_thread_gather( Builder::Maze& maze );
+void solve_with_randomized_dfs_thread_corners( Builder::Maze& maze );
 
-void animate_with_randomized_dfs_thread_hunt( Maze& maze, Solver_speed speed );
-void animate_with_randomized_dfs_thread_gather( Maze& maze, Solver_speed speed );
-void animate_with_randomized_dfs_thread_corners( Maze& maze, Solver_speed speed );
+void animate_with_randomized_dfs_thread_hunt( Builder::Maze& maze, Solver_speed speed );
+void animate_with_randomized_dfs_thread_gather( Builder::Maze& maze, Solver_speed speed );
+void animate_with_randomized_dfs_thread_corners( Builder::Maze& maze, Solver_speed speed );
 
-void solve_with_bfs_thread_hunt( Maze& maze );
-void solve_with_bfs_thread_gather( Maze& maze );
-void solve_with_bfs_thread_corners( Maze& maze );
+void solve_with_bfs_thread_hunt( Builder::Maze& maze );
+void solve_with_bfs_thread_gather( Builder::Maze& maze );
+void solve_with_bfs_thread_corners( Builder::Maze& maze );
 
-void animate_with_bfs_thread_hunt( Maze& maze, Solver_speed speed );
-void animate_with_bfs_thread_gather( Maze& maze, Solver_speed speed );
-void animate_with_bfs_thread_corners( Maze& maze, Solver_speed speed );
+void animate_with_bfs_thread_hunt( Builder::Maze& maze, Solver_speed speed );
+void animate_with_bfs_thread_gather( Builder::Maze& maze, Solver_speed speed );
+void animate_with_bfs_thread_corners( Builder::Maze& maze, Solver_speed speed );
 
 /* * * * * * * * * * * * *   Generic Read-Only Helpers Available to All Solvers  * * * * * * * * * * * * * * * * */
 
-std::vector<Maze::Point> set_corner_starts( const Maze& maze );
-Maze::Point pick_random_point( const Maze& maze );
-Maze::Point find_nearest_square( const Maze& maze, const Maze::Point& choice );
+std::vector<Builder::Maze::Point> set_corner_starts( const Builder::Maze& maze );
+Builder::Maze::Point pick_random_point( const Builder::Maze& maze );
+Builder::Maze::Point find_nearest_square( const Builder::Maze& maze, const Builder::Maze::Point& choice );
 void clear_screen();
-void print_point( const Maze& maze, const Maze::Point& point );
-void print_maze( const Maze& maze );
-void flush_cursor_path_coordinate( const Maze& maze, const Maze::Point& point );
-void set_cursor_point( const Maze::Point& point );
-void clear_and_flush_paths( const Maze& maze );
+void print_point( const Builder::Maze& maze, const Builder::Maze::Point& point );
+void print_maze( const Builder::Maze& maze );
+void flush_cursor_path_coordinate( const Builder::Maze& maze, const Builder::Maze::Point& point );
+void set_cursor_point( const Builder::Maze::Point& point );
+void clear_and_flush_paths( const Builder::Maze& maze );
 void print_hunt_solution_message( std::optional<int> winning_index );
 void print_gather_solution_message();
 void print_overlap_key();
@@ -171,11 +171,11 @@ constexpr std::array<std::string_view, 16> thread_colors_ = {
   ansi_wit_,
 };
 // north, east, south, west
-constexpr std::array<Maze::Point, 4> cardinal_directions_ = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
+constexpr std::array<Builder::Maze::Point, 4> cardinal_directions_ = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
 // north, east, south, west
-constexpr std::array<Maze::Point, 4> generate_directions_ = { { { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
+constexpr std::array<Builder::Maze::Point, 4> generate_directions_ = { { { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
 // north, north-east, east, south-east, south, south-west, west, north-west
-constexpr std::array<Maze::Point, 7> all_directions_
+constexpr std::array<Builder::Maze::Point, 7> all_directions_
   = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };
 constexpr int overlap_key_and_message_height = 11;
 constexpr std::array<Speed_unit, 8> solver_speeds_ = { 0, 20000, 10000, 5000, 2000, 1000, 500, 250 };

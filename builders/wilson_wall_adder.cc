@@ -44,12 +44,12 @@ void join_walk_walls( Maze& maze, const Maze::Point& cur, const Maze::Point& nex
   }
   maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
   maze[next.row][next.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
-  maze.build_wall_line( cur.row, cur.col );
-  maze.build_wall_line( wall.row, wall.col );
-  maze.build_wall_line( next.row, next.col );
+  build_wall_line( maze, cur );
+  build_wall_line( maze, wall );
+  build_wall_line( maze, next );
 }
 
-void animate_walk_walls( Maze& maze, const Maze::Point& cur, const Maze::Point& next )
+void animate_walk_walls( Maze& maze, const Maze::Point& cur, const Maze::Point& next, Speed_unit speed )
 {
   Maze::Point wall = cur;
   if ( next.row < cur.row ) {
@@ -66,9 +66,9 @@ void animate_walk_walls( Maze& maze, const Maze::Point& cur, const Maze::Point& 
   }
   maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
   maze[next.row][next.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
-  maze.build_wall_line_animated( cur.row, cur.col );
-  maze.build_wall_line_animated( wall.row, wall.col );
-  maze.build_wall_line_animated( next.row, next.col );
+  build_wall_line_animated( maze, cur, speed );
+  build_wall_line_animated( maze, wall, speed );
+  build_wall_line_animated( maze, next, speed );
 }
 
 void connect_walk_to_maze ( Maze& maze, const Maze::Point& walk )
@@ -86,10 +86,10 @@ void connect_walk_to_maze ( Maze& maze, const Maze::Point& walk )
   }
   maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
   maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::markers_mask_ );
-  maze.build_wall_line( cur.row, cur.col );
+  build_wall_line( maze, cur );
 }
 
-void animate_walk_to_maze( Maze& maze, const Maze::Point& walk )
+void animate_walk_to_maze( Maze& maze, const Maze::Point& walk, Speed_unit speed )
 {
   Maze::Point cur = walk;
   while ( maze[cur.row][cur.col] & Maze::markers_mask_ ) {
@@ -97,16 +97,16 @@ void animate_walk_to_maze( Maze& maze, const Maze::Point& walk )
       = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
     Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
-    animate_walk_walls( maze, cur, next );
+    animate_walk_walls( maze, cur, next, speed );
     // Clean up after ourselves and leave no marks behind for the maze solvers.
     maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
-    maze.flush_cursor_maze_coordinate( cur.row, cur.col );
-    std::this_thread::sleep_for( std::chrono::microseconds( maze.build_speed() ) );
+    flush_cursor_maze_coordinate( maze, cur );
+    std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
     cur = next;
   }
   maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
   maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::markers_mask_ );
-  maze.build_wall_line_animated( cur.row, cur.col );
+  build_wall_line_animated( maze, cur, speed );
 }
 
 void erase_loop( Maze& maze, const Loop& loop )
@@ -123,7 +123,7 @@ void erase_loop( Maze& maze, const Loop& loop )
   }
 }
 
-void animate_erase_loop( Maze& maze, const Loop& loop )
+void animate_erase_loop( Maze& maze, const Loop& loop, Speed_unit speed )
 {
   Maze::Point cur = loop.walk;
   while ( cur != loop.root ) {
@@ -133,18 +133,18 @@ void animate_erase_loop( Maze& maze, const Loop& loop )
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
     Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
     maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker> ( ~Maze::markers_mask_ );
-    maze.flush_cursor_maze_coordinate( cur.row, cur.col );
-    std::this_thread::sleep_for( std::chrono::microseconds( maze.build_speed() ) );
+    flush_cursor_maze_coordinate( maze, cur );
+    std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
     cur = next;
   }
 }
 
 bool continue_random_walks( Maze& maze, Random_walk& cur )
 {
-  if ( maze.has_builder_bit( cur.next ) ) {
+  if ( has_builder_bit( maze, cur.next ) ) {
     join_walk_walls( maze, cur.walk, cur.next );
     connect_walk_to_maze( maze, cur.walk );
-    cur.walk = maze.choose_arbitrary_point( Maze::Parity_point::even );
+    cur.walk = choose_arbitrary_point( maze, Parity_point::even );
 
     if ( !cur.walk.row ) {
       return false;
@@ -166,18 +166,18 @@ bool continue_random_walks( Maze& maze, Random_walk& cur )
     return true;
   }
 
-  maze.mark_origin( cur.walk, cur.next );
+  mark_origin( maze, cur.walk, cur.next );
   cur.prev = cur.walk;
   cur.walk = cur.next;
   return true;
 };
 
-bool animate_random_walks( Maze& maze, Random_walk& cur )
+bool animate_random_walks( Maze& maze, Random_walk& cur, Speed_unit speed )
 {
-  if ( maze.has_builder_bit( cur.next ) ) {
-    animate_walk_walls( maze, cur.walk, cur.next );
-    animate_walk_to_maze( maze, cur.walk );
-    cur.walk = maze.choose_arbitrary_point( Maze::Parity_point::even );
+  if ( has_builder_bit( maze, cur.next ) ) {
+    animate_walk_walls( maze, cur.walk, cur.next, speed );
+    animate_walk_to_maze( maze, cur.walk, speed );
+    cur.walk = choose_arbitrary_point( maze, Parity_point::even );
 
     if ( !cur.walk.row ) {
       return false;
@@ -188,7 +188,7 @@ bool animate_random_walks( Maze& maze, Random_walk& cur )
     return true;
   }
   if ( maze[cur.next.row][cur.next.col] & Maze::start_bit_ ) {
-    animate_erase_loop( maze, { cur.walk, cur.next } );
+    animate_erase_loop( maze, { cur.walk, cur.next }, speed );
     cur.walk = cur.next;
     cur.prev = {};
     Maze::Backtrack_marker mark
@@ -197,7 +197,7 @@ bool animate_random_walks( Maze& maze, Random_walk& cur )
     cur.prev = { cur.walk.row + direction.row, cur.walk.col + direction.col };
     return true;
   }
-  maze.mark_origin_animated( cur.walk, cur.next );
+  mark_origin_animated( maze, cur.walk, cur.next, speed );
   cur.prev = cur.walk;
   cur.walk = cur.next;
   return true;
@@ -209,7 +209,7 @@ bool animate_random_walks( Maze& maze, Random_walk& cur )
 
 void generate_wilson_wall_adder_maze( Maze& maze )
 {
-  maze.build_wall_outline();
+  build_wall_outline( maze );
   // Walls must start and connect between even squares.
   std::mt19937 generator( std::random_device{}() );
   std::uniform_int_distribution<int> row_rand( 2, maze.row_size() - 2 );
@@ -237,9 +237,10 @@ void generate_wilson_wall_adder_maze( Maze& maze )
 
 }
 
-void animate_wilson_wall_adder_maze( Maze& maze )
+void animate_wilson_wall_adder_maze( Maze& maze, Builder_speed speed )
 {
-  maze.build_wall_outline();
+  Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  build_wall_outline( maze );
   std::mt19937 generator( std::random_device{}() );
   std::uniform_int_distribution<int> row_rand( 2, maze.row_size() - 2 );
   std::uniform_int_distribution<int> col_rand( 2, maze.col_size() - 2 );
@@ -258,7 +259,7 @@ void animate_wilson_wall_adder_maze( Maze& maze )
       if ( !is_valid_walk_step( maze, cur.next, cur.prev ) ) {
         continue;
       }
-      if ( !animate_random_walks( maze, cur ) ) {
+      if ( !animate_random_walks( maze, cur, animation ) ) {
         return;
       }
       break;

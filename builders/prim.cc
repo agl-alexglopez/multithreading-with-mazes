@@ -52,7 +52,7 @@ std::unordered_map<Maze::Point, int> randomize_cell_costs( Maze& maze )
 
 void generate_prim_maze( Maze& maze )
 {
-  maze.fill_maze_with_walls();
+  fill_maze_with_walls( maze );
   std::unordered_map<Maze::Point, int> cell_cost = randomize_cell_costs( maze );
   Maze::Point odd_point = pick_random_odd_point( maze );
   Priority_cell start = { odd_point, cell_cost[odd_point] };
@@ -65,7 +65,7 @@ void generate_prim_maze( Maze& maze )
     int min_weight = INT_MAX;
     for ( const Maze::Point& p : Maze::generate_directions_ ) {
       Maze::Point next = { cur.row + p.row, cur.col + p.col };
-      if ( maze.can_build_new_square( next ) ) {
+      if ( can_build_new_square( maze, next ) ) {
         int weight = cell_cost[next];
         if ( weight < min_weight ) {
           min_weight = weight;
@@ -74,7 +74,7 @@ void generate_prim_maze( Maze& maze )
       }
     }
     if ( min_neighbor.row ) {
-      maze.join_squares( cur, min_neighbor );
+      join_squares( maze, cur, min_neighbor );
       cells.push( { min_neighbor, min_weight } );
     } else {
       cells.pop();
@@ -82,9 +82,10 @@ void generate_prim_maze( Maze& maze )
   }
 }
 
-void animate_prim_maze( Maze& maze )
+void animate_prim_maze( Maze& maze, Builder_speed speed )
 {
-  maze.fill_maze_with_walls_animated();
+  const Speed_unit animation_speed = builder_speeds_.at( static_cast<int>( speed ) );
+  fill_maze_with_walls_animated( maze );
   std::unordered_map<Maze::Point, int> cell_cost = randomize_cell_costs( maze );
   Maze::Point odd_point = pick_random_odd_point( maze );
   Priority_cell start = { odd_point, cell_cost[odd_point] };
@@ -97,7 +98,7 @@ void animate_prim_maze( Maze& maze )
     int min_weight = INT_MAX;
     for ( const Maze::Point& p : Maze::generate_directions_ ) {
       Maze::Point next = { cur.row + p.row, cur.col + p.col };
-      if ( maze.can_build_new_square( next ) ) {
+      if ( can_build_new_square( maze, next ) ) {
         int weight = cell_cost[next];
         if ( weight < min_weight ) {
           min_weight = weight;
@@ -106,7 +107,7 @@ void animate_prim_maze( Maze& maze )
       }
     }
     if ( min_neighbor.row ) {
-      maze.join_squares_animated( cur, min_neighbor );
+      join_squares_animated( maze, cur, min_neighbor, animation_speed );
       cells.push( { min_neighbor, min_weight } );
     } else {
       cells.pop();

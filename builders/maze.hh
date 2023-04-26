@@ -34,37 +34,18 @@ public:
     spikes,
   };
 
-  enum class Builder_speed
-  {
-    instant = 0,
-    speed_1,
-    speed_2,
-    speed_3,
-    speed_4,
-    speed_5,
-    speed_6,
-    speed_7,
-  };
-
   struct Point
   {
     int row;
     int col;
   };
 
-  enum class Parity_point
-  {
-    even,
-    odd,
-  };
 
   struct Maze_args
   {
     uint64_t odd_rows = 31;
     uint64_t odd_cols = 111;
-    Maze_modification modification = Maze_modification::none;
     Maze_style style = Maze_style::sharp;
-    Builder_speed builder_speed = Builder_speed::instant;
   };
 
   /* Here is the scheme we will use to store tons of data in a square.
@@ -113,7 +94,6 @@ public:
   using Square = uint16_t;
   using Wall_line = uint16_t;
   using Backtrack_marker = uint16_t;
-  using Animation_speed = int;
 
   explicit Maze(const Maze_args& args);
 
@@ -121,52 +101,10 @@ public:
   const std::vector<Square>& operator[]( uint64_t index ) const;
   int row_size() const;
   int col_size() const;
-  Animation_speed build_speed() const;
-  void add_positive_slope( int row, int col );
-  void add_positive_slope_animated( int row, int col );
-  void add_negative_slope( int row, int col );
-  void add_negative_slope_animated( int row, int col );
-  void build_wall_line( int row, int col );
-  void build_wall_line_animated( int row, int col );
-  void carve_path_walls( int row, int col );
-  void carve_path_walls_animated( int row, int col );
-  void carve_path_markings( const Point& cur, const Point& next );
-  void carve_path_markings_animated( const Point& cur, const Point& next );
-  void build_wall_outline();
-  void fill_maze_with_walls();
-  void fill_maze_with_walls_animated();
-  void add_modification( int row, int col );
-  void add_modification_animated( int row, int col );
-  void join_squares( const Point& cur, const Point& next );
-  void join_squares_animated( const Point& cur, const Point& next );
-  void mark_origin( const Point& walk, const Point& next );
-  void mark_origin_animated( const Point& walk, const Point& next );
-  void build_path( int row, int col );
-  void build_path_animated( int row, int col );
-  void build_wall( int row, int col );
-  void build_wall_carefully( int row, int col );
-  Point find_nearest_square( Point choice );
-  Point choose_arbitrary_point( Parity_point parity ) const;
-  void clear_and_flush_grid() const;
-  void clear_for_wall_adders();
-  void flush_cursor_maze_coordinate( int row, int col ) const;
-  void print_square( int row, int col ) const;
-  void print_maze() const;
-  void print_maze_square( int row, int col ) const;
-  bool can_build_new_square( const Point& next ) const;
-  bool has_builder_bit( const Point& next ) const;
-  bool is_square_within_perimeter_walls( const Point& next ) const;
-
-  static void clear_screen();
-  static void set_cursor_position( int row, int col );
-
-
+  const std::array<std::string_view,16>& wall_style() const;
 
   static constexpr Square path_bit_ = 0b0010'0000'0000'0000;
   static constexpr Square clear_available_bits_ = 0b0001'1111'1111'0000;
-
-
-
   static constexpr Square start_bit_ = 0b0100'0000'0000'0000;
   static constexpr Square builder_bit_ = 0b0001'0000'0000'0000;
   static constexpr int marker_shift_ = 4;
@@ -203,9 +141,10 @@ public:
    * 0b0011 as, "this is a wall square that must connect to other walls to the East and North."
    */
   static constexpr std::array<const std::array<std::string_view, 16>, 6> wall_styles_ = { {
-    { // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall with no walls around.
+      // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall with no walls around.
       // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
       // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
+    {
       "■",
       "╵",
       "╶",
@@ -318,16 +257,13 @@ public:
   static constexpr std::array<Point, 7> all_directions_
     = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };
 
-  static constexpr std::array<Animation_speed, 8> builder_speeds_ = { 0, 5000, 2500, 1000, 500, 250, 100, 1 };
 
 private:
 
   const int maze_row_size_;
   const int maze_col_size_;
   std::vector<std::vector<Square>> maze_;
-  const int builder_speed_units_;
   const int wall_style_index_;
-  const Maze_modification modification_;
 
 };
 

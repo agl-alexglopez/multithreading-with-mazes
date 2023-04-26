@@ -27,7 +27,7 @@ int random_odd_passage( std::mt19937& generator, int axis_limit )
 } // namespace
 
 void generate_recursive_subdivision_maze( Maze& maze ) {
-  maze.build_wall_outline();
+  build_wall_outline( maze );
   std::mt19937 generator( std::random_device {} () );
   std::stack<std::tuple<Maze::Point, Height, Width>>
   chamber_stack( { { { 0, 0 }, maze.row_size(), maze.col_size() } } );
@@ -42,7 +42,7 @@ void generate_recursive_subdivision_maze( Maze& maze ) {
       for ( int col = 0; col < chamber_width; col++ ) {
         if ( col != passage ) {
           maze[chamber_offset.row + divide][chamber_offset.col + col] &= static_cast<Maze::Square>( ~Maze::path_bit_ );
-          maze.build_wall_line( chamber_offset.row + divide, chamber_offset.col + col );
+          build_wall_line( maze, { chamber_offset.row + divide, chamber_offset.col + col } );
         }
       }
       // Remember to shrink height of this branch before we continue down next branch.
@@ -55,7 +55,7 @@ void generate_recursive_subdivision_maze( Maze& maze ) {
       for ( int row = 0; row < chamber_height; row++ ) {
         if ( row != passage ) {
           maze[chamber_offset.row + row][chamber_offset.col + divide] &= static_cast<Maze::Square>( ~Maze::path_bit_ );
-          maze.build_wall_line( chamber_offset.row + row, chamber_offset.col + divide );
+          build_wall_line( maze, { chamber_offset.row + row, chamber_offset.col + divide } );
         }
       }
       // In this case, we are shrinking the width.
@@ -68,8 +68,9 @@ void generate_recursive_subdivision_maze( Maze& maze ) {
   }
 }
 
-void animate_recursive_subdivision_maze( Maze& maze ) {
-  maze.build_wall_outline();
+void animate_recursive_subdivision_maze( Maze& maze, Builder_speed speed ) {
+  Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  build_wall_outline( maze );
   std::mt19937 generator( std::random_device {} () );
   std::stack<std::tuple<Maze::Point, Height, Width>>
   chamber_stack( { { { 0, 0 }, maze.row_size(), maze.col_size() } } );
@@ -84,7 +85,7 @@ void animate_recursive_subdivision_maze( Maze& maze ) {
       for ( int col = 0; col < chamber_width; col++ ) {
         if ( col != passage ) {
           maze[chamber_offset.row + divide][chamber_offset.col + col] &= static_cast<Maze::Square>( ~Maze::path_bit_ );
-          maze.build_wall_line_animated( chamber_offset.row + divide, chamber_offset.col + col );
+          build_wall_line_animated( maze, { chamber_offset.row + divide, chamber_offset.col + col }, animation );
         }
       }
       std::get<1>( chamber ) = divide + 1;
@@ -96,7 +97,7 @@ void animate_recursive_subdivision_maze( Maze& maze ) {
       for ( int row = 0; row < chamber_height; row++ ) {
         if ( row != passage ) {
           maze[chamber_offset.row + row][chamber_offset.col + divide] &= static_cast<Maze::Square>( ~Maze::path_bit_ );
-          maze.build_wall_line_animated( chamber_offset.row + row, chamber_offset.col + divide );
+          build_wall_line_animated( maze, { chamber_offset.row + row, chamber_offset.col + divide }, animation );
         }
       }
       std::get<2>( chamber ) = divide + 1;

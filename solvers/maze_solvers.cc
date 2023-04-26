@@ -6,53 +6,53 @@ namespace Solver {
 
 namespace {
 
-bool is_valid_start_or_finish( const Maze& maze, const Maze::Point& choice )
+bool is_valid_start_or_finish( const Builder::Maze& maze, const Builder::Maze::Point& choice )
 {
   return choice.row > 0 && choice.row < maze.row_size() - 1 && choice.col > 0 && choice.col < maze.col_size() - 1
-    && maze[choice.row][choice.col] & Maze::path_bit_ &&  !( maze[choice.row][choice.col] & finish_bit_ )
+    && maze[choice.row][choice.col] & Builder::Maze::path_bit_ &&  !( maze[choice.row][choice.col] & finish_bit_ )
       && ! (maze[choice.row][choice.col] & start_bit_ );
 }
 
 } // namespace
 
-std::vector<Maze::Point> set_corner_starts( const Maze& maze )
+std::vector<Builder::Maze::Point> set_corner_starts( const Builder::Maze& maze )
 {
-  Maze::Point point1 = { 1, 1 };
-  if ( !( maze[point1.row][point1.col] & Maze::path_bit_ ) ) {
+  Builder::Maze::Point point1 = { 1, 1 };
+  if ( !( maze[point1.row][point1.col] & Builder::Maze::path_bit_ ) ) {
     point1 = find_nearest_square( maze, point1 );
   }
-  Maze::Point point2 = { 1, maze.col_size() - 2 };
-  if ( !( maze[point2.row][point2.col] & Maze::path_bit_ ) ) {
+  Builder::Maze::Point point2 = { 1, maze.col_size() - 2 };
+  if ( !( maze[point2.row][point2.col] & Builder::Maze::path_bit_ ) ) {
     point2 = find_nearest_square( maze, point2 );
   }
-  Maze::Point point3 = { maze.row_size() - 2, 1 };
-  if ( !( maze[point3.row][point3.col] & Maze::path_bit_ ) ) {
+  Builder::Maze::Point point3 = { maze.row_size() - 2, 1 };
+  if ( !( maze[point3.row][point3.col] & Builder::Maze::path_bit_ ) ) {
     point3 = find_nearest_square( maze, point3 );
   }
-  Maze::Point point4 = { maze.row_size() - 2, maze.col_size() - 2 };
-  if ( !( maze[point4.row][point4.col] & Maze::path_bit_ ) ) {
+  Builder::Maze::Point point4 = { maze.row_size() - 2, maze.col_size() - 2 };
+  if ( !( maze[point4.row][point4.col] & Builder::Maze::path_bit_ ) ) {
     point4 = find_nearest_square( maze, point4 );
   }
   return { point1, point2, point3, point4 };
 }
 
-Maze::Point pick_random_point( const Maze& maze )
+Builder::Maze::Point pick_random_point( const Builder::Maze& maze )
 {
   std::mt19937 generator( std::random_device{}() );
   std::uniform_int_distribution<int> row_random( 1, maze.row_size() - 2 );
   std::uniform_int_distribution<int> col_random( 1, maze.col_size() - 2 );
-  Maze::Point choice = { row_random( generator ), col_random( generator ) };
+  Builder::Maze::Point choice = { row_random( generator ), col_random( generator ) };
   if ( !is_valid_start_or_finish( maze, choice ) ) {
     choice = find_nearest_square( maze, choice );
   }
   return choice;
 }
 
-Maze::Point find_nearest_square( const Maze& maze, const Maze::Point& choice )
+Builder::Maze::Point find_nearest_square( const Builder::Maze& maze, const Builder::Maze::Point& choice )
 {
   // Fanning out from a starting point should work on any medium to large maze.
-  for ( const Maze::Point& p : all_directions_ ) {
-    Maze::Point next = { choice.row + p.row, choice.col + p.col };
+  for ( const Builder::Maze::Point& p : all_directions_ ) {
+    Builder::Maze::Point next = { choice.row + p.row, choice.col + p.col };
     if ( is_valid_start_or_finish( maze, next ) ) {
       return next;
     }
@@ -71,7 +71,7 @@ Maze::Point find_nearest_square( const Maze& maze, const Maze::Point& choice )
   std::abort();
 }
 
-void clear_and_flush_paths( const Maze& maze )
+void clear_and_flush_paths( const Builder::Maze& maze )
 {
   clear_screen();
   print_maze( maze );
@@ -82,7 +82,7 @@ void clear_screen()
   std::cout << ansi_clear_screen_;
 }
 
-void print_maze( const Maze& maze )
+void print_maze( const Builder::Maze& maze )
 {
   for ( int row = 0; row < maze.row_size(); row++ ) {
     for ( int col = 0; col < maze.col_size(); col++ ) {
@@ -93,16 +93,16 @@ void print_maze( const Maze& maze )
   std::cout << std::flush;
 }
 
-void flush_cursor_path_coordinate( const Maze& maze, const Maze::Point& point )
+void flush_cursor_path_coordinate( const Builder::Maze& maze, const Builder::Maze::Point& point )
 {
   set_cursor_point( point );
   print_point( maze, point );
   std::cout << std::flush;
 }
 
-void print_point( const Maze& maze, const Maze::Point& point )
+void print_point( const Builder::Maze& maze, const Builder::Maze::Point& point )
 {
-  const Maze::Square& square = maze[point.row][point.col];
+  const Builder::Maze::Square& square = maze[point.row][point.col];
   if ( square & finish_bit_ ) {
     std::cout << ansi_finish_;
   } else if ( square & start_bit_ ) {
@@ -115,7 +115,7 @@ void print_point( const Maze& maze, const Maze::Point& point )
   }
 }
 
-void set_cursor_point( const Maze::Point& point )
+void set_cursor_point( const Builder::Maze::Point& point )
 {
   std::string cursor_pos = "\033[" + std::to_string( point.row + 1 ) + ";" + std::to_string( point.col + 1 ) + "f";
   std::cout << cursor_pos;
