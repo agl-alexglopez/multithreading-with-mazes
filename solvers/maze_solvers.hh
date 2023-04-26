@@ -1,30 +1,12 @@
 #pragma once
+#include <optional>
 #ifndef MAZE_SOLVERS_HH
 #define MAZE_SOLVERS_HH
 #include "maze.hh"
 #include <array>
 #include <string_view>
 
-enum class Maze_game
-{
-  hunt,
-  gather,
-  corners,
-};
-
-enum class Solver_speed
-{
-  instant,
-  speed_1,
-  speed_2,
-  speed_3,
-  speed_4,
-  speed_5,
-  speed_6,
-  speed_7,
-};
-
-
+namespace Solver {
 
 /* The maze builder is responsible for zeroing out the direction bits as part of the
  * building process. When solving the maze we adjust how we use the middle bits.
@@ -49,16 +31,89 @@ enum class Solver_speed
  */
 using Thread_paint = uint16_t;
 using Thread_cache = uint16_t;
+using Speed_unit = int;
+
+struct Thread_id
+{
+  int index;
+  Thread_paint paint;
+};
+
+enum class Maze_game
+{
+  hunt,
+  gather,
+  corners,
+};
+
+enum class Solver_speed
+{
+  instant,
+  speed_1,
+  speed_2,
+  speed_3,
+  speed_4,
+  speed_5,
+  speed_6,
+  speed_7,
+};
+
+
+/* * * * * * * * * * * * * * * * * * * *     Solving Algorithms      * * * * * * * * * * * * * * * * * * * * * * */
+
+void solve_with_dfs_thread_hunt( Maze& maze );
+void solve_with_dfs_thread_gather( Maze& maze );
+void solve_with_dfs_thread_corners( Maze& maze );
+
+void animate_with_dfs_thread_hunt( Maze& maze, Solver_speed speed );
+void animate_with_dfs_thread_gather( Maze& maze, Solver_speed speed );
+void animate_with_dfs_thread_corners( Maze& maze, Solver_speed speed );
+
+void solve_with_randomized_dfs_thread_hunt( Maze& maze );
+void solve_with_randomized_dfs_thread_gather( Maze& maze );
+void solve_with_randomized_dfs_thread_corners( Maze& maze );
+
+void animate_with_randomized_dfs_thread_hunt( Maze& maze, Solver_speed speed );
+void animate_with_randomized_dfs_thread_gather( Maze& maze, Solver_speed speed );
+void animate_with_randomized_dfs_thread_corners( Maze& maze, Solver_speed speed );
+
+void solve_with_bfs_thread_hunt( Maze& maze );
+void solve_with_bfs_thread_gather( Maze& maze );
+void solve_with_bfs_thread_corners( Maze& maze );
+
+void animate_with_bfs_thread_hunt( Maze& maze, Solver_speed speed );
+void animate_with_bfs_thread_gather( Maze& maze, Solver_speed speed );
+void animate_with_bfs_thread_corners( Maze& maze, Solver_speed speed );
+
+/* * * * * * * * * * * * *   Generic Read-Only Helpers Available to All Solvers  * * * * * * * * * * * * * * * * */
+
+std::vector<Maze::Point> set_corner_starts( const Maze& maze );
+Maze::Point pick_random_point( const Maze& maze );
+Maze::Point find_nearest_square( const Maze& maze, const Maze::Point& choice );
+void clear_screen();
+void print_point( const Maze& maze, const Maze::Point& point );
+void print_maze( const Maze& maze );
+void flush_cursor_path_coordinate( const Maze& maze, const Maze::Point& point );
+void set_cursor_point( const Maze::Point& point );
+void clear_and_flush_paths( const Maze& maze );
+void print_hunt_solution_message( std::optional<int> winning_index );
+void print_gather_solution_message();
+void print_overlap_key();
+
+/* * * * * * * * * * * * *     Helpful Read-Only Data Available to All Solvers   * * * * * * * * * * * * * * * * */
 
 constexpr Thread_paint start_bit_ = 0b0100'0000'0000'0000;
 constexpr Thread_paint finish_bit_ = 0b1000'0000'0000'0000;
 constexpr int num_threads_ = 4;
 constexpr Thread_paint thread_tag_offset_ = 4;
+constexpr int num_gather_finishes_ = 4;
+constexpr int initial_path_len_ = 1024;
 constexpr Thread_paint thread_mask_ = 0b1111'0000;
 constexpr Thread_paint zero_thread_ = 0b0001'0000;
 constexpr Thread_paint one_thread_ = 0b0010'0000;
 constexpr Thread_paint two_thread_ = 0b0100'0000;
 constexpr Thread_paint three_thread_ = 0b1000'0000;
+constexpr Thread_paint error_thread_ = 0b0000'0000;
 constexpr std::array<Thread_paint, 4> thread_masks_
   = { zero_thread_, one_thread_, two_thread_, three_thread_ };
 
@@ -89,10 +144,12 @@ constexpr std::string_view ansi_red_blu_prp_ = "\033[38;5;89m█\033[0m";
 constexpr std::string_view ansi_dark_blu_mag_ = "\033[38;5;57m█\033[0m";
 constexpr std::string_view ansi_bold_ = "\033[1m";
 constexpr std::string_view ansi_nil_ = "\033[0m";
+constexpr std::string_view ansi_no_solution_ = "\033[38;5;15m\033[255;0;0m╳\033[0m";
 constexpr std::string_view ansi_finish_ = "\033[1m\033[38;5;87mF\033[0m";
 constexpr std::string_view ansi_start_ = "\033[1m\033[38;5;87mS\033[0m";
+constexpr Thread_paint all_threads_failed_index_ = 0;
 constexpr std::array<std::string_view, 16> thread_colors_ = {
-  ansi_nil_,
+  ansi_no_solution_,
   // Threads Overlaps. The zero thread is the zero index bit with a value of 1.
   // 0b0001   0b0010     0b0011     0b0100     0b0101     0b0110        0b0111
   ansi_red_,
@@ -121,8 +178,8 @@ constexpr std::array<Maze::Point, 4> generate_directions_ = { { { -2, 0 }, { 0, 
 constexpr std::array<Maze::Point, 7> all_directions_
   = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };
 constexpr int overlap_key_and_message_height = 11;
-constexpr std::array<int, 8> solver_speeds_ = { 0, 20000, 10000, 5000, 2000, 1000, 500, 250 };
+constexpr std::array<Speed_unit, 8> solver_speeds_ = { 0, 20000, 10000, 5000, 2000, 1000, 500, 250 };
 
-void print_overlap_key();
+} // namespace Solver
 
 #endif
