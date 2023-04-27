@@ -18,11 +18,11 @@ class My_queue
 {
 
 public:
-  My_queue() : elems_(initial_size_), allocated_size_( initial_size_ ) {}
+  My_queue() : elems_( initial_size_ ), allocated_size_( initial_size_ ) {}
 
   void reserve( size_t capacity )
   {
-    elems_ = std::vector<Value_type>(capacity);
+    elems_ = std::vector<Value_type>( capacity );
     allocated_size_ = capacity;
     logical_size_ = 0;
     front_ = 0;

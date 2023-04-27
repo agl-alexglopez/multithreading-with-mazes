@@ -47,5 +47,5 @@ bool Disjoint_set::made_union( uint64_t a, uint64_t b )
 
 bool Disjoint_set::is_union_no_merge( uint64_t a, uint64_t b )
 {
-  return find( a ) == find ( b );
+  return find( a ) == find( b );
 }

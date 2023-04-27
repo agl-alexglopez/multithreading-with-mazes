@@ -109,38 +109,58 @@ void add_negative_slope_animated( Maze& maze, const Maze::Point& p, Speed_unit s
   }
 }
 
-void add_cross( Maze& maze, const Maze::Point& p )
+void add_cross( Maze& maze )
 {
-  if ( ( p.row == maze.row_size() / 2 && p.col > 1 && p.col < maze.col_size() - 2 )
-       || ( p.col == maze.col_size() / 2 && p.row > 1 && p.row < maze.row_size() - 2 ) ) {
-    build_path( maze, p );
-    if ( p.col + 1 < maze.col_size() - 2 ) {
-      build_path( maze, { p.row, p.col + 1 } );
+  for ( int row = 0; row < maze.row_size(); row++ ) {
+    for ( int col = 0; col < maze.col_size(); col++ ) {
+      if ( ( row == maze.row_size() / 2 && col > 1 && col < maze.col_size() - 2 )
+           || ( col == maze.col_size() / 2 && row > 1 && row < maze.row_size() - 2 ) ) {
+        build_path( maze, { row, col } );
+        if ( col + 1 < maze.col_size() - 2 ) {
+          build_path( maze, { row, col + 1 } );
+        }
+      }
     }
   }
 }
 
-void add_cross_animated( Maze& maze, const Maze::Point& p, Speed_unit speed )
+void add_cross_animated( Maze& maze, Builder_speed speed )
 {
-  if ( ( p.row == maze.row_size() / 2 && p.col > 1 && p.col < maze.col_size() - 2 )
-       || ( p.col == maze.col_size() / 2 && p.row > 1 && p.row < maze.row_size() - 2 ) ) {
-    build_path_animated( maze, p, speed );
-    if ( p.col + 1 < maze.col_size() - 2 ) {
-      build_path_animated( maze, { p.row, p.col + 1 }, speed );
+  clear_and_flush_grid( maze );
+  const Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  for ( int row = 1; row < maze.row_size() - 1; row++ ) {
+    for ( int col = 1; col < maze.col_size() - 1; col++ ) {
+      if ( ( row == maze.row_size() / 2 && col > 1 && col < maze.col_size() - 2 )
+           || ( col == maze.col_size() / 2 && row > 1 && row < maze.row_size() - 2 ) ) {
+        build_path_animated( maze, { row, col }, animation );
+        if ( col + 1 < maze.col_size() - 2 ) {
+          build_path_animated( maze, { row, col + 1 }, animation );
+        }
+      }
     }
   }
 }
 
-void add_x( Maze& maze, const Maze::Point& p )
+void add_x( Maze& maze )
 {
-  add_positive_slope( maze, p );
-  add_negative_slope( maze, p );
+  for ( int row = 1; row < maze.row_size() - 1; row++ ) {
+    for ( int col = 1; col < maze.col_size() - 1; col++ ) {
+      add_positive_slope( maze, { row, col } );
+      add_negative_slope( maze, { row, col } );
+    }
+  }
 }
 
-void add_x_animated( Maze& maze, const Maze::Point& p, Speed_unit speed )
+void add_x_animated( Maze& maze, Builder_speed speed )
 {
-  add_positive_slope_animated( maze, p, speed );
-  add_negative_slope_animated( maze, p, speed );
+  clear_and_flush_grid( maze );
+  const Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  for ( int row = 1; row < maze.row_size() - 1; row++ ) {
+    for ( int col = 1; col < maze.col_size() - 1; col++ ) {
+      add_positive_slope_animated( maze, { row, col }, animation );
+      add_negative_slope_animated( maze, { row, col }, animation );
+    }
+  }
 }
 
 void build_wall_outline( Maze& maze )

@@ -76,7 +76,8 @@ void connect_walk_to_maze( Maze& maze, const Maze::Point& walk )
 {
   Maze::Point cur = walk;
   while ( maze[cur.row][cur.col] & Maze::markers_mask_ ) {
-    const Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+    const Maze::Backtrack_marker mark
+      = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
     const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
     build_with_marks( maze, cur, next );
@@ -93,7 +94,8 @@ void animate_walk_to_maze( Maze& maze, const Maze::Point& walk, Speed_unit speed
 {
   Maze::Point cur = walk;
   while ( maze[cur.row][cur.col] & Maze::markers_mask_ ) {
-    const Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+    const Maze::Backtrack_marker mark
+      = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
     const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
     animate_with_marks( maze, cur, next, speed );
@@ -115,7 +117,8 @@ void erase_loop( Maze& maze, const Loop& loop )
   Maze::Point cur = loop.walk;
   while ( cur != loop.root ) {
     maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
-    const Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+    const Maze::Backtrack_marker mark
+      = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
     const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
     maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
@@ -128,7 +131,8 @@ void animate_erase_loop( Maze& maze, const Loop& loop, Speed_unit speed )
   Maze::Point cur = loop.walk;
   while ( cur != loop.root ) {
     maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
-    const Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+    const Maze::Backtrack_marker mark
+      = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
     const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
     maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::markers_mask_ );

@@ -6,6 +6,7 @@
 #include <array>
 #include <functional>
 #include <iostream>
+#include <optional>
 #include <span>
 #include <string_view>
 #include <tuple>
@@ -14,8 +15,26 @@
 #include <unordered_set>
 #include <vector>
 
-constexpr int get_static = 0;
-constexpr int get_animated = 1;
+using Build_choice = std::tuple<std::function<void( Builder::Maze& )>,
+                                std::function<void( Builder::Maze&, Builder::Builder_speed )>>;
+
+using Solve_choice
+  = std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Solver::Solver_speed )>>;
+
+using Builder_storage = std::unordered_map<
+  std::string,
+  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Builder::Builder_speed )>>>;
+
+using Modder_storage = std::unordered_map<
+  std::string,
+  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Builder::Builder_speed )>>>;
+
+using Solver_storage = std::unordered_map<
+  std::string,
+  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Solver::Solver_speed )>>>;
+
+constexpr int static_image = 0;
+constexpr int animated_playback = 1;
 
 struct Flag_arg
 {
@@ -27,30 +46,26 @@ struct Maze_runner
 {
   Builder::Maze::Maze_args args;
 
-  int builder_getter { get_static };
+  int builder_view { static_image };
   Builder::Builder_speed builder_speed {};
-  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Builder::Builder_speed )>>
-    builder { Builder::generate_recursive_backtracker_maze, Builder::animate_recursive_backtracker_maze };
+  Build_choice builder { Builder::generate_recursive_backtracker_maze,
+                         Builder::animate_recursive_backtracker_maze };
 
-  int solver_getter { get_static };
+  int modification_getter { static_image };
+  std::optional<Build_choice> modder {};
+
+  int solver_view { static_image };
   Solver::Solver_speed solver_speed {};
-  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Solver::Solver_speed )>>
-    solver { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt };
+  Solve_choice solver { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt };
   Maze_runner() : args {} {}
 };
 
 struct Lookup_tables
 {
   const std::unordered_set<std::string> argument_flags;
-  const std::unordered_map<std::string,
-                           std::tuple<std::function<void( Builder::Maze& )>,
-                                      std::function<void( Builder::Maze&, Builder::Builder_speed )>>>
-    builder_table;
-  const std::unordered_map<std::string, Builder::Maze::Maze_modification> modification_table;
-  const std::unordered_map<
-    std::string,
-    std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Solver::Solver_speed )>>>
-    solver_table;
+  const Builder_storage builder_table;
+  const Modder_storage modification_table;
+  const Solver_storage solver_table;
   const std::unordered_map<std::string, Builder::Maze::Maze_style> style_table;
   const std::unordered_map<std::string, Solver::Solver_speed> solver_animation_table;
   const std::unordered_map<std::string, Builder::Builder_speed> builder_animation_table;
@@ -77,9 +92,8 @@ int main( int argc, char** argv )
       { "arena", { Builder::generate_arena, Builder::animate_arena } },
     },
     {
-      { "none", Builder::Maze::Maze_modification::none },
-      { "cross", Builder::Maze::Maze_modification::add_cross },
-      { "x", Builder::Maze::Maze_modification::add_x },
+      { "cross", { Builder::add_cross, Builder::add_cross_animated } },
+      { "x", { Builder::add_x, Builder::add_x_animated } },
     },
     {
       { "dfs-hunt", { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt } },
@@ -153,16 +167,25 @@ int main( int argc, char** argv )
   }
 
   Builder::Maze maze( runner.args );
-  if ( runner.builder_getter == get_animated ) {
-    std::get<get_animated>( runner.builder )( maze, runner.builder_speed );
+
+  // We have stored functions in our maze runner. Run them with the tuple get syntax.
+
+  if ( runner.builder_view == animated_playback ) {
+    std::get<animated_playback>( runner.builder )( maze, runner.builder_speed );
+    if ( runner.modder ) {
+      std::get<animated_playback>( runner.modder.value() )( maze, runner.builder_speed );
+    }
   } else {
-    std::get<get_static>( runner.builder )( maze );
+    std::get<static_image>( runner.builder )( maze );
+    if ( runner.modder ) {
+      std::get<static_image>( runner.modder.value() )( maze );
+    }
   }
 
-  if ( runner.solver_getter == get_animated ) {
-    std::get<get_animated>( runner.solver )( maze, runner.solver_speed );
+  if ( runner.solver_view == animated_playback ) {
+    std::get<animated_playback>( runner.solver )( maze, runner.solver_speed );
   } else {
-    std::get<get_static>( runner.solver )( maze );
+    std::get<static_image>( runner.solver )( maze );
   }
   return 0;
 }
@@ -186,7 +209,11 @@ void set_relevant_arg( const Lookup_tables& tables, Maze_runner& runner, const F
     return;
   }
   if ( pairs.flag == "-m" ) {
-    // todo
+    const auto found = tables.modification_table.find( pairs.arg.data() );
+    if ( found == tables.modification_table.end() ) {
+      print_invalid_arg( pairs.arg );
+    }
+    runner.modder = found->second;
     return;
   }
   if ( pairs.flag == "-s" ) {
@@ -211,7 +238,7 @@ void set_relevant_arg( const Lookup_tables& tables, Maze_runner& runner, const F
       print_invalid_arg( pairs.arg );
     }
     runner.solver_speed = found->second;
-    runner.solver_getter = get_animated;
+    runner.solver_view = animated_playback;
     return;
   }
   if ( pairs.flag == "-ba" ) {
@@ -220,7 +247,8 @@ void set_relevant_arg( const Lookup_tables& tables, Maze_runner& runner, const F
       print_invalid_arg( pairs.arg );
     }
     runner.builder_speed = found->second;
-    runner.builder_getter = get_animated;
+    runner.builder_view = animated_playback;
+    runner.modification_getter = animated_playback;
     return;
   }
   print_invalid_arg( pairs.arg );
@@ -250,6 +278,7 @@ void set_cols( Maze_runner& runner, const Flag_arg& pairs )
 void print_invalid_arg( std::string_view arg )
 {
   std::cerr << "Invalid argument or flag: " << arg << std::endl;
+  print_usage();
   abort();
 }
 

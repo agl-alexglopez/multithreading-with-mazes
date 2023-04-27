@@ -56,7 +56,8 @@ void generate_grid_maze( Maze& maze )
   std::mt19937 generator( std::random_device {}() );
   std::uniform_int_distribution row_random( 1, maze.row_size() - 2 );
   std::uniform_int_distribution col_random( 1, maze.col_size() - 2 );
-  std::stack<Maze::Point> dfs( { { 2 * ( row_random( generator ) / 2 ) + 1, 2 * ( col_random( generator ) / 2 ) + 1  } } );
+  std::stack<Maze::Point> dfs(
+    { { 2 * ( row_random( generator ) / 2 ) + 1, 2 * ( col_random( generator ) / 2 ) + 1 } } );
   std::vector<int> random_direction_indices( Maze::generate_directions_.size() );
   std::iota( begin( random_direction_indices ), end( random_direction_indices ), 0 );
   while ( !dfs.empty() ) {
@@ -86,7 +87,8 @@ void animate_grid_maze( Maze& maze, Builder_speed speed )
   std::mt19937 generator( std::random_device {}() );
   std::uniform_int_distribution row_random( 1, maze.row_size() - 2 );
   std::uniform_int_distribution col_random( 1, maze.col_size() - 2 );
-  std::stack<Maze::Point> dfs( { { 2 * ( row_random( generator ) / 2 ) + 1, 2 * ( col_random( generator ) / 2 ) + 1  } } );
+  std::stack<Maze::Point> dfs(
+    { { 2 * ( row_random( generator ) / 2 ) + 1, 2 * ( col_random( generator ) / 2 ) + 1 } } );
   std::vector<int> random_direction_indices( Maze::generate_directions_.size() );
   std::iota( begin( random_direction_indices ), end( random_direction_indices ), 0 );
   while ( !dfs.empty() ) {
