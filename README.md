@@ -63,10 +63,10 @@ Examples:
 
 ```zsh
 ./build/bin/run_maze_optimized
-./build/bin/run_maze_optimized -r 51 -c 111 -b rdfs -s bfs -g hunt
-./build/bin/run_maze_optimized -c 111 -s bfs -g gather
-./build/bin/run_maze_optimized -s bfs -g corners -d round -b fractal
-./build/bin/run_maze_optimized -s dfs -ba 4 -sa 5 -b wilson-walls -m x
+./build/bin/run_maze_optimized -r 51 -c 111 -b rdfs -s bfs-hunt
+./build/bin/run_maze_optimized -c 111 -s bfs-gather
+./build/bin/run_maze_optimized -s bfs-corners -d round -b fractal
+./build/bin/run_maze_optimized -s dfs-hunt -ba 4 -sa 5 -b wilson-walls -m x
 ./build/bin/run_maze_optimized -h
 ```
 
