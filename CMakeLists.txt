@@ -4,7 +4,11 @@ project(mazes CXX)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
-  set(CMAKE_MAKE_PROGRAM "${PROJECT_SOURCE_DIR}/scripts/make-parallel.sh" CACHE STRING "" FORCE)
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+      set(CMAKE_MAKE_PROGRAM "${PROJECT_SOURCE_DIR}/scripts/make-parallel.sh" CACHE STRING "" FORCE)
+    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+      set(CMAKE_MAKE_PROGRAM "${PROJECT_SOURCE_DIR}/scripts/make-parallel-mac.sh" CACHE STRING "" FORCE)
+  endif()
 endif()
 
 if(${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
