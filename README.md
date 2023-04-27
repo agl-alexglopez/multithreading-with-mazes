@@ -35,13 +35,15 @@ Use flags, followed by arguments, in any order:
 	- `cross` - Add crossroads through the center.
 	- `x` - Add an x of crossing paths through center.
 - `-s` Solver flag. Set maze solving algorithm.
-	- `dfs` - Depth First Search
-	- `rdfs` - Randomized Depth First Search
-	- `bfs` - Breadth First Search
-- `-g` Game flag. Set the game for the solver threads to play.
-	- `hunt` - 4 threads race to find one finish.
-	- `gather` - 4 threads gather 4 finish squares.
-	- `corners` - 4 threads race to the center.
+	- `dfs-hunt` - Depth First Search
+	- `dfs-gather` - Depth First Search
+	- `dfs-corners` - Depth First Search
+	- `rdfs-hunt` - Randomized Depth First Search
+	- `rdfs-gather` - Randomized Depth First Search
+	- `rdfs-corners` - Randomized Depth First Search
+	- `bfs-hunt` - Breadth First Search
+	- `bfs-gather` - Breadth First Search
+	- `bfs-corners` - Breadth First Search
 - `-d` Draw flag. Set the line style for the maze.
 	- `sharp` - The default straight lines.
 	- `round` - Rounded corners.
@@ -94,11 +96,7 @@ The `-s` flag allows you to select the maze solver algorithm. The purpose of thi
 
 An important detail for the solvers is that you can trace the exact path of every thread due to my use of colors. Each thread has a unique color. When a thread walks along a maze path it will leave its color mark behind. If another thread crosses the same path, it will leave its color as well. This creates mixed colors that help you identify exactly where threads have gone in the maze. For depth first searches, I only have the threads paint the path they are currently on, not every square they have visited. This makes it easier to distinguish this algorithm from a breadth first search that paints every seen maze square. If you are looking at static images, not the live animations, the solution you are seeing is a freeze frame of all the threads at the time the game is over: depth first search shows the current position of each thread and the path it took from the start to get there, and breadth first search shows every square visited by all threads at the time a game finishes. These colors create interesting results for the games they play.
 
-### Game Flag
-
 ![games-showcase](/images/games-showcase.png)
-
-The `-g` flag lets you determine the game that the thread solvers will play in the maze.
 
 The `hunt` game randomly places a start and a finish then sets the threads loose to see who finds it first.
 

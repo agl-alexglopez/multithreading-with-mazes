@@ -1,4 +1,4 @@
-file (GLOB_RECURSE MAZE_CC_FILES ${CMAKE_SOURCE_DIR}/src/*.cc)
+file (GLOB_RECURSE MAZE_CC_FILES ${CMAKE_SOURCE_DIR}/src/*.cc ${CMAKE_SOURCE_DIR}/builders/*.cc ${CMAKE_SOURCE_DIR}/solvers/*.cc)
 
 file (GLOB_RECURSE ALL_SRC_FILES *.hh *.cc)
 
@@ -18,6 +18,6 @@ foreach (tidy_target ${ALL_SRC_FILES})
   endif ()
 endforeach (tidy_target)
 
-add_custom_target (tidy DEPENDS ${MINNOW_TIDY_TARGETS})
+add_custom_target (tidy DEPENDS ${MAZE_TIDY_TARGETS})
 
 add_custom_target (tidy-all DEPENDS ${ALL_TIDY_TARGETS})

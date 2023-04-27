@@ -1,95 +1,157 @@
-#include "thread_maze.hh"
-#include "thread_solvers.hh"
+#include "maze.hh"
+#include "maze_algorithms.hh"
+#include "maze_solvers.hh"
+#include "maze_utilities.hh"
+
+#include <array>
+#include <functional>
 #include <iostream>
+#include <optional>
+#include <span>
 #include <string_view>
+#include <tuple>
+#include <unistd.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-const std::unordered_set<std::string> argument_flags
-  = { "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-sa", "-ba" };
+using Build_choice = std::tuple<std::function<void( Builder::Maze& )>,
+                                std::function<void( Builder::Maze&, Builder::Builder_speed )>>;
 
-const std::unordered_map<std::string, Thread_maze::Builder_algorithm> builder_table = {
-  { "rdfs", Thread_maze::Builder_algorithm::randomized_depth_first },
-  { "wilson", Thread_maze::Builder_algorithm::randomized_loop_erased },
-  { "wilson-walls", Thread_maze::Builder_algorithm::randomized_loop_erased_walls },
-  { "fractal", Thread_maze::Builder_algorithm::randomized_fractal },
-  { "kruskal", Thread_maze::Builder_algorithm::randomized_kruskal },
-  { "prim", Thread_maze::Builder_algorithm::randomized_prim },
-  { "grid", Thread_maze::Builder_algorithm::randomized_grid },
-  { "arena", Thread_maze::Builder_algorithm::arena },
+using Solve_choice
+  = std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Solver::Solver_speed )>>;
+
+using Builder_storage = std::unordered_map<
+  std::string,
+  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Builder::Builder_speed )>>>;
+
+using Modder_storage = std::unordered_map<
+  std::string,
+  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Builder::Builder_speed )>>>;
+
+using Solver_storage = std::unordered_map<
+  std::string,
+  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Solver::Solver_speed )>>>;
+
+constexpr int static_image = 0;
+constexpr int animated_playback = 1;
+
+struct Flag_arg
+{
+  std::string_view flag;
+  std::string_view arg;
 };
 
-const std::unordered_map<std::string, Thread_maze::Maze_modification> modification_table = {
-  { "none", Thread_maze::Maze_modification::none },
-  { "cross", Thread_maze::Maze_modification::add_cross },
-  { "x", Thread_maze::Maze_modification::add_x },
+struct Maze_runner
+{
+  Builder::Maze::Maze_args args;
+
+  int builder_view { static_image };
+  Builder::Builder_speed builder_speed {};
+  Build_choice builder { Builder::generate_recursive_backtracker_maze,
+                         Builder::animate_recursive_backtracker_maze };
+
+  int modification_getter { static_image };
+  std::optional<Build_choice> modder {};
+
+  int solver_view { static_image };
+  Solver::Solver_speed solver_speed {};
+  Solve_choice solver { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt };
+  Maze_runner() : args {} {}
 };
 
-const std::unordered_map<std::string, Thread_solvers::Solver_algorithm> solver_table = {
-  { "dfs", Thread_solvers::Solver_algorithm::depth_first_search },
-  { "rdfs", Thread_solvers::Solver_algorithm::randomized_depth_first_search },
-  { "bfs", Thread_solvers::Solver_algorithm::breadth_first_search },
+struct Lookup_tables
+{
+  const std::unordered_set<std::string> argument_flags;
+  const Builder_storage builder_table;
+  const Modder_storage modification_table;
+  const Solver_storage solver_table;
+  const std::unordered_map<std::string, Builder::Maze::Maze_style> style_table;
+  const std::unordered_map<std::string, Solver::Solver_speed> solver_animation_table;
+  const std::unordered_map<std::string, Builder::Builder_speed> builder_animation_table;
 };
 
-const std::unordered_map<std::string, Thread_maze::Maze_style> style_table = {
-  { "sharp", Thread_maze::Maze_style::sharp },
-  { "round", Thread_maze::Maze_style::round },
-  { "doubles", Thread_maze::Maze_style::doubles },
-  { "bold", Thread_maze::Maze_style::bold },
-  { "contrast", Thread_maze::Maze_style::contrast },
-  { "spikes", Thread_maze::Maze_style::spikes },
-};
-
-const std::unordered_map<std::string, Thread_solvers::Maze_game> game_table = {
-  { "hunt", Thread_solvers::Maze_game::hunt },
-  { "gather", Thread_solvers::Maze_game::gather },
-  { "corners", Thread_solvers::Maze_game::corners },
-};
-
-const std::unordered_map<std::string, Thread_solvers::Solver_speed> solver_animation_table = {
-  { "0", Thread_solvers::Solver_speed::instant },
-  { "1", Thread_solvers::Solver_speed::speed_1 },
-  { "2", Thread_solvers::Solver_speed::speed_2 },
-  { "3", Thread_solvers::Solver_speed::speed_3 },
-  { "4", Thread_solvers::Solver_speed::speed_4 },
-  { "5", Thread_solvers::Solver_speed::speed_5 },
-  { "6", Thread_solvers::Solver_speed::speed_6 },
-  { "7", Thread_solvers::Solver_speed::speed_7 },
-};
-
-const std::unordered_map<std::string, Thread_maze::Builder_speed> builder_animation_table = {
-  { "0", Thread_maze::Builder_speed::instant },
-  { "1", Thread_maze::Builder_speed::speed_1 },
-  { "2", Thread_maze::Builder_speed::speed_2 },
-  { "3", Thread_maze::Builder_speed::speed_3 },
-  { "4", Thread_maze::Builder_speed::speed_4 },
-  { "5", Thread_maze::Builder_speed::speed_5 },
-  { "6", Thread_maze::Builder_speed::speed_6 },
-  { "7", Thread_maze::Builder_speed::speed_7 },
-};
-
-void set_relevant_arg( Thread_maze::Maze_args& maze_args,
-                       Thread_solvers::Solver_args& solver_args,
-                       std::string_view flag,
-                       std::string_view arg );
+void set_relevant_arg( const Lookup_tables& tables, Maze_runner& runner, const Flag_arg& pairs );
+void set_rows( Maze_runner& runner, const Flag_arg& pairs );
+void set_cols( Maze_runner& runner, const Flag_arg& pairs );
+void print_invalid_arg( std::string_view arg );
 void print_usage();
 
 int main( int argc, char** argv )
 {
-  Thread_maze::Maze_args maze_args = {};
-  Thread_solvers::Solver_args solver_args = {};
+  const Lookup_tables tables = {
+    { "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-sa", "-ba" },
+    {
+      { "rdfs", { Builder::generate_recursive_backtracker_maze, Builder::animate_recursive_backtracker_maze } },
+      { "wilson", { Builder::generate_wilson_path_carver_maze, Builder::animate_wilson_path_carver_maze } },
+      { "wilson-walls", { Builder::generate_wilson_wall_adder_maze, Builder::animate_wilson_wall_adder_maze } },
+      { "fractal", { Builder::generate_recursive_subdivision_maze, Builder::animate_recursive_subdivision_maze } },
+      { "kruskal", { Builder::generate_kruskal_maze, Builder::animate_kruskal_maze } },
+      { "prim", { Builder::generate_prim_maze, Builder::animate_prim_maze } },
+      { "grid", { Builder::generate_grid_maze, Builder::animate_grid_maze } },
+      { "arena", { Builder::generate_arena, Builder::animate_arena } },
+    },
+    {
+      { "cross", { Builder::add_cross, Builder::add_cross_animated } },
+      { "x", { Builder::add_x, Builder::add_x_animated } },
+    },
+    {
+      { "dfs-hunt", { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt } },
+      { "dfs-gather", { Solver::solve_with_dfs_thread_gather, Solver::animate_with_dfs_thread_gather } },
+      { "dfs-corners", { Solver::solve_with_dfs_thread_corners, Solver::animate_with_dfs_thread_corners } },
+      { "rdfs-hunt",
+        { Solver::solve_with_randomized_dfs_thread_hunt, Solver::animate_with_randomized_dfs_thread_hunt } },
+      { "rdfs-gather",
+        { Solver::solve_with_randomized_dfs_thread_gather, Solver::animate_with_randomized_dfs_thread_gather } },
+      { "rdfs-corners",
+        { Solver::solve_with_randomized_dfs_thread_corners, Solver::animate_with_randomized_dfs_thread_corners } },
+      { "bfs-hunt", { Solver::solve_with_bfs_thread_hunt, Solver::animate_with_bfs_thread_hunt } },
+      { "bfs-gather", { Solver::solve_with_bfs_thread_gather, Solver::animate_with_bfs_thread_gather } },
+      { "bfs-corners", { Solver::solve_with_bfs_thread_corners, Solver::animate_with_bfs_thread_corners } },
+    },
+    {
+      { "sharp", Builder::Maze::Maze_style::sharp },
+      { "round", Builder::Maze::Maze_style::round },
+      { "doubles", Builder::Maze::Maze_style::doubles },
+      { "bold", Builder::Maze::Maze_style::bold },
+      { "contrast", Builder::Maze::Maze_style::contrast },
+      { "spikes", Builder::Maze::Maze_style::spikes },
+    },
+    {
+      { "0", Solver::Solver_speed::instant },
+      { "1", Solver::Solver_speed::speed_1 },
+      { "2", Solver::Solver_speed::speed_2 },
+      { "3", Solver::Solver_speed::speed_3 },
+      { "4", Solver::Solver_speed::speed_4 },
+      { "5", Solver::Solver_speed::speed_5 },
+      { "6", Solver::Solver_speed::speed_6 },
+      { "7", Solver::Solver_speed::speed_7 },
+    },
+    {
+      { "0", Builder::Builder_speed::instant },
+      { "1", Builder::Builder_speed::speed_1 },
+      { "2", Builder::Builder_speed::speed_2 },
+      { "3", Builder::Builder_speed::speed_3 },
+      { "4", Builder::Builder_speed::speed_4 },
+      { "5", Builder::Builder_speed::speed_5 },
+      { "6", Builder::Builder_speed::speed_6 },
+      { "7", Builder::Builder_speed::speed_7 },
+    },
+  };
+
+  Maze_runner runner;
   if ( argc > 1 ) {
-    const std::vector<std::string_view> args( argv + 1, argv + argc );
+    const auto args = std::span( argv, static_cast<size_t>( argc ) );
     bool process_current = false;
     std::string_view prev_flag = {};
-    for ( const std::string_view& arg : args ) {
+    for ( size_t i = 1; i < args.size(); i++ ) {
+      auto* arg = args[i];
       if ( process_current ) {
-        set_relevant_arg( maze_args, solver_args, prev_flag, arg );
+        set_relevant_arg( tables, runner, { prev_flag, arg } );
         process_current = false;
       } else {
-        const auto& found_arg = argument_flags.find( arg.data() );
-        if ( found_arg == argument_flags.end() ) {
+        const auto& found_arg = tables.argument_flags.find( arg );
+        if ( found_arg == tables.argument_flags.end() ) {
           std::cerr << "Invalid argument flag: " << arg << std::endl;
           print_usage();
           std::abort();
@@ -97,102 +159,127 @@ int main( int argc, char** argv )
         if ( *found_arg == "-h" ) {
           print_usage();
           return 0;
-        } else {
-          process_current = true;
-          prev_flag = arg;
         }
+        process_current = true;
+        prev_flag = arg;
       }
     }
   }
-  Thread_maze maze( maze_args );
-  Thread_solvers( maze, solver_args ).solve_maze();
+
+  Builder::Maze maze( runner.args );
+
+  // We have stored functions in our maze runner. Run them with the tuple get syntax.
+
+  if ( runner.builder_view == animated_playback ) {
+    std::get<animated_playback>( runner.builder )( maze, runner.builder_speed );
+    if ( runner.modder ) {
+      std::get<animated_playback>( runner.modder.value() )( maze, runner.builder_speed );
+    }
+  } else {
+    std::get<static_image>( runner.builder )( maze );
+    if ( runner.modder ) {
+      std::get<static_image>( runner.modder.value() )( maze );
+    }
+  }
+
+  if ( runner.solver_view == animated_playback ) {
+    std::get<animated_playback>( runner.solver )( maze, runner.solver_speed );
+  } else {
+    std::get<static_image>( runner.solver )( maze );
+  }
   return 0;
 }
 
-void set_relevant_arg( Thread_maze::Maze_args& maze_args,
-                       Thread_solvers::Solver_args& solver_args,
-                       std::string_view flag,
-                       std::string_view arg )
+void set_relevant_arg( const Lookup_tables& tables, Maze_runner& runner, const Flag_arg& pairs )
 {
-  if ( flag == "-r" ) {
-    maze_args.odd_rows = std::stoi( arg.data() );
-    if ( maze_args.odd_rows % 2 == 0 ) {
-      maze_args.odd_rows++;
-    }
-    if ( maze_args.odd_rows < 7 ) {
-      std::cerr << "Smallest maze possible is 7x7" << std::endl;
-      std::abort();
-    }
-  } else if ( flag == "-c" ) {
-    maze_args.odd_cols = std::stoi( arg.data() );
-    if ( maze_args.odd_cols % 2 == 0 ) {
-      maze_args.odd_cols++;
-    }
-    if ( maze_args.odd_cols < 7 ) {
-      std::cerr << "Smallest maze possible is 3x7" << std::endl;
-      std::abort();
-    }
-  } else if ( flag == "-b" ) {
-    const auto found = builder_table.find( arg.data() );
-    if ( found == builder_table.end() ) {
-      std::cerr << "Invalid builder argument: " << arg << std::endl;
-      print_usage();
-      std::abort();
-    }
-    maze_args.builder = found->second;
-  } else if ( flag == "-m" ) {
-    const auto found = modification_table.find( arg.data() );
-    if ( found == modification_table.end() ) {
-      std::cerr << "Invalid modification argument: " << arg << std::endl;
-      print_usage();
-      std::abort();
-    }
-    maze_args.modification = found->second;
-  } else if ( flag == "-s" ) {
-    const auto found = solver_table.find( arg.data() );
-    if ( found == solver_table.end() ) {
-      std::cerr << "Invalid solver argument: " << arg << std::endl;
-      print_usage();
-      std::abort();
-    }
-    solver_args.solver = found->second;
-  } else if ( flag == "-g" ) {
-    const auto found = game_table.find( arg.data() );
-    if ( found == game_table.end() ) {
-      std::cerr << "Invalid game argument: " << arg << std::endl;
-      print_usage();
-      std::abort();
-    }
-    solver_args.game = found->second;
-  } else if ( flag == "-d" ) {
-    const auto found = style_table.find( arg.data() );
-    if ( found == style_table.end() ) {
-      std::cerr << "Invalid drawing argument: " << arg << std::endl;
-      print_usage();
-      std::abort();
-    }
-    maze_args.style = found->second;
-  } else if ( flag == "-sa" ) {
-    const auto found = solver_animation_table.find( arg.data() );
-    if ( found == solver_animation_table.end() ) {
-      std::cerr << "Invalid solver animation argument: " << arg << std::endl;
-      print_usage();
-      std::abort();
-    }
-    solver_args.speed = found->second;
-  } else if ( flag == "-ba" ) {
-    const auto found = builder_animation_table.find( arg.data() );
-    if ( found == builder_animation_table.end() ) {
-      std::cerr << "Invalid builder animation argument: " << arg << std::endl;
-      print_usage();
-      std::abort();
-    }
-    maze_args.builder_speed = found->second;
-  } else {
-    std::cerr << "Invalid flag past the first defense? " << flag << std::endl;
-    print_usage();
-    std::abort();
+  if ( pairs.flag == "-r" ) {
+    set_rows( runner, pairs );
+    return;
   }
+  if ( pairs.flag == "-c" ) {
+    set_cols( runner, pairs );
+    return;
+  }
+  if ( pairs.flag == "-b" ) {
+    const auto found = tables.builder_table.find( pairs.arg.data() );
+    if ( found == tables.builder_table.end() ) {
+      print_invalid_arg( pairs.arg );
+    }
+    runner.builder = found->second;
+    return;
+  }
+  if ( pairs.flag == "-m" ) {
+    const auto found = tables.modification_table.find( pairs.arg.data() );
+    if ( found == tables.modification_table.end() ) {
+      print_invalid_arg( pairs.arg );
+    }
+    runner.modder = found->second;
+    return;
+  }
+  if ( pairs.flag == "-s" ) {
+    const auto found = tables.solver_table.find( pairs.arg.data() );
+    if ( found == tables.solver_table.end() ) {
+      print_invalid_arg( pairs.arg );
+    }
+    runner.solver = found->second;
+    return;
+  }
+  if ( pairs.flag == "-d" ) {
+    const auto found = tables.style_table.find( pairs.arg.data() );
+    if ( found == tables.style_table.end() ) {
+      print_invalid_arg( pairs.arg );
+    }
+    runner.args.style = found->second;
+    return;
+  }
+  if ( pairs.flag == "-sa" ) {
+    const auto found = tables.solver_animation_table.find( pairs.arg.data() );
+    if ( found == tables.solver_animation_table.end() ) {
+      print_invalid_arg( pairs.arg );
+    }
+    runner.solver_speed = found->second;
+    runner.solver_view = animated_playback;
+    return;
+  }
+  if ( pairs.flag == "-ba" ) {
+    const auto found = tables.builder_animation_table.find( pairs.arg.data() );
+    if ( found == tables.builder_animation_table.end() ) {
+      print_invalid_arg( pairs.arg );
+    }
+    runner.builder_speed = found->second;
+    runner.builder_view = animated_playback;
+    runner.modification_getter = animated_playback;
+    return;
+  }
+  print_invalid_arg( pairs.arg );
+}
+
+void set_rows( Maze_runner& runner, const Flag_arg& pairs )
+{
+  runner.args.odd_rows = std::stoi( pairs.arg.data() );
+  if ( runner.args.odd_rows % 2 == 0 ) {
+    runner.args.odd_rows++;
+  }
+  if ( runner.args.odd_rows < 7 ) {
+    print_invalid_arg( pairs.arg );
+  }
+}
+void set_cols( Maze_runner& runner, const Flag_arg& pairs )
+{
+  runner.args.odd_cols = std::stoi( pairs.arg.data() );
+  if ( runner.args.odd_cols % 2 == 0 ) {
+    runner.args.odd_cols++;
+  }
+  if ( runner.args.odd_cols < 7 ) {
+    print_invalid_arg( pairs.arg );
+  }
+}
+
+void print_invalid_arg( std::string_view arg )
+{
+  std::cerr << "Invalid argument or flag: " << arg << std::endl;
+  print_usage();
+  abort();
 }
 
 void print_usage()
@@ -209,6 +296,8 @@ void print_usage()
             << "│      Any number > 7. Zoom out for larger mazes!      │\n"
             << "│  -b Builder flag. Set maze building algorithm.       │\n"
             << "│      rdfs - Randomized Depth First Search.           │\n"
+            << "│      rdfs - Randomized Depth First Search.           │\n"
+            << "│      rdfs - Randomized Depth First Search.           │\n"
             << "│      kruskal - Randomized Kruskal's algorithm.       │\n"
             << "│      prim - Randomized Prim's algorithm.             │\n"
             << "│      wilson - Loop-Erased Random Path Carver.        │\n"
@@ -219,14 +308,16 @@ void print_usage()
             << "│  -m Modification flag. Add shortcuts to the maze.    │\n"
             << "│      cross - Add crossroads through the center.      │\n"
             << "│      x - Add an x of crossing paths through center.  │\n"
-            << "│  -s Solver flag. Set maze solving algorithm.         │\n"
-            << "│      dfs - Depth First Search                        │\n"
-            << "│      rdfs - Randomized Depth First Search            │\n"
-            << "│      bfs - Breadth First Search                      │\n"
-            << "│  -g Game flag. Set the game for the threads to play. │\n"
-            << "│      hunt - 4 threads race to find one finish.       │\n"
-            << "│      gather - 4 threads gather 4 finish squares.     │\n"
-            << "│      corners - 4 threads race to the center.         │\n"
+            << "│  -s Solver flag. Choose the game and solver.         │\n"
+            << "│      dfs-hunt - Depth First Search                   │\n"
+            << "│      dfs-gather - Depth First Search                 │\n"
+            << "│      dfs-corners - Depth First Search                │\n"
+            << "│      rdfs-hunt - Randomized Depth First Search       │\n"
+            << "│      rdfs-gather - Randomized Depth First Search     │\n"
+            << "│      rdfs-corners - Randomized Depth First Search    │\n"
+            << "│      bfs-hunt - Breadth First Search                 │\n"
+            << "│      bfs-gather - Breadth First Search               │\n"
+            << "│      bfs-corners - Breadth First Search              │\n"
             << "│  -d Draw flag. Set the line style for the maze.      │\n"
             << "│      sharp - The default straight lines.             │\n"
             << "│      round - Rounded corners.                        │\n"

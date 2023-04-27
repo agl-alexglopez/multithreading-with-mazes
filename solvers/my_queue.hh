@@ -10,26 +10,19 @@
 #pragma once
 #ifndef MY_QUEUE_HH
 #define MY_QUEUE_HH
-#include <memory>
 #include <stdexcept>
-#include <stdio.h>
+#include <vector>
 
 template<class Value_type>
 class My_queue
 {
 
 public:
-  My_queue()
-    : elems_( new Value_type[initial_size_] )
-    , logical_size_( 0 )
-    , allocated_size_( initial_size_ )
-    , front_( 0 )
-    , back_( 0 )
-  {}
+  My_queue() : elems_( initial_size_ ), allocated_size_( initial_size_ ) {}
 
   void reserve( size_t capacity )
   {
-    elems_.reset( new Value_type[capacity] );
+    elems_ = std::vector<Value_type>( capacity );
     allocated_size_ = capacity;
     logical_size_ = 0;
     front_ = 0;
@@ -59,7 +52,7 @@ public:
     if ( logical_size_ == 0 ) {
       throw std::logic_error( "My_queue is empty." );
     }
-    Value_type return_copy = elems_[front_];
+    const Value_type return_copy = elems_[front_];
     ++front_ %= allocated_size_;
     logical_size_--;
     return return_copy;
@@ -74,16 +67,16 @@ public:
   }
 
 private:
-  const size_t initial_size_ = 2;
+  static constexpr size_t initial_size_ = 8;
   const size_t full_queue_ = 1UL << 63;
-  std::unique_ptr<Value_type[]> elems_;
-  size_t logical_size_;
+  std::vector<Value_type> elems_;
   size_t allocated_size_;
-  size_t front_;
-  size_t back_;
+  size_t logical_size_ { 0 };
+  size_t front_ { 0 };
+  size_t back_ { 0 };
   void grow()
   {
-    std::unique_ptr<Value_type[]> new_elems( new Value_type[allocated_size_ * 2] );
+    std::vector<Value_type> new_elems( allocated_size_ * 2 );
     for ( size_t i = 0; i < logical_size_; i++ ) {
       new_elems[i] = elems_[front_];
       ++front_ %= allocated_size_;
@@ -95,4 +88,4 @@ private:
   }
 };
 
-#endif // My_queue_H
+#endif // My_QUEUE_HH
