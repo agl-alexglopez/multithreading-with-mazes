@@ -21,18 +21,6 @@ using Build_choice = std::tuple<std::function<void( Builder::Maze& )>,
 using Solve_choice
   = std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Solver::Solver_speed )>>;
 
-using Builder_storage = std::unordered_map<
-  std::string,
-  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Builder::Builder_speed )>>>;
-
-using Modder_storage = std::unordered_map<
-  std::string,
-  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Builder::Builder_speed )>>>;
-
-using Solver_storage = std::unordered_map<
-  std::string,
-  std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Solver::Solver_speed )>>>;
-
 constexpr int static_image = 0;
 constexpr int animated_playback = 1;
 
@@ -63,9 +51,9 @@ struct Maze_runner
 struct Lookup_tables
 {
   const std::unordered_set<std::string> argument_flags;
-  const Builder_storage builder_table;
-  const Modder_storage modification_table;
-  const Solver_storage solver_table;
+  const std::unordered_map<std::string, Build_choice> builder_table;
+  const std::unordered_map<std::string, Build_choice> modification_table;
+  const std::unordered_map<std::string, Solve_choice> solver_table;
   const std::unordered_map<std::string, Builder::Maze::Maze_style> style_table;
   const std::unordered_map<std::string, Solver::Solver_speed> solver_animation_table;
   const std::unordered_map<std::string, Builder::Builder_speed> builder_animation_table;
