@@ -454,12 +454,10 @@ void animate_with_floodfs_thread_corners( Builder::Maze& maze, Solver_speed spee
 
   if ( monitor.winning_index ) {
     const Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
-    for ( const Builder::Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.value() ) ) {
-      maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
-      maze[p.row][p.col] |= winner_color;
-      flush_cursor_path_coordinate( maze, p );
-      std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
-    }
+    const Builder::Maze::Point& before_finish = monitor.thread_paths.at( monitor.winning_index.value() ).back();
+    maze[before_finish.row][before_finish.col] |= winner_color;
+    flush_cursor_path_coordinate( maze, before_finish );
+    std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
 
   set_cursor_point( { maze.row_size() + overlap_key_and_message_height, 0 } );
