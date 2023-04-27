@@ -52,7 +52,7 @@ Builder::Maze::Point find_nearest_square( const Builder::Maze& maze, const Build
 {
   // Fanning out from a starting point should work on any medium to large maze.
   for ( const Builder::Maze::Point& p : all_directions_ ) {
-    Builder::Maze::Point next = { choice.row + p.row, choice.col + p.col };
+    const Builder::Maze::Point next = { choice.row + p.row, choice.col + p.col };
     if ( is_valid_start_or_finish( maze, next ) ) {
       return next;
     }
@@ -130,8 +130,7 @@ void print_point( const Builder::Maze& maze, const Builder::Maze::Point& point )
 
 void set_cursor_point( const Builder::Maze::Point& point )
 {
-  std::string cursor_pos = "\033[" + std::to_string( point.row + 1 ) + ";" + std::to_string( point.col + 1 ) + "f";
-  std::cout << cursor_pos;
+  std::cout << "\033[" + std::to_string( point.row + 1 ) + ";" + std::to_string( point.col + 1 ) + "f";
 }
 
 void print_hunt_solution_message( std::optional<int> winning_index )

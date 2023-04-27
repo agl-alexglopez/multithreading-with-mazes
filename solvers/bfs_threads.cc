@@ -69,11 +69,11 @@ void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
     int direction_index = id.index;
     do {
       const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
-      Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
-      bool seen_next = seen.contains( next );
+      const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
+      const bool seen_next = seen.contains( next );
 
       monitor.monitor.lock();
-      bool push_next = !seen_next && ( maze[next.row][next.col] & Builder::Maze::path_bit_ );
+      const bool push_next = !seen_next && ( maze[next.row][next.col] & Builder::Maze::path_bit_ );
       monitor.monitor.unlock();
 
       if ( push_next ) {
@@ -125,11 +125,11 @@ void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
     int direction_index = id.index;
     do {
       const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
-      Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
-      bool seen_next = seen.contains( next );
+      const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
+      const bool seen_next = seen.contains( next );
 
       monitor.monitor.lock();
-      bool push_next = !seen_next && ( maze[next.row][next.col] & Builder::Maze::path_bit_ );
+      const bool push_next = !seen_next && ( maze[next.row][next.col] & Builder::Maze::path_bit_ );
       monitor.monitor.unlock();
 
       if ( push_next ) {
@@ -149,7 +149,7 @@ void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
 void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
 {
   std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>& seen = monitor.thread_maps[id.index];
-  Thread_cache seen_bit = id.paint << 4;
+  const Thread_cache seen_bit = id.paint << 4;
   seen[monitor.starts[id.index]] = { -1, -1 };
   My_queue<Builder::Maze::Point>& bfs = monitor.thread_queues[id.index];
   bfs.push( monitor.starts.at( id.index ) );
@@ -171,10 +171,10 @@ void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id
     int direction_index = id.index;
     do {
       const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
-      Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
-      bool seen_next = seen.contains( next );
+      const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
+      const bool seen_next = seen.contains( next );
       monitor.monitor.lock();
-      bool push_next = !seen_next && ( maze[next.row][next.col] & Builder::Maze::path_bit_ );
+      const bool push_next = !seen_next && ( maze[next.row][next.col] & Builder::Maze::path_bit_ );
       monitor.monitor.unlock();
       if ( push_next ) {
         seen[next] = cur;
@@ -194,7 +194,7 @@ void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id
 void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
 {
   std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>& seen = monitor.thread_maps[id.index];
-  Thread_cache seen_bit = id.paint << 4;
+  const Thread_cache seen_bit = id.paint << 4;
   seen[monitor.starts[id.index]] = { -1, -1 };
   My_queue<Builder::Maze::Point>& bfs = monitor.thread_queues[id.index];
   bfs.push( monitor.starts.at( id.index ) );
@@ -218,10 +218,10 @@ void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id 
     int direction_index = id.index;
     do {
       const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
-      Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
-      bool seen_next = seen.contains( next );
+      const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
+      const bool seen_next = seen.contains( next );
       monitor.monitor.lock();
-      bool push_next = !seen_next && ( maze[next.row][next.col] & Builder::Maze::path_bit_ );
+      const bool push_next = !seen_next && ( maze[next.row][next.col] & Builder::Maze::path_bit_ );
       monitor.monitor.unlock();
       if ( push_next ) {
         seen[next] = cur;
@@ -247,7 +247,7 @@ void solve_with_bfs_thread_hunt( Builder::Maze& maze )
   Solver_monitor monitor;
   monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit_;
-  Builder::Maze::Point finish = pick_random_point( maze );
+  const Builder::Maze::Point finish = pick_random_point( maze );
   maze[finish.row][finish.col] |= finish_bit_;
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
@@ -263,7 +263,7 @@ void solve_with_bfs_thread_hunt( Builder::Maze& maze )
     abort();
   }
   // It is cool to see the shortest path that the winning thread took to victory
-  Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
+  const Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
   for ( const Builder::Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.value() ) ) {
     maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
     maze[p.row][p.col] |= winner_color;
@@ -284,7 +284,7 @@ void animate_with_bfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
   monitor.speed = solver_speeds_.at( static_cast<Speed_unit>( speed ) );
   monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit_;
-  Builder::Maze::Point finish = pick_random_point( maze );
+  const Builder::Maze::Point finish = pick_random_point( maze );
   maze[finish.row][finish.col] |= finish_bit_;
   flush_cursor_path_coordinate( maze, finish );
   std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
@@ -292,7 +292,8 @@ void animate_with_bfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread] = std::thread( [&maze, &monitor, this_thread] { animate_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread]
+      = std::thread( [&maze, &monitor, this_thread] { animate_hunt( maze, monitor, this_thread ); } );
   }
 
   for ( std::thread& t : threads ) {
@@ -305,7 +306,7 @@ void animate_with_bfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
   }
 
   // It is cool to see the shortest path that the winning thread took to victory
-  Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
+  const Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
   for ( const Builder::Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.value() ) ) {
     maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
     maze[p.row][p.col] |= winner_color;
@@ -323,7 +324,7 @@ void solve_with_bfs_thread_gather( Builder::Maze& maze )
   monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit_;
   for ( int finish_square = 0; finish_square < num_gather_finishes_; finish_square++ ) {
-    Builder::Maze::Point finish = pick_random_point( maze );
+    const Builder::Maze::Point finish = pick_random_point( maze );
     maze[finish.row][finish.col] |= finish_bit_;
   }
   std::vector<std::thread> threads( num_threads_ );
@@ -338,7 +339,7 @@ void solve_with_bfs_thread_gather( Builder::Maze& maze )
   }
   int thread = 0;
   for ( const std::vector<Builder::Maze::Point>& path : monitor.thread_paths ) {
-    Thread_paint color = thread_masks_.at( thread );
+    const Thread_paint color = thread_masks_.at( thread );
     for ( const Builder::Maze::Point& p : path ) {
       maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
       maze[p.row][p.col] |= color;
@@ -362,7 +363,7 @@ void animate_with_bfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
   monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit_;
   for ( int finish_square = 0; finish_square < num_gather_finishes_; finish_square++ ) {
-    Builder::Maze::Point finish = pick_random_point( maze );
+    const Builder::Maze::Point finish = pick_random_point( maze );
     maze[finish.row][finish.col] |= finish_bit_;
     flush_cursor_path_coordinate( maze, finish );
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
@@ -381,7 +382,7 @@ void animate_with_bfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
 
   int i_thread = 0;
   for ( const std::vector<Builder::Maze::Point>& path : monitor.thread_paths ) {
-    Thread_paint color = thread_masks_.at( i_thread++ );
+    const Thread_paint color = thread_masks_.at( i_thread++ );
     const Builder::Maze::Point& p = path.front();
     maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
     maze[p.row][p.col] |= color;
@@ -402,9 +403,9 @@ void solve_with_bfs_thread_corners( Builder::Maze& maze )
   for ( const Builder::Maze::Point& p : monitor.starts ) {
     maze[p.row][p.col] |= start_bit_;
   }
-  Builder::Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
+  const Builder::Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
   for ( const Builder::Maze::Point& p : all_directions_ ) {
-    Builder::Maze::Point next = { finish.row + p.row, finish.col + p.col };
+    const Builder::Maze::Point next = { finish.row + p.row, finish.col + p.col };
     maze[next.row][next.col] |= Builder::Maze::path_bit_;
   }
   maze[finish.row][finish.col] |= Builder::Maze::path_bit_;
@@ -441,9 +442,9 @@ void animate_with_bfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
     flush_cursor_path_coordinate( maze, p );
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
-  Builder::Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
+  const Builder::Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
   for ( const Builder::Maze::Point& p : all_directions_ ) {
-    Builder::Maze::Point next = { finish.row + p.row, finish.col + p.col };
+    const Builder::Maze::Point next = { finish.row + p.row, finish.col + p.col };
     maze[next.row][next.col] |= Builder::Maze::path_bit_;
     flush_cursor_path_coordinate( maze, next );
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
@@ -470,7 +471,7 @@ void animate_with_bfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
   }
 
   // It is cool to see the shortest path that the winning thread took to victory
-  Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
+  const Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
   for ( const Builder::Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.value() ) ) {
     maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
     maze[p.row][p.col] |= winner_color;

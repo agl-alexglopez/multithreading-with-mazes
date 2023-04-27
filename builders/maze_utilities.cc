@@ -7,13 +7,13 @@ namespace Builder {
 
 void add_positive_slope( Maze& maze, const Maze::Point& p )
 {
-  auto row_size = static_cast<float>( maze.row_size() ) - 2.0F;
-  auto col_size = static_cast<float>( maze.col_size() ) - 2.0F;
-  auto cur_row = static_cast<float>( p.row );
+  const auto row_size = static_cast<float>( maze.row_size() ) - 2.0F;
+  const auto col_size = static_cast<float>( maze.col_size() ) - 2.0F;
+  const auto cur_row = static_cast<float>( p.row );
   // y = mx + b. We will get the negative slope. This line goes top left to bottom right.
-  float slope = ( 2.0F - row_size ) / ( 2.0F - col_size );
-  float b = 2.0F - ( 2.0F * slope );
-  int on_line = static_cast<int>( ( cur_row - b ) / slope );
+  const float slope = ( 2.0F - row_size ) / ( 2.0F - col_size );
+  const float b = 2.0F - ( 2.0F * slope );
+  const int on_line = static_cast<int>( ( cur_row - b ) / slope );
   if ( p.col == on_line && p.col < maze.col_size() - 2 && p.col > 1 ) {
     // An X is hard to notice and might miss breaking wall lines so make it wider.
     build_path( maze, p );
@@ -34,13 +34,13 @@ void add_positive_slope( Maze& maze, const Maze::Point& p )
 
 void add_positive_slope_animated( Maze& maze, const Maze::Point& p, Speed_unit speed )
 {
-  auto row_size = static_cast<float>( maze.row_size() ) - 2.0F;
-  auto col_size = static_cast<float>( maze.col_size() ) - 2.0F;
-  auto cur_row = static_cast<float>( p.row );
+  const auto row_size = static_cast<float>( maze.row_size() ) - 2.0F;
+  const auto col_size = static_cast<float>( maze.col_size() ) - 2.0F;
+  const auto cur_row = static_cast<float>( p.row );
   // y = mx + b. We will get the negative slope. This line goes top left to bottom right.
-  float slope = ( 2.0F - row_size ) / ( 2.0F - col_size );
-  float b = 2.0F - ( 2.0F * slope );
-  int on_line = static_cast<int>( ( cur_row - b ) / slope );
+  const float slope = ( 2.0F - row_size ) / ( 2.0F - col_size );
+  const float b = 2.0F - ( 2.0F * slope );
+  const int on_line = static_cast<int>( ( cur_row - b ) / slope );
   if ( p.col == on_line && p.col < maze.col_size() - 2 && p.col > 1 ) {
     // An X is hard to notice and might miss breaking wall lines so make it wider.
     build_path_animated( maze, p, speed );
@@ -61,12 +61,12 @@ void add_positive_slope_animated( Maze& maze, const Maze::Point& p, Speed_unit s
 
 void add_negative_slope( Maze& maze, const Maze::Point& p )
 {
-  auto row_size = static_cast<float>( maze.row_size() ) - 2.0F;
-  auto col_size = static_cast<float>( maze.col_size() ) - 2.0F;
-  auto cur_row = static_cast<float>( p.row );
-  float slope = ( 2.0F - row_size ) / ( col_size - 2.0F );
-  float b = row_size - ( 2.0F * slope );
-  int on_line = static_cast<int>( ( cur_row - b ) / slope );
+  const auto row_size = static_cast<float>( maze.row_size() ) - 2.0F;
+  const auto col_size = static_cast<float>( maze.col_size() ) - 2.0F;
+  const auto cur_row = static_cast<float>( p.row );
+  const float slope = ( 2.0F - row_size ) / ( col_size - 2.0F );
+  const float b = row_size - ( 2.0F * slope );
+  const int on_line = static_cast<int>( ( cur_row - b ) / slope );
   if ( p.col == on_line && p.col > 1 && p.col < maze.col_size() - 2 && p.row < maze.row_size() - 2 ) {
     build_path( maze, p );
     if ( p.col + 1 < maze.col_size() - 2 ) {
@@ -86,12 +86,12 @@ void add_negative_slope( Maze& maze, const Maze::Point& p )
 
 void add_negative_slope_animated( Maze& maze, const Maze::Point& p, Speed_unit speed )
 {
-  auto row_size = static_cast<float>( maze.row_size() ) - 2.0F;
-  auto col_size = static_cast<float>( maze.col_size() ) - 2.0F;
-  auto cur_row = static_cast<float>( p.row );
-  float slope = ( 2.0F - row_size ) / ( col_size - 2.0F );
-  float b = row_size - ( 2.0F * slope );
-  int on_line = static_cast<int>( ( cur_row - b ) / slope );
+  const auto row_size = static_cast<float>( maze.row_size() ) - 2.0F;
+  const auto col_size = static_cast<float>( maze.col_size() ) - 2.0F;
+  const auto cur_row = static_cast<float>( p.row );
+  const float slope = ( 2.0F - row_size ) / ( col_size - 2.0F );
+  const float b = row_size - ( 2.0F * slope );
+  const int on_line = static_cast<int>( ( cur_row - b ) / slope );
   if ( p.col == on_line && p.col > 1 && p.col < maze.col_size() - 2 && p.row < maze.row_size() - 2 ) {
     build_path_animated( maze, p, speed );
     if ( p.col + 1 < maze.col_size() - 2 ) {
@@ -159,12 +159,11 @@ void build_wall_outline( Maze& maze )
 
 Maze::Point choose_arbitrary_point( const Maze& maze, Parity_point parity )
 {
-  int init = parity == Parity_point::even ? 2 : 1;
+  const int init = parity == Parity_point::even ? 2 : 1;
   for ( int row = init; row < maze.row_size() - 1; row += 2 ) {
     for ( int col = init; col < maze.col_size() - 1; col += 2 ) {
-      Maze::Point cur = { row, col };
-      if ( !( maze[cur.row][cur.col] & Maze::builder_bit_ ) ) {
-        return cur;
+      if ( !( maze[row][col] & Maze::builder_bit_ ) ) {
+        return { row, col };
       }
     }
   }
@@ -555,8 +554,7 @@ void flush_cursor_maze_coordinate( const Maze& maze, const Maze::Point& p )
 
 void set_cursor_position( const Maze::Point& p )
 {
-  std::string cursor_pos = "\033[" + std::to_string( p.row + 1 ) + ";" + std::to_string( p.col + 1 ) + "f";
-  std::cout << cursor_pos;
+  std::cout << "\033[" + std::to_string( p.row + 1 ) + ";" + std::to_string( p.col + 1 ) + "f";
 }
 
 void print_maze_square( const Maze& maze, const Maze::Point& p )

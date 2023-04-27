@@ -44,11 +44,13 @@ struct Lookup_tables
   const std::unordered_set<std::string> argument_flags;
   const std::unordered_map<std::string,
                            std::tuple<std::function<void( Builder::Maze& )>,
-                                      std::function<void( Builder::Maze&, Builder::Builder_speed )>>> builder_table;
+                                      std::function<void( Builder::Maze&, Builder::Builder_speed )>>>
+    builder_table;
   const std::unordered_map<std::string, Builder::Maze::Maze_modification> modification_table;
-  const std::unordered_map<std::string,
-                           std::tuple<std::function<void( Builder::Maze& )>,
-                                      std::function<void( Builder::Maze&, Solver::Solver_speed )>>> solver_table;
+  const std::unordered_map<
+    std::string,
+    std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Solver::Solver_speed )>>>
+    solver_table;
   const std::unordered_map<std::string, Builder::Maze::Maze_style> style_table;
   const std::unordered_map<std::string, Solver::Solver_speed> solver_animation_table;
   const std::unordered_map<std::string, Builder::Builder_speed> builder_animation_table;
@@ -62,7 +64,7 @@ void print_usage();
 
 int main( int argc, char** argv )
 {
-  Lookup_tables tables = {
+  const Lookup_tables tables = {
     { "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-sa", "-ba" },
     {
       { "rdfs", { Builder::generate_recursive_backtracker_maze, Builder::animate_recursive_backtracker_maze } },

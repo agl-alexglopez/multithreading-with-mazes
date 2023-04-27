@@ -177,7 +177,7 @@ constexpr std::array<Builder::Maze::Point, 4> generate_directions_
 // north, north-east, east, south-east, south, south-west, west, north-west
 constexpr std::array<Builder::Maze::Point, 7> all_directions_
   = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };
-constexpr int overlap_key_and_message_height = 11;
+constexpr int overlap_key_and_message_height = 9;
 constexpr std::array<Speed_unit, 8> solver_speeds_ = { 0, 20000, 10000, 5000, 2000, 1000, 500, 250 };
 
 } // namespace Solver

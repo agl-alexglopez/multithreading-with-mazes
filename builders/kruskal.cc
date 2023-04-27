@@ -51,20 +51,20 @@ std::unordered_map<Maze::Point, int> tag_cells( Maze& maze )
 void generate_kruskal_maze( Maze& maze )
 {
   fill_maze_with_walls( maze );
-  std::vector<Maze::Point> walls = load_shuffled_walls( maze );
-  std::unordered_map<Maze::Point, int> set_ids = tag_cells( maze );
+  const std::vector<Maze::Point> walls = load_shuffled_walls( maze );
+  const std::unordered_map<Maze::Point, int> set_ids = tag_cells( maze );
   Disjoint_set sets( set_ids.size() );
   for ( const Maze::Point& p : walls ) {
     if ( p.row % 2 == 0 ) {
-      Maze::Point above_cell = { p.row - 1, p.col };
-      Maze::Point below_cell = { p.row + 1, p.col };
-      if ( sets.made_union( set_ids[above_cell], set_ids[below_cell] ) ) {
+      const Maze::Point above_cell = { p.row - 1, p.col };
+      const Maze::Point below_cell = { p.row + 1, p.col };
+      if ( sets.made_union( set_ids.at( above_cell ), set_ids.at( below_cell ) ) ) {
         join_squares( maze, above_cell, below_cell );
       }
     } else {
-      Maze::Point left_cell = { p.row, p.col - 1 };
-      Maze::Point right_cell = { p.row, p.col + 1 };
-      if ( sets.made_union( set_ids[left_cell], set_ids[right_cell] ) ) {
+      const Maze::Point left_cell = { p.row, p.col - 1 };
+      const Maze::Point right_cell = { p.row, p.col + 1 };
+      if ( sets.made_union( set_ids.at( left_cell ), set_ids.at( right_cell ) ) ) {
         join_squares( maze, left_cell, right_cell );
       }
     }
@@ -73,24 +73,24 @@ void generate_kruskal_maze( Maze& maze )
 
 void animate_kruskal_maze( Maze& maze, Builder_speed speed )
 {
-  Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );
   clear_and_flush_grid( maze );
-  std::vector<Maze::Point> walls = load_shuffled_walls( maze );
-  std::unordered_map<Maze::Point, int> set_ids = tag_cells( maze );
+  const std::vector<Maze::Point> walls = load_shuffled_walls( maze );
+  const std::unordered_map<Maze::Point, int> set_ids = tag_cells( maze );
   Disjoint_set sets( set_ids.size() );
 
   for ( const Maze::Point& p : walls ) {
     if ( p.row % 2 == 0 ) {
-      Maze::Point above_cell = { p.row - 1, p.col };
-      Maze::Point below_cell = { p.row + 1, p.col };
-      if ( sets.made_union( set_ids[above_cell], set_ids[below_cell] ) ) {
+      const Maze::Point above_cell = { p.row - 1, p.col };
+      const Maze::Point below_cell = { p.row + 1, p.col };
+      if ( sets.made_union( set_ids.at( above_cell ), set_ids.at( below_cell ) ) ) {
         join_squares_animated( maze, above_cell, below_cell, animation );
       }
     } else {
-      Maze::Point left_cell = { p.row, p.col - 1 };
-      Maze::Point right_cell = { p.row, p.col + 1 };
-      if ( sets.made_union( set_ids[left_cell], set_ids[right_cell] ) ) {
+      const Maze::Point left_cell = { p.row, p.col - 1 };
+      const Maze::Point right_cell = { p.row, p.col + 1 };
+      if ( sets.made_union( set_ids.at( left_cell ), set_ids.at( right_cell ) ) ) {
         join_squares_animated( maze, left_cell, right_cell, animation );
       }
     }

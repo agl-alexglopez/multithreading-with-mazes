@@ -257,7 +257,7 @@ struct hash<Builder::Maze::Point>
 {
   inline size_t operator()( const Builder::Maze::Point& p ) const
   {
-    std::hash<int> hasher;
+    const std::hash<int> hasher;
     return hasher( p.row ) ^ hasher( p.col );
   }
 };

@@ -29,8 +29,8 @@ uint64_t Disjoint_set::find( uint64_t p )
 
 bool Disjoint_set::made_union( uint64_t a, uint64_t b )
 {
-  uint64_t x = find( a );
-  uint64_t y = find( b );
+  const uint64_t x = find( a );
+  const uint64_t y = find( b );
   if ( x == y ) {
     return false;
   }
@@ -47,7 +47,5 @@ bool Disjoint_set::made_union( uint64_t a, uint64_t b )
 
 bool Disjoint_set::is_union_no_merge( uint64_t a, uint64_t b )
 {
-  uint64_t x = find( a );
-  uint64_t y = find( b );
-  return x == y;
+  return find( a ) == find ( b );
 }

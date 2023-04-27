@@ -76,9 +76,9 @@ void connect_walk_to_maze( Maze& maze, const Maze::Point& walk )
 {
   Maze::Point cur = walk;
   while ( maze[cur.row][cur.col] & Maze::markers_mask_ ) {
-    Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+    const Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
-    Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
+    const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
     join_walk_walls( maze, cur, next );
     // Clean up after ourselves and leave no marks behind for the maze solvers.
     maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
@@ -93,9 +93,9 @@ void animate_walk_to_maze( Maze& maze, const Maze::Point& walk, Speed_unit speed
 {
   Maze::Point cur = walk;
   while ( maze[cur.row][cur.col] & Maze::markers_mask_ ) {
-    Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+    const Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
-    Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
+    const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
     animate_walk_walls( maze, cur, next, speed );
     // Clean up after ourselves and leave no marks behind for the maze solvers.
     maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
@@ -113,9 +113,9 @@ void erase_loop( Maze& maze, const Loop& loop )
   Maze::Point cur = loop.walk;
   while ( cur != loop.root ) {
     maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
-    Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+    const Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
-    Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
+    const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
     maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
     cur = next;
   }
@@ -126,9 +126,9 @@ void animate_erase_loop( Maze& maze, const Loop& loop, Speed_unit speed )
   Maze::Point cur = loop.walk;
   while ( cur != loop.root ) {
     maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
-    Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+    const Maze::Backtrack_marker mark = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
-    Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
+    const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
     maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
     flush_cursor_maze_coordinate( maze, cur );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
@@ -156,7 +156,7 @@ bool continue_random_walks( Maze& maze, Random_walk& cur )
     erase_loop( maze, { cur.walk, cur.next } );
     cur.walk = cur.next;
     cur.prev = {};
-    Maze::Backtrack_marker mark
+    const Maze::Backtrack_marker mark
       = ( maze[cur.walk.row][cur.walk.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
     cur.prev = { cur.walk.row + direction.row, cur.walk.col + direction.col };
@@ -188,7 +188,7 @@ bool animate_random_walks( Maze& maze, Random_walk& cur, Speed_unit speed )
     animate_erase_loop( maze, { cur.walk, cur.next }, speed );
     cur.walk = cur.next;
     cur.prev = {};
-    Maze::Backtrack_marker mark
+    const Maze::Backtrack_marker mark
       = ( maze[cur.walk.row][cur.walk.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
     cur.prev = { cur.walk.row + direction.row, cur.walk.col + direction.col };
@@ -234,7 +234,7 @@ void generate_wilson_wall_adder_maze( Maze& maze )
 
 void animate_wilson_wall_adder_maze( Maze& maze, Builder_speed speed )
 {
-  Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   build_wall_outline( maze );
   clear_and_flush_grid( maze );
   std::mt19937 generator( std::random_device {}() );
