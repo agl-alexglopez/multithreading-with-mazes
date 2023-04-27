@@ -128,29 +128,34 @@ int main( int argc, char** argv )
   };
 
   Maze_runner runner;
-  if ( argc > 1 ) {
-    const auto args = std::span( argv, static_cast<size_t>( argc ) );
-    bool process_current = false;
-    std::string_view prev_flag = {};
-    for ( size_t i = 1; i < args.size(); i++ ) {
-      auto* arg = args[i];
-      if ( process_current ) {
-        set_relevant_arg( tables, runner, { prev_flag, arg } );
-        process_current = false;
-      } else {
-        const auto& found_arg = tables.argument_flags.find( arg );
-        if ( found_arg == tables.argument_flags.end() ) {
-          std::cerr << "Invalid argument flag: " << arg << std::endl;
-          print_usage();
-          std::abort();
-        }
-        if ( *found_arg == "-h" ) {
-          print_usage();
-          return 0;
-        }
-        process_current = true;
-        prev_flag = arg;
+  if ( argc <= 1 ){
+    Builder::Maze maze( runner.args );
+    std::get<static_image>( runner.builder )( maze );
+    std::get<static_image>( runner.solver )( maze );
+    return 0;
+  }
+
+  const auto args = std::span( argv, static_cast<size_t>( argc ) );
+  bool process_current = false;
+  std::string_view prev_flag = {};
+  for ( size_t i = 1; i < args.size(); i++ ) {
+    auto* arg = args[i];
+    if ( process_current ) {
+      set_relevant_arg( tables, runner, { prev_flag, arg } );
+      process_current = false;
+    } else {
+      const auto& found_arg = tables.argument_flags.find( arg );
+      if ( found_arg == tables.argument_flags.end() ) {
+        std::cerr << "Invalid argument flag: " << arg << std::endl;
+        print_usage();
+        std::abort();
       }
+      if ( *found_arg == "-h" ) {
+        print_usage();
+        return 0;
+      }
+      process_current = true;
+      prev_flag = arg;
     }
   }
 
