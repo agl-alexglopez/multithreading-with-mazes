@@ -87,6 +87,9 @@ int main( int argc, char** argv )
       { "dfs-hunt", { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt } },
       { "dfs-gather", { Solver::solve_with_dfs_thread_gather, Solver::animate_with_dfs_thread_gather } },
       { "dfs-corners", { Solver::solve_with_dfs_thread_corners, Solver::animate_with_dfs_thread_corners } },
+      { "floodfs-hunt", { Solver::solve_with_floodfs_thread_hunt, Solver::animate_with_floodfs_thread_hunt } },
+      { "floodfs-gather", { Solver::solve_with_floodfs_thread_gather, Solver::animate_with_floodfs_thread_gather } },
+      { "floodfs-corners", { Solver::solve_with_floodfs_thread_corners, Solver::animate_with_floodfs_thread_corners } },
       { "rdfs-hunt",
         { Solver::solve_with_randomized_dfs_thread_hunt, Solver::animate_with_randomized_dfs_thread_hunt } },
       { "rdfs-gather",
@@ -299,6 +302,9 @@ void print_usage()
             << "│      dfs-hunt - Depth First Search                   │\n"
             << "│      dfs-gather - Depth First Search                 │\n"
             << "│      dfs-corners - Depth First Search                │\n"
+            << "│      floodfs-hunt - Depth First Search               │\n"
+            << "│      floodfs-gather - Depth First Search             │\n"
+            << "│      floodfs-corners - Depth First Search            │\n"
             << "│      rdfs-hunt - Randomized Depth First Search       │\n"
             << "│      rdfs-gather - Randomized Depth First Search     │\n"
             << "│      rdfs-corners - Randomized Depth First Search    │\n"

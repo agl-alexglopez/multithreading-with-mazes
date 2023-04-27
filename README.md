@@ -38,6 +38,9 @@ Use flags, followed by arguments, in any order:
 	- `dfs-hunt` - Depth First Search
 	- `dfs-gather` - Depth First Search
 	- `dfs-corners` - Depth First Search
+	- `floodfs-hunt` - Depth First Search
+	- `floodfs-gather` - Depth First Search
+	- `floodfs-corners` - Depth First Search
 	- `rdfs-hunt` - Randomized Depth First Search
 	- `rdfs-gather` - Randomized Depth First Search
 	- `rdfs-corners` - Randomized Depth First Search
