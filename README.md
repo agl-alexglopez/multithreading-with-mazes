@@ -1,6 +1,6 @@
 # Maze Generators and Multithreaded Solvers
 
-> **Note to All: In order to enjoy the mazes built and solved by this repository, you will need a terminal that supports ANSI escape sequences, 256 bit colors, and a Unicode compatible font installed for your terminal (see [Nerd Fonts](https://www.nerdfonts.com/)). Also, this project is intended to be built in a Unix-like environment, specifically I have tested it to work on Apple-ARM64, Apple-Intelx86-64, WSL2 for Windows, and PopOS for Linux. However, I make no promises for portability as this project is for my own personal enjoyment and is operating completely in terminal, without any 3rd party libraries. I will try to make the project more portable when time allows. Enjoy!**
+> **Note to All: In order to enjoy the mazes built and solved by this repository, you will need a terminal that supports ANSI escape sequences, 256 bit colors, and a Unicode compatible font installed for your terminal (see [Nerd Fonts](https://www.nerdfonts.com/)). Also, this project is intended to be built in a Unix-like environment, specifically I have tested it to work on Apple-ARM64, Apple-Intelx86-64, WSL2 for Windows, and PopOS for Linux. However, I make no promises for portability as this project is for my own personal enjoyment and is operating completely in terminal, without any 3rd party libraries. I will try to make the project more portable when time allows. This was compiled with GCC-12 and Clang-15, requiring CMake 3.24. Enjoy!**
 
 ![wilson-demo](/images/wilson-demo.png)
 
