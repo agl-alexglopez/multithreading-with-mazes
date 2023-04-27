@@ -278,6 +278,8 @@ void solve_with_bfs_thread_hunt( Builder::Maze& maze )
 void animate_with_bfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
 {
   clear_and_flush_paths( maze );
+  set_cursor_point( { maze.row_size(), 0 } );
+  print_overlap_key();
   Solver_monitor monitor;
   monitor.speed = solver_speeds_.at( static_cast<Speed_unit>( speed ) );
   monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
@@ -286,8 +288,6 @@ void animate_with_bfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
   maze[finish.row][finish.col] |= finish_bit_;
   flush_cursor_path_coordinate( maze, finish );
   std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
-  set_cursor_point( { maze.row_size(), 0 } );
-  print_overlap_key();
 
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
@@ -355,6 +355,8 @@ void solve_with_bfs_thread_gather( Builder::Maze& maze )
 void animate_with_bfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
 {
   clear_and_flush_paths( maze );
+  set_cursor_point( { maze.row_size(), 0 } );
+  print_overlap_key();
   Solver_monitor monitor;
   monitor.speed = solver_speeds_.at( static_cast<int>( speed ) );
   monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
@@ -365,8 +367,6 @@ void animate_with_bfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
     flush_cursor_path_coordinate( maze, finish );
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
-  set_cursor_point( { maze.row_size(), 0 } );
-  print_overlap_key();
 
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
@@ -395,6 +395,8 @@ void animate_with_bfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
 
 void solve_with_bfs_thread_corners( Builder::Maze& maze )
 {
+  set_cursor_point( { maze.row_size(), 0 } );
+  print_overlap_key();
   Solver_monitor monitor;
   monitor.starts = set_corner_starts( maze );
   for ( const Builder::Maze::Point& p : monitor.starts ) {
@@ -407,8 +409,6 @@ void solve_with_bfs_thread_corners( Builder::Maze& maze )
   }
   maze[finish.row][finish.col] |= Builder::Maze::path_bit_;
   maze[finish.row][finish.col] |= finish_bit_;
-  set_cursor_point( { maze.row_size(), 0 } );
-  print_overlap_key();
 
   std::vector<std::thread> threads( num_threads_ );
   // Randomly shuffle thread start corners so colors mix differently each time.
@@ -431,21 +431,26 @@ void solve_with_bfs_thread_corners( Builder::Maze& maze )
 void animate_with_bfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
 {
   clear_and_flush_paths( maze );
+  set_cursor_point( { maze.row_size(), 0 } );
+  print_overlap_key();
   Solver_monitor monitor;
   monitor.speed = solver_speeds_.at( static_cast<int>( speed ) );
   monitor.starts = set_corner_starts( maze );
   for ( const Builder::Maze::Point& p : monitor.starts ) {
     maze[p.row][p.col] |= start_bit_;
+    flush_cursor_path_coordinate( maze, p );
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
   Builder::Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
   for ( const Builder::Maze::Point& p : all_directions_ ) {
     Builder::Maze::Point next = { finish.row + p.row, finish.col + p.col };
     maze[next.row][next.col] |= Builder::Maze::path_bit_;
+    flush_cursor_path_coordinate( maze, next );
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
   maze[finish.row][finish.col] |= Builder::Maze::path_bit_;
   maze[finish.row][finish.col] |= finish_bit_;
+  flush_cursor_path_coordinate( maze, finish );
   std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
 
   std::vector<std::thread> threads( num_threads_ );
