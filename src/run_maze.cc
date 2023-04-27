@@ -128,16 +128,10 @@ int main( int argc, char** argv )
   };
 
   Maze_runner runner;
-  if ( argc <= 1 ){
-    Builder::Maze maze( runner.args );
-    std::get<static_image>( runner.builder )( maze );
-    std::get<static_image>( runner.solver )( maze );
-    return 0;
-  }
-
   const auto args = std::span( argv, static_cast<size_t>( argc ) );
   bool process_current = false;
   std::string_view prev_flag = {};
+  // In the case of no arguments this is skipped and we use our sensible defaults.
   for ( size_t i = 1; i < args.size(); i++ ) {
     auto* arg = args[i];
     if ( process_current ) {
@@ -161,7 +155,7 @@ int main( int argc, char** argv )
 
   Builder::Maze maze( runner.args );
 
-  // We have stored functions in our maze runner. Run them with the tuple get syntax.
+  // Functions are stored in tuples so use tuple get syntax and then call them immidiately.
 
   if ( runner.builder_view == animated_playback ) {
     std::get<animated_playback>( runner.builder )( maze, runner.builder_speed );
