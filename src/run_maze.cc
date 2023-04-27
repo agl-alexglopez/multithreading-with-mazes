@@ -15,10 +15,10 @@
 #include <unordered_set>
 #include <vector>
 
-using Build_choice = std::tuple<std::function<void( Builder::Maze& )>,
-                                std::function<void( Builder::Maze&, Builder::Builder_speed )>>;
+using Build_function = std::tuple<std::function<void( Builder::Maze& )>,
+                                  std::function<void( Builder::Maze&, Builder::Builder_speed )>>;
 
-using Solve_choice
+using Solve_function
   = std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Solver::Solver_speed )>>;
 
 constexpr int static_image = 0;
@@ -36,24 +36,24 @@ struct Maze_runner
 
   int builder_view { static_image };
   Builder::Builder_speed builder_speed {};
-  Build_choice builder { Builder::generate_recursive_backtracker_maze,
-                         Builder::animate_recursive_backtracker_maze };
+  Build_function builder { Builder::generate_recursive_backtracker_maze,
+                           Builder::animate_recursive_backtracker_maze };
 
   int modification_getter { static_image };
-  std::optional<Build_choice> modder {};
+  std::optional<Build_function> modder {};
 
   int solver_view { static_image };
   Solver::Solver_speed solver_speed {};
-  Solve_choice solver { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt };
+  Solve_function solver { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt };
   Maze_runner() : args {} {}
 };
 
 struct Lookup_tables
 {
   const std::unordered_set<std::string> argument_flags;
-  const std::unordered_map<std::string, Build_choice> builder_table;
-  const std::unordered_map<std::string, Build_choice> modification_table;
-  const std::unordered_map<std::string, Solve_choice> solver_table;
+  const std::unordered_map<std::string, Build_function> builder_table;
+  const std::unordered_map<std::string, Build_function> modification_table;
+  const std::unordered_map<std::string, Solve_function> solver_table;
   const std::unordered_map<std::string, Builder::Maze::Maze_style> style_table;
   const std::unordered_map<std::string, Solver::Solver_speed> solver_animation_table;
   const std::unordered_map<std::string, Builder::Builder_speed> builder_animation_table;
