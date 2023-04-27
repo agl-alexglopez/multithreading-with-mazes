@@ -136,7 +136,7 @@ void set_cursor_point( const Builder::Maze::Point& point )
 void print_hunt_solution_message( std::optional<int> winning_index )
 {
   if ( !winning_index ) {
-    std::cout << thread_colors_.at( all_threads_failed_index_ ) << " no winner...\n";
+    std::cout << thread_colors_.at( all_threads_failed_index_ );
     return;
   }
   std::cout << ( thread_colors_.at( thread_masks_.at( winning_index.value() ) >> thread_tag_offset_ ) )

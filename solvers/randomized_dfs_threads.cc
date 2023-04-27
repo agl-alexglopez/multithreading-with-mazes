@@ -273,8 +273,7 @@ void solve_with_randomized_dfs_thread_hunt( Builder::Maze& maze )
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread]
-      = std::thread( [&maze, &monitor, this_thread] { complete_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread] = std::thread( complete_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -299,8 +298,7 @@ void solve_with_randomized_dfs_thread_gather( Builder::Maze& maze )
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread]
-      = std::thread( [&maze, &monitor, this_thread] { complete_gather( maze, monitor, this_thread ); } );
+    threads[i_thread] = std::thread( complete_gather, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -333,8 +331,7 @@ void solve_with_randomized_dfs_thread_corners( Builder::Maze& maze )
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread = { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread]
-      = std::thread( [&maze, &monitor, this_thread] { complete_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread] = std::thread( complete_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
   }
   for ( std::thread& t : threads ) {
     t.join();
@@ -363,8 +360,7 @@ void animate_with_randomized_dfs_thread_hunt( Builder::Maze& maze, Solver_speed 
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread]
-      = std::thread( [&maze, &monitor, this_thread] { animate_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread] = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -394,8 +390,7 @@ void animate_with_randomized_dfs_thread_gather( Builder::Maze& maze, Solver_spee
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread]
-      = std::thread( [&maze, &monitor, this_thread] { animate_gather( maze, monitor, this_thread ); } );
+    threads[i_thread] = std::thread( animate_gather, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -436,8 +431,7 @@ void animate_with_randomized_dfs_thread_corners( Builder::Maze& maze, Solver_spe
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread = { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread]
-      = std::thread( [&maze, &monitor, this_thread] { animate_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread] = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
   }
   for ( std::thread& t : threads ) {
     t.join();

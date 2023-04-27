@@ -248,18 +248,20 @@ void solve_with_floodfs_thread_hunt( Builder::Maze& maze )
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread]
-      = std::thread( [&maze, &monitor, this_thread] { complete_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread] = std::thread( complete_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
     t.join();
   }
-  const Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
-  for ( const Builder::Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.value() ) ) {
-    maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
-    maze[p.row][p.col] |= winner_color;
+
+  if ( monitor.winning_index ) {
+    const Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
+    monitor.thread_paths.at( monitor.winning_index.value() ).pop_back();
+    const Builder::Maze::Point& before_finish = monitor.thread_paths.at( monitor.winning_index.value() ).back();
+    maze[before_finish.row][before_finish.col] |= winner_color;
   }
+
   clear_screen();
   print_maze( maze );
   print_overlap_key();
@@ -279,12 +281,18 @@ void solve_with_floodfs_thread_gather( Builder::Maze& maze )
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread]
-      = std::thread( [&maze, &monitor, this_thread] { complete_gather( maze, monitor, this_thread ); } );
+    threads[i_thread] = std::thread( complete_gather, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
     t.join();
+  }
+  int i_thread = 0;
+  for ( const std::vector<Builder::Maze::Point>& path : monitor.thread_paths ) {
+    const Thread_paint color = thread_masks_.at( i_thread++ );
+    const Builder::Maze::Point& p = path.back();
+    maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
+    maze[p.row][p.col] |= color;
   }
   clear_screen();
   print_maze( maze );
@@ -313,17 +321,18 @@ void solve_with_floodfs_thread_corners( Builder::Maze& maze )
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread = { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread]
-      = std::thread( [&maze, &monitor, this_thread] { complete_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread] = std::thread( complete_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
   }
   for ( std::thread& t : threads ) {
     t.join();
   }
-  const Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
-  for ( const Builder::Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.value() ) ) {
-    maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
-    maze[p.row][p.col] |= winner_color;
+
+  if ( monitor.winning_index ) {
+    const Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
+    const Builder::Maze::Point& before_finish = monitor.thread_paths.at( monitor.winning_index.value() ).back();
+    maze[before_finish.row][before_finish.col] |= winner_color;
   }
+
   clear_screen();
   print_maze( maze );
   print_overlap_key();
@@ -348,19 +357,18 @@ void animate_with_floodfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread]
-      = std::thread( [&maze, &monitor, this_thread] { animate_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread] = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
     t.join();
   }
-  // It is cool to see the shortest path that the winning thread took to victory
-  const Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
-  for ( const Builder::Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.value() ) ) {
-    maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
-    maze[p.row][p.col] |= winner_color;
-    flush_cursor_path_coordinate( maze, p );
+
+  if ( monitor.winning_index ) {
+    const Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
+    const Builder::Maze::Point& before_finish = monitor.thread_paths.at( monitor.winning_index.value() ).back();
+    maze[before_finish.row][before_finish.col] |= winner_color;
+    flush_cursor_path_coordinate( maze, before_finish );
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
   set_cursor_point( { maze.row_size() + overlap_key_and_message_height, 0 } );
@@ -387,12 +395,21 @@ void animate_with_floodfs_thread_gather( Builder::Maze& maze, Solver_speed speed
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread]
-      = std::thread( [&maze, &monitor, this_thread] { animate_gather( maze, monitor, this_thread ); } );
+    threads[i_thread] = std::thread( animate_gather, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
     t.join();
+  }
+
+  int i_thread = 0;
+  for ( const std::vector<Builder::Maze::Point>& path : monitor.thread_paths ) {
+    const Thread_paint color = thread_masks_.at( i_thread++ );
+    const Builder::Maze::Point& p = path.back();
+    maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
+    maze[p.row][p.col] |= color;
+    flush_cursor_path_coordinate( maze, p );
+    std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
   set_cursor_point( { maze.row_size() + overlap_key_and_message_height, 0 } );
   print_gather_solution_message();
@@ -429,21 +446,22 @@ void animate_with_floodfs_thread_corners( Builder::Maze& maze, Solver_speed spee
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_id this_thread = { i_thread, thread_masks_.at( i_thread ) };
-    threads[i_thread]
-      = std::thread( [&maze, &monitor, this_thread] { animate_hunt( maze, monitor, this_thread ); } );
+    threads[i_thread] = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
   }
   for ( std::thread& t : threads ) {
     t.join();
   }
 
-  // It is cool to see the shortest path that the winning thread took to victory
-  const Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
-  for ( const Builder::Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.value() ) ) {
-    maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
-    maze[p.row][p.col] |= winner_color;
-    flush_cursor_path_coordinate( maze, p );
-    std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
+  if ( monitor.winning_index ) {
+    const Thread_paint winner_color = thread_masks_.at( monitor.winning_index.value() );
+    for ( const Builder::Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.value() ) ) {
+      maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_mask_ );
+      maze[p.row][p.col] |= winner_color;
+      flush_cursor_path_coordinate( maze, p );
+      std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
+    }
   }
+
   set_cursor_point( { maze.row_size() + overlap_key_and_message_height, 0 } );
   print_hunt_solution_message( monitor.winning_index );
   std::cout << std::endl;
