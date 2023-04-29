@@ -119,13 +119,8 @@ public:
 
   static constexpr std::array<std::string_view, 5> backtracking_symbols_
     = { { " ", from_north_mark_, from_east_mark_, from_south_mark_, from_west_mark_ } };
-  static constexpr std::array<Point, 5> backtracking_marks_ = { {
-    { 0, 0 },
-    { -2, 0 },
-    { 0, 2 },
-    { 2, 0 },
-    { 0, -2 },
-  } };
+  static constexpr std::array<Point, 5> backtracking_marks_
+    = { { { 0, 0 }, { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
 
   static constexpr Wall_line wall_mask_ = 0b1111;
   static constexpr Wall_line floating_wall_ = 0b0000;
@@ -141,95 +136,12 @@ public:
     // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall with no walls around.
     // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
     // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
-    { "■", "╵", "╶", "└", "╷", "│", "┌", "├", "╴", "┘", "─", "┴", "┐", "┤", "┬", "┼" },
-    { // Same but with rounded corners.
-      "●",
-      "╵",
-      "╶",
-      "╰",
-      "╷",
-      "│",
-      "╭",
-      "├",
-      "╴",
-      "╯",
-      "─",
-      "┴",
-      "╮",
-      "┤",
-      "┬",
-      "┼" },
-    { // Same but with double lines.
-      "◫",
-      "║",
-      "═",
-      "╚",
-      "║",
-      "║",
-      "╔",
-      "╠",
-      "═",
-      "╝",
-      "═",
-      "╩",
-      "╗",
-      "╣",
-      "╦",
-      "╬" },
-    { // Same but with bold lines.
-      "■",
-      "╹",
-      "╺",
-      "┗",
-      "╻",
-      "┃",
-      "┏",
-      "┣",
-      "╸",
-      "┛",
-      "━",
-      "┻",
-      "┓",
-      "┫",
-      "┳",
-      "╋" },
-    {
-      // Simpler approach that creates well-connected high contrast black/white.
-      "█",
-      "█",
-      "█",
-      "█",
-      "█",
-      "█",
-      "█",
-      "█",
-      "█",
-      "█",
-      "█",
-      "█",
-      "█",
-      "█",
-      "█",
-      "█",
-    },
-    { // Same but with crosses that create spikes.
-      "✸",
-      "╀",
-      "┾",
-      "╊",
-      "╁",
-      "╂",
-      "╆",
-      "╊",
-
-      "┽",
-      "╃",
-      "┿",
-      "╇",
-      "╅",
-      "╉",
-      "╈",
-      "╋" },
+    { "■", "╵", "╶", "└", "╷", "│", "┌", "├", "╴", "┘", "─", "┴", "┐", "┤", "┬", "┼" }, // standard
+    { "●", "╵", "╶", "╰", "╷", "│", "╭", "├", "╴", "╯", "─", "┴", "╮", "┤", "┬", "┼" }, // rounded
+    { "◫", "║", "═", "╚", "║", "║", "╔", "╠", "═", "╝", "═", "╩", "╗", "╣", "╦", "╬" }, // doubles
+    { "■", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋" }, // bold
+    { "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█" }, // contrast
+    { "✸", "╀", "┾", "╊", "╁", "╂", "╆", "╊", "┽", "╃", "┿", "╇", "╅", "╉", "╈", "╋" }, // spikes
   } };
 
   //                                                               n      e     s      w
