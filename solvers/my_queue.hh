@@ -29,10 +29,6 @@ public:
     back_ = 0;
   }
 
-  size_t size() const { return logical_size_; }
-
-  bool empty() const { return logical_size_ == 0; }
-
   void push( const Value_type& elem )
   {
     // Doubling allocations so we can't acheive ULLONG_MAX for our container size. Slightly less.
@@ -47,24 +43,35 @@ public:
     logical_size_++;
   }
 
-  Value_type pop()
+  void pop()
   {
     if ( logical_size_ == 0 ) {
       throw std::logic_error( "My_queue is empty." );
     }
-    const Value_type return_copy = elems_[front_];
     ++front_ %= allocated_size_;
     logical_size_--;
-    return return_copy;
   }
 
-  Value_type front() const
+  const Value_type& front() const
   {
     if ( logical_size_ == 0 ) {
       throw std::logic_error( "My_queue is empty." );
     }
     return elems_[front_];
   }
+
+  Value_type& front()
+  {
+    if ( logical_size_ == 0 ) {
+      throw std::logic_error( "My_queue is empty." );
+    }
+    return elems_[front_];
+  }
+
+  size_t size() const { return logical_size_; }
+
+  bool empty() const { return logical_size_ == 0; }
+
 
 private:
   static constexpr size_t initial_size_ = 8;
