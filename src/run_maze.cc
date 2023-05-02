@@ -77,6 +77,7 @@ int main( int argc, char** argv )
       { "wilson-walls", { Builder::generate_wilson_wall_adder_maze, Builder::animate_wilson_wall_adder_maze } },
       { "fractal", { Builder::generate_recursive_subdivision_maze, Builder::animate_recursive_subdivision_maze } },
       { "kruskal", { Builder::generate_kruskal_maze, Builder::animate_kruskal_maze } },
+      { "eller", { Builder::generate_eller_maze, Builder::animate_eller_maze } },
       { "prim", { Builder::generate_prim_maze, Builder::animate_prim_maze } },
       { "grid", { Builder::generate_grid_maze, Builder::animate_grid_maze } },
       { "arena", { Builder::generate_arena, Builder::animate_arena } },
