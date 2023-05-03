@@ -30,15 +30,15 @@ void animate_eller_maze( Maze& maze, Builder_speed speed )
   uint64_t global_index = 0;
   std::vector<std::vector<Set_id>> cur_next_rows( 2, std::vector<Set_id>( maze.col_size(), { 0 } ) );
   std::iota( std::begin( cur_next_rows[0] ), std::end( cur_next_rows[0] ),  0 );
-  Set_id global_ids = maze.col_size();
+  Set_id unique_ids = maze.col_size();
 
   std::mt19937 gen( std::random_device{}() );
   std::uniform_int_distribution<int> coin( 0, 1 );
   for ( int row = 1; row < maze.row_size() - 2; row += 2 ) {
     uint64_t cur_row_set = global_index;
     uint64_t next_row_set = ( global_index + 1 ) % cur_next_rows.size();
-    std::iota( std::begin( cur_next_rows[next_row_set] ), std::end( cur_next_rows[next_row_set] ), global_ids );
-    global_ids += maze.col_size();
+    std::iota( std::begin( cur_next_rows[next_row_set] ), std::end( cur_next_rows[next_row_set] ), unique_ids );
+    unique_ids += maze.col_size();
 
     std::unordered_map<Set_id, std::vector<Maze::Point>> sets_in_this_row {};
 
