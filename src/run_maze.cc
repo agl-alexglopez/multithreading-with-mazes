@@ -295,7 +295,7 @@ void print_usage()
                "│ │ └─┐ ╵ │ rdfs - Randomized Depth First Search.         │ │ └─┘ ┌─┘ │\n"
                "│     │   │ kruskal - Randomized Kruskal's algorithm. │   │       │   │\n"
                "├─────┤ ╷ ╵ prim - Randomized Prim's algorithm.─┴───┐ │ ┌─┴─────┬─┴─┐ │\n"
-               "│     │ │   eller - Randomized Eller's algorithm.   │ │ │       │   │ │"
+               "│     │ │   eller - Randomized Eller's algorithm.   │ │ │       │   │ │\n"
                "│     │ │   wilson - Loop-Erased Random Path Carver.│ │ │       │   │ │\n"
                "│ ┌─┐ ╵ ├─┬─wilson-walls - Loop-Erased Random Wall Adder. ┌───┐ ╵ ╷ │ │\n"
                "│ │ │   │ │ fractal - Randomized recursive subdivision. │ │   │   │ │ │\n"
