@@ -1,6 +1,4 @@
-#include "disjoint_set.hh"
 #include "maze_algorithms.hh"
-#include "maze_utilities.hh"
 
 #include <cstdint>
 #include <numeric>
@@ -14,63 +12,171 @@ namespace {
 
 using Set_id = int;
 
+struct Sliding_set_window
+{
+  uint64_t curr_row { 0 };
+  std::vector<std::vector<Set_id>> sets;
+  explicit Sliding_set_window( const Maze& maze ) : sets( 2, std::vector<Set_id>( maze.col_size(), { 0 } ) ) {}
+};
+
+struct Id_merge_request
+{
+  Set_id winning_id;
+  Set_id losing_id;
+};
+
+constexpr int horizontal_bias = 2;
+
+void merge_sets( Sliding_set_window& sets, const Id_merge_request& merge, int col_in_row )
+{
+  for ( uint64_t set_elem = col_in_row + 2; set_elem < sets.sets[0].size() - 1; set_elem += 2 ) {
+    if ( sets.sets.at( sets.curr_row )[set_elem] == merge.losing_id ) {
+      sets.sets.at( sets.curr_row )[set_elem] = merge.winning_id;
+    }
+  }
+  for ( int set_elem = col_in_row - 2; set_elem > 0; set_elem -= 2 ) {
+    if ( sets.sets.at( sets.curr_row )[set_elem] == merge.losing_id ) {
+      sets.sets.at( sets.curr_row )[set_elem] = merge.winning_id;
+    }
+  }
+}
+
+void complete_final_row( Maze& maze, Sliding_set_window& window )
+{
+  const int final_row = maze.row_size() - 2;
+  for ( int col = 1; col < maze.col_size() - 2; col += 2 ) {
+    const Maze::Point next = { final_row, col + 2 };
+    const Set_id this_square_id = window.sets.at( window.curr_row )[col];
+    if ( this_square_id != window.sets.at( window.curr_row )[col + 2] ) {
+      join_squares( maze, { final_row, col }, next );
+      const Set_id other_set_id = window.sets.at( window.curr_row )[next.col];
+      for ( int set_elem = next.col; set_elem < maze.col_size() - 1; set_elem += 2 ) {
+        if ( window.sets.at( window.curr_row )[set_elem] == other_set_id ) {
+          window.sets.at( window.curr_row )[set_elem] = this_square_id;
+        }
+      }
+    }
+  }
+}
+
+void complete_final_row_animated( Maze& maze, Sliding_set_window& window, Speed_unit animation )
+{
+  const int final_row = maze.row_size() - 2;
+  for ( int col = 1; col < maze.col_size() - 2; col += 2 ) {
+    const Maze::Point next = { final_row, col + 2 };
+    const Set_id this_square_id = window.sets.at( window.curr_row )[col];
+    if ( this_square_id != window.sets.at( window.curr_row )[col + 2] ) {
+      join_squares_animated( maze, { final_row, col }, next, animation );
+      const Set_id other_set_id = window.sets.at( window.curr_row )[next.col];
+      for ( int set_elem = next.col; set_elem < maze.col_size() - 1; set_elem += 2 ) {
+        if ( window.sets.at( window.curr_row )[set_elem] == other_set_id ) {
+          window.sets.at( window.curr_row )[set_elem] = this_square_id;
+        }
+      }
+    }
+  }
+}
 
 } // namespace
 
+/* There are two fun details about this implementation: the auxillary memory requirement is a constant determined
+ * by the width of a row and the randomness is thorough when determining how many squares per set should drop below.
+ * The downside is the way I am doing it now is somewhat slow. I want to keep the memory footprint low and a good
+ * randomized technique to choose dropping squares. Find a better strategy.
+ */
+
 void generate_eller_maze( Maze& maze )
 {
-  (void) maze;
+  fill_maze_with_walls( maze );
+  Sliding_set_window window( maze );
+  std::iota( std::begin( window.sets[0] ), std::end( window.sets[0] ), 0 );
+  Set_id unique_ids = maze.col_size();
+  std::mt19937 gen( std::random_device {}() );
+  std::uniform_int_distribution<int> coin( 0, horizontal_bias );
+
+  std::unordered_map<Set_id, std::vector<Maze::Point>> sets_in_this_row {};
+  for ( int row = 1; row < maze.row_size() - 2; row += 2 ) {
+    const uint64_t next_row = ( window.curr_row + 1 ) % window.sets.size();
+    std::iota( std::begin( window.sets.at( next_row ) ), std::end( window.sets.at( next_row ) ), unique_ids );
+    unique_ids += maze.col_size();
+
+    for ( int col = 1; col < maze.col_size() - 1; col += 2 ) {
+      const Maze::Point next = { row, col + 2 };
+      const Set_id this_square_id = window.sets.at( window.curr_row )[col];
+      if ( is_square_within_perimeter_walls( maze, next )
+           && this_square_id != window.sets.at( window.curr_row )[next.col] && coin( gen ) ) {
+        join_squares( maze, { row, col }, next );
+        merge_sets( window, { this_square_id, window.sets.at( window.curr_row )[next.col] }, col );
+      }
+    }
+
+    for ( int col = 1; col < maze.col_size() - 1; col += 2 ) {
+      const Set_id this_square_id = window.sets.at( window.curr_row )[col];
+      sets_in_this_row[this_square_id].push_back( { row, col } );
+    }
+
+    for ( const auto& s : sets_in_this_row ) {
+      std::uniform_int_distribution<uint64_t> num_drops( 1, s.second.size() );
+      const uint64_t drops = num_drops( gen );
+      for ( uint64_t drop = 0; drop < drops; drop++ ) {
+        std::uniform_int_distribution<uint64_t> rand_drop( 0, s.second.size() - 1 );
+        const Maze::Point chosen = s.second[rand_drop( gen )];
+        window.sets.at( next_row )[chosen.col] = s.first;
+        join_squares( maze, chosen, { chosen.row + 2, chosen.col } );
+      }
+    }
+    window.curr_row = next_row;
+    sets_in_this_row.clear();
+  }
+  complete_final_row( maze, window );
 }
 
 void animate_eller_maze( Maze& maze, Builder_speed speed )
 {
   fill_maze_with_walls_animated( maze );
   clear_and_flush_grid( maze );
-  Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
-  uint64_t global_index = 0;
-  std::vector<std::vector<Set_id>> cur_next_rows( 2, std::vector<Set_id>( maze.col_size(), { 0 } ) );
-  std::iota( std::begin( cur_next_rows[0] ), std::end( cur_next_rows[0] ),  0 );
+  const Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  Sliding_set_window window( maze );
+  std::iota( std::begin( window.sets[0] ), std::end( window.sets[0] ), 0 );
   Set_id unique_ids = maze.col_size();
+  std::mt19937 gen( std::random_device {}() );
+  std::uniform_int_distribution<int> coin( 0, horizontal_bias );
 
-  std::mt19937 gen( std::random_device{}() );
-  std::uniform_int_distribution<int> coin( 0, 1 );
+  std::unordered_map<Set_id, std::vector<Maze::Point>> sets_in_this_row {};
   for ( int row = 1; row < maze.row_size() - 2; row += 2 ) {
-    uint64_t cur_row_set = global_index;
-    uint64_t next_row_set = ( global_index + 1 ) % cur_next_rows.size();
-    std::iota( std::begin( cur_next_rows[next_row_set] ), std::end( cur_next_rows[next_row_set] ), unique_ids );
+    const uint64_t next_row = ( window.curr_row + 1 ) % window.sets.size();
+    std::iota( std::begin( window.sets.at( next_row ) ), std::end( window.sets.at( next_row ) ), unique_ids );
     unique_ids += maze.col_size();
 
-    std::unordered_map<Set_id, std::vector<Maze::Point>> sets_in_this_row {};
-
     for ( int col = 1; col < maze.col_size() - 1; col += 2 ) {
-      Maze::Point next = { row, col + 2 };
-      Set_id this_square_id = cur_next_rows[cur_row_set][col];
-      sets_in_this_row[this_square_id].push_back( { row, col } );
-      if ( is_square_within_perimeter_walls( maze, next ) &&
-          this_square_id != cur_next_rows[cur_row_set][col + 2] && coin( gen ) ) {
-        cur_next_rows[cur_row_set][col + 2] = this_square_id;
+      const Maze::Point next = { row, col + 2 };
+      const Set_id this_square_id = window.sets.at( window.curr_row )[col];
+      if ( is_square_within_perimeter_walls( maze, next )
+           && this_square_id != window.sets.at( window.curr_row )[next.col] && coin( gen ) ) {
         join_squares_animated( maze, { row, col }, next, animation );
+        merge_sets( window, { this_square_id, window.sets.at( window.curr_row )[next.col] }, col );
       }
     }
 
+    for ( int col = 1; col < maze.col_size() - 1; col += 2 ) {
+      const Set_id this_square_id = window.sets.at( window.curr_row )[col];
+      sets_in_this_row[this_square_id].push_back( { row, col } );
+    }
+
     for ( const auto& s : sets_in_this_row ) {
-      std::uniform_int_distribution<uint64_t> random_dropdown( 0, s.second.size() - 1 );
-      Maze::Point chosen = s.second[random_dropdown( gen )];
-      cur_next_rows[next_row_set][chosen.col] = s.first;
-      join_squares_animated( maze, chosen, { chosen.row + 2, chosen.col }, animation );
+      std::uniform_int_distribution<uint64_t> num_drops( 1, s.second.size() );
+      const uint64_t drops = num_drops( gen );
+      for ( uint64_t drop = 0; drop < drops; drop++ ) {
+        std::uniform_int_distribution<uint64_t> rand_drop( 0, s.second.size() - 1 );
+        const Maze::Point chosen = s.second[rand_drop( gen )];
+        window.sets.at( next_row )[chosen.col] = s.first;
+        join_squares_animated( maze, chosen, { chosen.row + 2, chosen.col }, animation );
+      }
     }
-    ++global_index %= cur_next_rows.size();
+    window.curr_row = next_row;
+    sets_in_this_row.clear();
   }
-
-  int final_row = maze.row_size() - 2;
-  for ( int col = 1; col < maze.col_size() - 2; col += 2 ) {
-    Maze::Point next = { final_row, col + 2 };
-    Set_id this_square_id = cur_next_rows[global_index][col];
-    if ( this_square_id != cur_next_rows[global_index][col + 2] ) {
-      join_squares_animated( maze, { final_row, col }, next, animation );
-    }
-  }
+  complete_final_row_animated( maze, window, animation );
 }
-
 
 } // namespace Builder
