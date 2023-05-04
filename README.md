@@ -19,10 +19,10 @@ If you would rather just see some cool mazes right away, run the demo I have inc
 ```zsh
 $ cmake -S . -B build/
 $ cmake --build build
-$ ./build/bin/run_maze_optimized
+$ ./build/bin/demo_optimized
 
 # Or set the rows and columns to your liking for bigger or smaller demo mazes.
-$ ./build/bin/run_maze_optimized -r 50 -c 50
+$ ./build/bin/demo_optimized -r 50 -c 50
 ```
 If you wish to dive into the more specific `run_maze` program, here is the help message that comes with the `-h` flag to get started.
 
