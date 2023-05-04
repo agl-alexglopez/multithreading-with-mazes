@@ -23,6 +23,9 @@ void animate_kruskal_maze( Maze& maze, Builder_speed speed );
 void generate_prim_maze( Maze& maze );
 void animate_prim_maze( Maze& maze, Builder_speed speed );
 
+void generate_eller_maze( Maze& maze );
+void animate_eller_maze( Maze& maze, Builder_speed speed );
+
 void generate_grid_maze( Maze& maze );
 void animate_grid_maze( Maze& maze, Builder_speed speed );
 

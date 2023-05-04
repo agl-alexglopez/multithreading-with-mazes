@@ -72,7 +72,6 @@ public:
 
   bool empty() const { return logical_size_ == 0; }
 
-
 private:
   static constexpr size_t initial_size_ = 8;
   const size_t full_queue_ = 1UL << 63;

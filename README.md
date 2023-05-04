@@ -26,6 +26,7 @@ Use flags, followed by arguments, in any order:
 	- `rdfs` - Randomized Depth First Search.
 	- `kruskal` - Randomized Kruskal's algorithm.
 	- `prim` - Randomized Prim's algorithm.
+	- `eller` - Randomized Eller's algorithm.
 	- `wilson` - Loop-Erased Random Path Carver.
 	- `wilson-walls` - Loop-Erased Random Wall Adder.
 	- `fractal` - Randomized recursive subdivision.
@@ -165,7 +166,7 @@ This is an algorithm that has many optimization possibilities. The most notable 
 
 ![kruskal-loop](/images/kruskal-loop.gif)
 
-I lump Kruskal and Prim together as quite similar but their visual animations are different. Kruskal reasons about the cells and walls in a maze in terms of Disjoint Sets. In fact, I was able to learn about this data structure through this algorithm. I will not go into full detail on what it is, only explain how it is used in this algorithm. The algorithm goes something like this.
+I lump Kruskal, Prim, and Eller together as quite similar but their visual animations are different. Kruskal reasons about the cells and walls in a maze in terms of Disjoint Sets. In fact, I was able to learn about this data structure through this algorithm. I will not go into full detail on what it is, only explain how it is used in this algorithm. The algorithm goes something like this.
 
 ```txt
 load all square into a disjoint set as single unique sets
@@ -228,6 +229,45 @@ while the min priority queue is not empty
 ```
 
 This algorithm spreads out nicely as it builds like clusters all over the grid. It is also space inefficient at this time. I hear there are optimizations and will try to learn more.
+
+### Eller's Algorithm
+
+![eller-loop](/images/eller-loop.gif)
+
+People interested in mazes love Eller's algorithm. This is because it can be implemented many ways, some of which allow for arbitrarily large generation of mazes with a memory requirement only equivalent to the width of the maze. This algorithm can generate row by row which makes it quite fast and efficient. For all of its benefits it is challenging to find good information on the implementation. So, I went with a somewhat original approach to the problem for now. I was able to uphold the main benefit of Eller, that being I only require a memory constant tied to the width of the maze. I think there are smarter ways to implement my approach and when I get a chance, I think I can cut down on the number of passes over a row that I require.
+
+```txt
+prepare a sliding window of the current and next row
+
+give every cell in the first row of the window a unique set id
+
+for every row in the maze except the last
+
+    give every cell in the next sliding window row a unique set id
+
+    for every column in the current row
+
+        if a square is not part of its right neigbhors set and
+        a random choice allows them to be merged
+
+            merge them into the same set, joining squares
+
+    for every set merged with another or left isolated
+
+        choose a random number of elements >= 1 in that set to drop to row below
+
+            join that element with the set below, joining squares.
+
+    adjust the sliding window, set current = next.
+
+for every column in the final row
+
+    if a square is not part of its neighbors set
+
+        merge them into the same set, joining squares.
+```
+
+The final row is definitely the trickiest part of this algorithm. However, working it out helps reveal how exact the set tracking must be throughout this algorithm. There are a few key details to consider to notify all cells within a set, and within a row, of a merge.
 
 ### Wilson's Path Carver
 
