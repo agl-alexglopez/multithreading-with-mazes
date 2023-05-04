@@ -28,7 +28,7 @@ enum class Parity_point
   odd,
 };
 
-constexpr std::array<Speed_unit, 8> builder_speeds_ = { 0, 80000, 2500, 1000, 500, 250, 100, 1 };
+constexpr std::array<Speed_unit, 8> builder_speeds_ = { 0, 5000, 2500, 1000, 500, 250, 100, 1 };
 
 void add_positive_slope( Maze& maze, const Maze::Point& p );
 void add_positive_slope_animated( Maze& maze, const Maze::Point& p, Speed_unit speed );
