@@ -1,7 +1,5 @@
-#include "maze.hh"
 #include "maze_algorithms.hh"
 #include "maze_solvers.hh"
-#include "maze_utilities.hh"
 
 #include <array>
 #include <exception>
@@ -16,6 +14,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+namespace {
 
 using Build_function = std::tuple<std::function<void( Builder::Maze& )>,
                                   std::function<void( Builder::Maze&, Builder::Builder_speed )>>;
@@ -60,6 +60,8 @@ struct Lookup_tables
   const std::unordered_map<std::string, Solver::Solver_speed> solver_animation_table;
   const std::unordered_map<std::string, Builder::Builder_speed> builder_animation_table;
 };
+
+} // namespace
 
 void set_relevant_arg( const Lookup_tables& tables, Maze_runner& runner, const Flag_arg& pairs );
 void set_rows( Maze_runner& runner, const Flag_arg& pairs );

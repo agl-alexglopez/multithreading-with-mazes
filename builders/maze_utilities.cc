@@ -126,7 +126,6 @@ void add_cross( Maze& maze )
 
 void add_cross_animated( Maze& maze, Builder_speed speed )
 {
-  clear_and_flush_grid( maze );
   const Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   for ( int row = 1; row < maze.row_size() - 1; row++ ) {
     for ( int col = 1; col < maze.col_size() - 1; col++ ) {
@@ -153,7 +152,6 @@ void add_x( Maze& maze )
 
 void add_x_animated( Maze& maze, Builder_speed speed )
 {
-  clear_and_flush_grid( maze );
   const Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   for ( int row = 1; row < maze.row_size() - 1; row++ ) {
     for ( int col = 1; col < maze.col_size() - 1; col++ ) {
