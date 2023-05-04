@@ -77,6 +77,7 @@ void generate_prim_maze( Maze& maze )
       cells.pop();
     }
   }
+  clear_and_flush_grid( maze );
 }
 
 void animate_prim_maze( Maze& maze, Builder_speed speed )

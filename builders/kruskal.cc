@@ -69,6 +69,7 @@ void generate_kruskal_maze( Maze& maze )
       }
     }
   }
+  clear_and_flush_grid( maze );
 }
 
 void animate_kruskal_maze( Maze& maze, Builder_speed speed )

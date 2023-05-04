@@ -132,6 +132,7 @@ void generate_eller_maze( Maze& maze )
     sets_in_this_row.clear();
   }
   complete_final_row( maze, window );
+  clear_and_flush_grid( maze );
 }
 
 void animate_eller_maze( Maze& maze, Builder_speed speed )

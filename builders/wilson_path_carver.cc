@@ -239,6 +239,7 @@ void generate_wilson_path_carver_maze( Maze& maze )
         continue;
       }
       if ( !continue_random_walks( maze, cur ) ) {
+        clear_and_flush_grid( maze );
         return;
       }
       break;

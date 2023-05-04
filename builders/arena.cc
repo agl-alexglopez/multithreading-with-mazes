@@ -10,6 +10,7 @@ void generate_arena( Maze& maze )
       build_path( maze, { row, col } );
     }
   }
+  clear_and_flush_grid( maze );
 }
 
 void animate_arena( Maze& maze, Builder_speed speed )

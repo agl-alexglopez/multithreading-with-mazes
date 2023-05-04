@@ -177,6 +177,9 @@ int main( int argc, char** argv )
     }
   }
 
+  // This helps ensure we have a smooth transition from build to solve with no flashing from redrawing frame.
+  Solver::set_cursor_point( { 0, 0 } );
+
   if ( runner.solver_view == animated_playback ) {
     std::get<animated_playback>( runner.solver )( maze, runner.solver_speed );
   } else {

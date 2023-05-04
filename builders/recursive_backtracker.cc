@@ -49,6 +49,7 @@ void generate_recursive_backtracker_maze( Maze& maze )
       branches_remain = true;
     }
   }
+  clear_and_flush_grid( maze );
 }
 
 void animate_recursive_backtracker_maze( Maze& maze, Builder_speed speed )

@@ -77,6 +77,7 @@ void generate_grid_maze( Maze& maze )
       dfs.pop();
     }
   }
+  clear_and_flush_grid( maze );
 }
 
 void animate_grid_maze( Maze& maze, Builder_speed speed )

@@ -69,6 +69,7 @@ void generate_recursive_subdivision_maze( Maze& maze )
       chamber_stack.pop();
     }
   }
+  clear_and_flush_grid( maze );
 }
 
 void animate_recursive_subdivision_maze( Maze& maze, Builder_speed speed )

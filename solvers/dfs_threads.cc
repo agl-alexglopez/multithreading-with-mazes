@@ -268,7 +268,6 @@ void solve_with_dfs_thread_hunt( Builder::Maze& maze )
   for ( std::thread& t : threads ) {
     t.join();
   }
-  clear_screen();
   print_maze( maze );
   print_overlap_key();
   print_hunt_solution_message( monitor.winning_index );
@@ -293,7 +292,6 @@ void solve_with_dfs_thread_gather( Builder::Maze& maze )
   for ( std::thread& t : threads ) {
     t.join();
   }
-  clear_screen();
   print_maze( maze );
   print_overlap_key();
   print_gather_solution_message();
@@ -325,7 +323,6 @@ void solve_with_dfs_thread_corners( Builder::Maze& maze )
   for ( std::thread& t : threads ) {
     t.join();
   }
-  clear_screen();
   print_maze( maze );
   print_overlap_key();
   print_hunt_solution_message( monitor.winning_index );
@@ -334,7 +331,6 @@ void solve_with_dfs_thread_corners( Builder::Maze& maze )
 
 void animate_with_dfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
 {
-  clear_and_flush_paths( maze );
   set_cursor_point( { maze.row_size(), 0 } );
   print_overlap_key();
   Solver_monitor monitor;
@@ -362,7 +358,6 @@ void animate_with_dfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
 
 void animate_with_dfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
 {
-  clear_and_flush_paths( maze );
   set_cursor_point( { maze.row_size(), 0 } );
   print_overlap_key();
   Solver_monitor monitor;
@@ -392,7 +387,6 @@ void animate_with_dfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
 
 void animate_with_dfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
 {
-  clear_and_flush_paths( maze );
   set_cursor_point( { maze.row_size(), 0 } );
   print_overlap_key();
   Solver_monitor monitor;
