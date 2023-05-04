@@ -88,12 +88,12 @@ void complete_final_row_animated( Maze& maze, Sliding_set_window& window, Speed_
 void generate_eller_maze( Maze& maze )
 {
   fill_maze_with_walls( maze );
-  Sliding_set_window window( maze );
-  std::iota( std::begin( window.sets[0] ), std::end( window.sets[0] ), 0 );
   std::mt19937 gen( std::random_device {}() );
   std::uniform_int_distribution<int> coin( 0, horizontal_bias );
 
-  Set_id unique_ids = 0;
+  Sliding_set_window window( maze );
+  std::iota( std::begin( window.sets[0] ), std::end( window.sets[0] ), 0 );
+  Set_id unique_ids = maze.col_size();
   std::unordered_map<Set_id, std::vector<Maze::Point>> sets_in_this_row {};
   for ( int row = 1; row < maze.row_size() - 2; row += 2 ) {
     const uint64_t next_row = ( window.curr_row + 1 ) % window.sets.size();
@@ -140,12 +140,12 @@ void animate_eller_maze( Maze& maze, Builder_speed speed )
   fill_maze_with_walls_animated( maze );
   clear_and_flush_grid( maze );
   const Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
-  Sliding_set_window window( maze );
-  std::iota( std::begin( window.sets[0] ), std::end( window.sets[0] ), 0 );
-  Set_id unique_ids = maze.col_size();
   std::mt19937 gen( std::random_device {}() );
   std::uniform_int_distribution<int> coin( 0, horizontal_bias );
 
+  Sliding_set_window window( maze );
+  std::iota( std::begin( window.sets[0] ), std::end( window.sets[0] ), 0 );
+  Set_id unique_ids = maze.col_size();
   std::unordered_map<Set_id, std::vector<Maze::Point>> sets_in_this_row {};
   for ( int row = 1; row < maze.row_size() - 2; row += 2 ) {
     const uint64_t next_row = ( window.curr_row + 1 ) % window.sets.size();
