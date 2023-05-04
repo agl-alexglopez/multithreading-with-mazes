@@ -239,11 +239,11 @@ People interested in mazes love Eller's algorithm. This is because it can be imp
 ```txt
 prepare a sliding window of the current and next row
 
-give every cell a unique id corresponding to a set in the first row.
+give every cell in the first row of the window a unique set id
 
-for every row in the maze except the last.
+for every row in the maze except the last
 
-    give the next row in the sliding window a set of unique set ids
+    give every cell in the next sliding window row a unique set id
 
     for every column in the current row
 
@@ -267,7 +267,7 @@ for every column in the final row
         merge them into the same set, joining squares.
 ```
 
-The final row is definitely the trickiest part of this algorithm. However, getting it wrong will likely reveal how exact the set tracking must be throughout this algorithm. There are a few key details to consider to notify all cells within a set, and within a row, of a merge.
+The final row is definitely the trickiest part of this algorithm. However, working it out helps reveal how exact the set tracking must be throughout this algorithm. There are a few key details to consider to notify all cells within a set, and within a row, of a merge.
 
 ### Wilson's Path Carver
 
