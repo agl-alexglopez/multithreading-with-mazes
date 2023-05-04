@@ -30,13 +30,13 @@ constexpr int horizontal_bias = 2;
 void merge_sets( Sliding_set_window& sets, const Id_merge_request& merge, int col_in_row )
 {
   for ( uint64_t set_elem = col_in_row + 2; set_elem < sets.sets[0].size() - 1; set_elem += 2 ) {
-    if ( sets.sets.at( sets.curr_row )[set_elem] == merge.losing_id ) {
-      sets.sets.at( sets.curr_row )[set_elem] = merge.winning_id;
+    if ( sets.sets[sets.curr_row][set_elem] == merge.losing_id ) {
+      sets.sets[sets.curr_row][set_elem] = merge.winning_id;
     }
   }
   for ( int set_elem = col_in_row - 2; set_elem > 0; set_elem -= 2 ) {
-    if ( sets.sets.at( sets.curr_row )[set_elem] == merge.losing_id ) {
-      sets.sets.at( sets.curr_row )[set_elem] = merge.winning_id;
+    if ( sets.sets[sets.curr_row][set_elem] == merge.losing_id ) {
+      sets.sets[sets.curr_row][set_elem] = merge.winning_id;
     }
   }
 }
@@ -46,13 +46,13 @@ void complete_final_row( Maze& maze, Sliding_set_window& window )
   const int final_row = maze.row_size() - 2;
   for ( int col = 1; col < maze.col_size() - 2; col += 2 ) {
     const Maze::Point next = { final_row, col + 2 };
-    const Set_id this_square_id = window.sets.at( window.curr_row )[col];
-    if ( this_square_id != window.sets.at( window.curr_row )[col + 2] ) {
+    const Set_id this_square_id = window.sets[window.curr_row][col];
+    if ( this_square_id != window.sets[window.curr_row][col + 2] ) {
       join_squares( maze, { final_row, col }, next );
-      const Set_id other_set_id = window.sets.at( window.curr_row )[next.col];
+      const Set_id other_set_id = window.sets[window.curr_row][next.col];
       for ( int set_elem = next.col; set_elem < maze.col_size() - 1; set_elem += 2 ) {
-        if ( window.sets.at( window.curr_row )[set_elem] == other_set_id ) {
-          window.sets.at( window.curr_row )[set_elem] = this_square_id;
+        if ( window.sets[window.curr_row][set_elem] == other_set_id ) {
+          window.sets[window.curr_row][set_elem] = this_square_id;
         }
       }
     }
@@ -64,13 +64,13 @@ void complete_final_row_animated( Maze& maze, Sliding_set_window& window, Speed_
   const int final_row = maze.row_size() - 2;
   for ( int col = 1; col < maze.col_size() - 2; col += 2 ) {
     const Maze::Point next = { final_row, col + 2 };
-    const Set_id this_square_id = window.sets.at( window.curr_row )[col];
-    if ( this_square_id != window.sets.at( window.curr_row )[col + 2] ) {
+    const Set_id this_square_id = window.sets[window.curr_row][col];
+    if ( this_square_id != window.sets[window.curr_row][col + 2] ) {
       join_squares_animated( maze, { final_row, col }, next, animation );
-      const Set_id other_set_id = window.sets.at( window.curr_row )[next.col];
+      const Set_id other_set_id = window.sets[window.curr_row][next.col];
       for ( int set_elem = next.col; set_elem < maze.col_size() - 1; set_elem += 2 ) {
-        if ( window.sets.at( window.curr_row )[set_elem] == other_set_id ) {
-          window.sets.at( window.curr_row )[set_elem] = this_square_id;
+        if ( window.sets[window.curr_row][set_elem] == other_set_id ) {
+          window.sets[window.curr_row][set_elem] = this_square_id;
         }
       }
     }
@@ -97,21 +97,21 @@ void generate_eller_maze( Maze& maze )
   std::unordered_map<Set_id, std::vector<Maze::Point>> sets_in_this_row {};
   for ( int row = 1; row < maze.row_size() - 2; row += 2 ) {
     const uint64_t next_row = ( window.curr_row + 1 ) % window.sets.size();
-    std::iota( std::begin( window.sets.at( next_row ) ), std::end( window.sets.at( next_row ) ), unique_ids );
+    std::iota( std::begin( window.sets[next_row] ), std::end( window.sets[next_row] ), unique_ids );
     unique_ids += maze.col_size();
 
     for ( int col = 1; col < maze.col_size() - 1; col += 2 ) {
       const Maze::Point next = { row, col + 2 };
-      const Set_id this_square_id = window.sets.at( window.curr_row )[col];
+      const Set_id this_square_id = window.sets[window.curr_row][col];
       if ( is_square_within_perimeter_walls( maze, next )
-           && this_square_id != window.sets.at( window.curr_row )[next.col] && coin( gen ) ) {
+           && this_square_id != window.sets[window.curr_row][next.col] && coin( gen ) ) {
         join_squares( maze, { row, col }, next );
-        merge_sets( window, { this_square_id, window.sets.at( window.curr_row )[next.col] }, col );
+        merge_sets( window, { this_square_id, window.sets[window.curr_row][next.col] }, col );
       }
     }
 
     for ( int col = 1; col < maze.col_size() - 1; col += 2 ) {
-      const Set_id this_square_id = window.sets.at( window.curr_row )[col];
+      const Set_id this_square_id = window.sets[window.curr_row][col];
       sets_in_this_row[this_square_id].push_back( { row, col } );
     }
 
@@ -123,7 +123,7 @@ void generate_eller_maze( Maze& maze )
         const Maze::Point chosen = s.second[rand_drop( gen )];
         // We already linked this up and rondomness dropped us here again. More important for animated version.
         if ( !( maze[chosen.row + 2][chosen.col] & Maze::builder_bit_ ) ) {
-          window.sets.at( next_row )[chosen.col] = s.first;
+          window.sets[next_row][chosen.col] = s.first;
           join_squares( maze, chosen, { chosen.row + 2, chosen.col } );
         }
       }
@@ -148,21 +148,21 @@ void animate_eller_maze( Maze& maze, Builder_speed speed )
   std::unordered_map<Set_id, std::vector<Maze::Point>> sets_in_this_row {};
   for ( int row = 1; row < maze.row_size() - 2; row += 2 ) {
     const uint64_t next_row = ( window.curr_row + 1 ) % window.sets.size();
-    std::iota( std::begin( window.sets.at( next_row ) ), std::end( window.sets.at( next_row ) ), unique_ids );
+    std::iota( std::begin( window.sets[next_row] ), std::end( window.sets[next_row] ), unique_ids );
     unique_ids += maze.col_size();
 
     for ( int col = 1; col < maze.col_size() - 1; col += 2 ) {
       const Maze::Point next = { row, col + 2 };
-      const Set_id this_square_id = window.sets.at( window.curr_row )[col];
+      const Set_id this_square_id = window.sets[window.curr_row][col];
       if ( is_square_within_perimeter_walls( maze, next )
-           && this_square_id != window.sets.at( window.curr_row )[next.col] && coin( gen ) ) {
+           && this_square_id != window.sets[window.curr_row][next.col] && coin( gen ) ) {
         join_squares_animated( maze, { row, col }, next, animation );
-        merge_sets( window, { this_square_id, window.sets.at( window.curr_row )[next.col] }, col );
+        merge_sets( window, { this_square_id, window.sets[window.curr_row][next.col] }, col );
       }
     }
 
     for ( int col = 1; col < maze.col_size() - 1; col += 2 ) {
-      const Set_id this_square_id = window.sets.at( window.curr_row )[col];
+      const Set_id this_square_id = window.sets[window.curr_row][col];
       sets_in_this_row[this_square_id].push_back( { row, col } );
     }
 
@@ -174,7 +174,7 @@ void animate_eller_maze( Maze& maze, Builder_speed speed )
         const Maze::Point chosen = s.second[rand_drop( gen )];
         // We already linked this up and rondomness dropped us here again. Save pointless cursor movements.
         if ( !( maze[chosen.row + 2][chosen.col] & Maze::builder_bit_ ) ) {
-          window.sets.at( next_row )[chosen.col] = s.first;
+          window.sets[next_row][chosen.col] = s.first;
           join_squares_animated( maze, chosen, { chosen.row + 2, chosen.col }, animation );
         }
       }
