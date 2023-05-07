@@ -1,5 +1,6 @@
-#include "maze_solvers.hh"
+#include "solver_utilities.hh"
 #include "print_utilities.hh"
+
 #include <iostream>
 #include <random>
 
@@ -160,5 +161,6 @@ void print_overlap_key()
             << thread_colors_.at( 15 ) << " = 3|2|1|0│\n"
             << "└────────────┴────────────┴────────────┴────────────┴────────────┘\n";
 }
+
 
 } // namespace Solver
