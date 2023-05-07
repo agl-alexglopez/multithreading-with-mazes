@@ -108,7 +108,7 @@ void print_point( const Builder::Maze& maze, const Builder::Maze::Point& point )
     return;
   }
   if ( square & thread_mask_ ) {
-    Thread_paint thread_color = static_cast<Thread_paint>( square & thread_mask_ ) >> thread_tag_offset_;
+    const Thread_paint thread_color = static_cast<Thread_paint>( square & thread_mask_ ) >> thread_tag_offset_;
     std::cout << thread_colors_.at( thread_color );
     return;
   }
