@@ -1,5 +1,6 @@
 #include "maze_algorithms.hh"
 #include "maze_solvers.hh"
+#include "print_utilities.hh"
 #include <chrono>
 #include <cstdint>
 #include <functional>
@@ -124,13 +125,13 @@ int main( int argc, char** argv )
       demo.modifications[modification_chooser( gen )]( maze, demo.builder_speed[speed_chooser( gen )] );
     }
 
-    Solver::set_cursor_point( { 0, 0 } );
+    Printer::set_cursor_position( { 0, 0 } );
     demo.solvers[solver_chooser( gen )]( maze, demo.solver_speed[speed_chooser( gen )] );
 
     // We don't need loading time, it's just jarring to immediately transition after the solution finishes.
     std::cout << "Loading next maze..." << std::flush;
     std::this_thread::sleep_for( std::chrono::seconds( 2 ) );
-    Solver::set_cursor_point( { 0, 0 } );
+    Printer::set_cursor_position( { 0, 0 } );
   }
 }
 

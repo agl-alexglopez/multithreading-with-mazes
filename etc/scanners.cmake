@@ -1,4 +1,4 @@
-file (GLOB_RECURSE MAZE_CC_FILES ${CMAKE_SOURCE_DIR}/src/*.cc ${CMAKE_SOURCE_DIR}/builders/*.cc ${CMAKE_SOURCE_DIR}/solvers/*.cc)
+file (GLOB_RECURSE MAZE_CC_FILES ${CMAKE_SOURCE_DIR}/src/*.cc ${CMAKE_SOURCE_DIR}/builders/*.cc ${CMAKE_SOURCE_DIR}/solvers/*.cc ${CMAKE_SOURCE_DIR}/utilities/*.cc)
 
 file (GLOB_RECURSE ALL_SRC_FILES *.hh *.cc)
 

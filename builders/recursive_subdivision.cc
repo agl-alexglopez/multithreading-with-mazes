@@ -50,7 +50,7 @@ void generate_recursive_subdivision_maze( Maze& maze )
       // Remember to shrink height of this branch before we continue down next branch.
       std::get<1>( chamber ) = divide + 1;
       const Maze::Point offset = { chamber_offset.row + divide, chamber_offset.col };
-      chamber_stack.push( std::make_tuple( offset, chamber_height - divide, chamber_width ) );
+      chamber_stack.emplace( offset, chamber_height - divide, chamber_width );
     } else if ( chamber_width > chamber_height && chamber_height > 3 ) {
       const int divide = random_even_division( generator, chamber_width );
       const int passage = random_odd_passage( generator, chamber_height );
@@ -64,7 +64,7 @@ void generate_recursive_subdivision_maze( Maze& maze )
       // In this case, we are shrinking the width.
       std::get<2>( chamber ) = divide + 1;
       const Maze::Point offset = { chamber_offset.row, chamber_offset.col + divide };
-      chamber_stack.push( std::make_tuple( offset, chamber_height, chamber_width - divide ) );
+      chamber_stack.emplace( offset, chamber_height, chamber_width - divide );
     } else {
       chamber_stack.pop();
     }
@@ -97,7 +97,7 @@ void animate_recursive_subdivision_maze( Maze& maze, Builder_speed speed )
       }
       std::get<1>( chamber ) = divide + 1;
       const Maze::Point offset = { chamber_offset.row + divide, chamber_offset.col };
-      chamber_stack.push( std::make_tuple( offset, chamber_height - divide, chamber_width ) );
+      chamber_stack.emplace( offset, chamber_height - divide, chamber_width );
     } else if ( chamber_width > chamber_height && chamber_height > 3 ) {
       const int divide = random_even_division( generator, chamber_width );
       const int passage = random_odd_passage( generator, chamber_height );
@@ -110,7 +110,7 @@ void animate_recursive_subdivision_maze( Maze& maze, Builder_speed speed )
       }
       std::get<2>( chamber ) = divide + 1;
       const Maze::Point offset = { chamber_offset.row, chamber_offset.col + divide };
-      chamber_stack.push( std::make_tuple( offset, chamber_height, chamber_width - divide ) );
+      chamber_stack.emplace( offset, chamber_height, chamber_width - divide );
     } else {
       chamber_stack.pop();
     }

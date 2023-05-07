@@ -111,7 +111,6 @@ public:
   static constexpr Backtrack_marker from_east_ = 0b0010'0000;
   static constexpr Backtrack_marker from_south_ = 0b0011'0000;
   static constexpr Backtrack_marker from_west_ = 0b0100'0000;
-  static constexpr std::string_view ansi_clear_screen_ = "\033[2J\033[1;1H";
   static constexpr std::string_view from_north_mark_ = "\033[38;5;15m\033[48;5;1m↑\033[0m";
   static constexpr std::string_view from_east_mark_ = "\033[38;5;15m\033[48;5;2m→\033[0m";
   static constexpr std::string_view from_south_mark_ = "\033[38;5;15m\033[48;5;3m↓\033[0m";
@@ -151,10 +150,10 @@ public:
     = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };
 
 private:
-  const int maze_row_size_;
-  const int maze_col_size_;
+  int maze_row_size_;
+  int maze_col_size_;
   std::vector<std::vector<Square>> maze_;
-  const int wall_style_index_;
+  int wall_style_index_;
 };
 
 bool operator==( const Maze::Point& lhs, const Builder::Maze::Point& rhs );

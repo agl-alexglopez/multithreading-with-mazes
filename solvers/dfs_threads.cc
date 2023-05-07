@@ -1,4 +1,5 @@
 #include "maze_solvers.hh"
+#include "print_utilities.hh"
 
 #include <algorithm>
 #include <chrono>
@@ -331,7 +332,7 @@ void solve_with_dfs_thread_corners( Builder::Maze& maze )
 
 void animate_with_dfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
 {
-  set_cursor_point( { maze.row_size(), 0 } );
+  Printer::set_cursor_position( { maze.row_size(), 0 } );
   print_overlap_key();
   Solver_monitor monitor;
   monitor.speed = solver_speeds_.at( static_cast<int>( speed ) );
@@ -351,14 +352,14 @@ void animate_with_dfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
   for ( std::thread& t : threads ) {
     t.join();
   }
-  set_cursor_point( { maze.row_size() + overlap_key_and_message_height, 0 } );
+  Printer::set_cursor_position( { maze.row_size() + overlap_key_and_message_height, 0 } );
   print_hunt_solution_message( monitor.winning_index );
   std::cout << std::endl;
 }
 
 void animate_with_dfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
 {
-  set_cursor_point( { maze.row_size(), 0 } );
+  Printer::set_cursor_position( { maze.row_size(), 0 } );
   print_overlap_key();
   Solver_monitor monitor;
   monitor.speed = solver_speeds_.at( static_cast<int>( speed ) );
@@ -380,14 +381,14 @@ void animate_with_dfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
   for ( std::thread& t : threads ) {
     t.join();
   }
-  set_cursor_point( { maze.row_size() + overlap_key_and_message_height, 0 } );
+  Printer::set_cursor_position( { maze.row_size() + overlap_key_and_message_height, 0 } );
   print_gather_solution_message();
   std::cout << std::endl;
 }
 
 void animate_with_dfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
 {
-  set_cursor_point( { maze.row_size(), 0 } );
+  Printer::set_cursor_position( { maze.row_size(), 0 } );
   print_overlap_key();
   Solver_monitor monitor;
   monitor.speed = solver_speeds_.at( static_cast<int>( speed ) );
@@ -419,7 +420,7 @@ void animate_with_dfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
   for ( std::thread& t : threads ) {
     t.join();
   }
-  set_cursor_point( { maze.row_size() + overlap_key_and_message_height, 0 } );
+  Printer::set_cursor_position( { maze.row_size() + overlap_key_and_message_height, 0 } );
   print_hunt_solution_message( monitor.winning_index );
   std::cout << std::endl;
 }

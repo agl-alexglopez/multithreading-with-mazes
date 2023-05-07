@@ -24,9 +24,11 @@ include(etc/scanners.cmake)
 include_directories("${PROJECT_SOURCE_DIR}/src")
 include_directories("${PROJECT_SOURCE_DIR}/builders")
 include_directories("${PROJECT_SOURCE_DIR}/solvers")
+include_directories("${PROJECT_SOURCE_DIR}/utilities")
 
 add_subdirectory("${PROJECT_SOURCE_DIR}/src")
 add_subdirectory("${PROJECT_SOURCE_DIR}/builders")
 add_subdirectory("${PROJECT_SOURCE_DIR}/solvers")
+add_subdirectory("${PROJECT_SOURCE_DIR}/utilities")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

@@ -1,4 +1,5 @@
 #include "maze_utilities.hh"
+#include "print_utilities.hh"
 #include <chrono>
 #include <iostream>
 #include <thread>
@@ -316,7 +317,7 @@ void fill_maze_with_walls( Maze& maze )
 
 void fill_maze_with_walls_animated( Maze& maze )
 {
-  clear_screen();
+  Printer::clear_screen();
   for ( int row = 0; row < maze.row_size(); row++ ) {
     for ( int col = 0; col < maze.col_size(); col++ ) {
       build_wall( maze, { row, col } );
@@ -548,7 +549,7 @@ void build_path_animated( Maze& maze, const Maze::Point& p, Speed_unit speed )
 
 void clear_and_flush_grid( const Maze& maze )
 {
-  clear_screen();
+  Printer::clear_screen();
   for ( int row = 0; row < maze.row_size(); row++ ) {
     for ( int col = 0; col < maze.col_size(); col++ ) {
       print_square( maze, { row, col } );
@@ -558,21 +559,11 @@ void clear_and_flush_grid( const Maze& maze )
   std::cout << std::flush;
 }
 
-void clear_screen()
-{
-  std::cout << Maze::ansi_clear_screen_;
-}
-
 void flush_cursor_maze_coordinate( const Maze& maze, const Maze::Point& p )
 {
-  set_cursor_position( p );
+  Printer::set_cursor_position( p );
   print_square( maze, p );
   std::cout << std::flush;
-}
-
-void set_cursor_position( const Maze::Point& p )
-{
-  std::cout << "\033[" + std::to_string( p.row + 1 ) + ";" + std::to_string( p.col + 1 ) + "f";
 }
 
 void print_maze_square( const Maze& maze, const Maze::Point& p )
@@ -592,7 +583,9 @@ void print_square( const Maze& maze, const Maze::Point& p )
 {
   const Maze::Square& square = maze[p.row][p.col];
   if ( square & Maze::markers_mask_ ) {
-    Maze::Backtrack_marker mark = ( maze[p.row][p.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+    const Maze::Backtrack_marker mark
+      = static_cast<Maze::Backtrack_marker>( maze[p.row][p.col] & Maze::markers_mask_ )
+        >> static_cast<Maze::Backtrack_marker>( Maze::marker_shift_ );
     std::cout << Maze::backtracking_symbols_.at( mark );
   } else if ( !( square & Maze::path_bit_ ) ) {
     std::cout << maze.wall_style().at( square & Maze::wall_mask_ );

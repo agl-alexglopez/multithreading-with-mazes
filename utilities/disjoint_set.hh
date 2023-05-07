@@ -2,7 +2,6 @@
 #define DISJOINT_SET_HH
 
 #include <cstdint>
-#include <numeric>
 #include <vector>
 
 class Disjoint_set

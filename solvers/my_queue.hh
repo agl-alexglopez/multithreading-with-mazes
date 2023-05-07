@@ -74,7 +74,7 @@ public:
 
 private:
   static constexpr size_t initial_size_ = 8;
-  const size_t full_queue_ = 1UL << 63;
+  static constexpr size_t full_queue_ = 1UL << 63;
   std::vector<Value_type> elems_;
   size_t allocated_size_;
   size_t logical_size_ { 0 };

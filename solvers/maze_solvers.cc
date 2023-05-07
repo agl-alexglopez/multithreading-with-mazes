@@ -1,4 +1,5 @@
 #include "maze_solvers.hh"
+#include "print_utilities.hh"
 #include <iostream>
 #include <random>
 
@@ -73,13 +74,8 @@ Builder::Maze::Point find_nearest_square( const Builder::Maze& maze, const Build
 
 void clear_and_flush_paths( const Builder::Maze& maze )
 {
-  clear_screen();
+  Printer::clear_screen();
   print_maze( maze );
-}
-
-void clear_screen()
-{
-  std::cout << ansi_clear_screen_;
 }
 
 void print_maze( const Builder::Maze& maze )
@@ -95,7 +91,7 @@ void print_maze( const Builder::Maze& maze )
 
 void flush_cursor_path_coordinate( const Builder::Maze& maze, const Builder::Maze::Point& point )
 {
-  set_cursor_point( point );
+  Printer::set_cursor_position( point );
   print_point( maze, point );
   std::cout << std::flush;
 }
@@ -112,7 +108,7 @@ void print_point( const Builder::Maze& maze, const Builder::Maze::Point& point )
     return;
   }
   if ( square & thread_mask_ ) {
-    Thread_paint thread_color = ( square & thread_mask_ ) >> thread_tag_offset_; // NOLINT
+    Thread_paint thread_color = static_cast<Thread_paint>( square & thread_mask_ ) >> thread_tag_offset_;
     std::cout << thread_colors_.at( thread_color );
     return;
   }
@@ -126,11 +122,6 @@ void print_point( const Builder::Maze& maze, const Builder::Maze::Point& point )
   }
   std::cerr << "Printed maze and a square was not categorized." << std::endl;
   abort();
-}
-
-void set_cursor_point( const Builder::Maze::Point& point )
-{
-  std::cout << "\033[" + std::to_string( point.row + 1 ) + ";" + std::to_string( point.col + 1 ) + "f";
 }
 
 void print_hunt_solution_message( std::optional<int> winning_index )

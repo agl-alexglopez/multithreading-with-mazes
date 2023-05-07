@@ -1,4 +1,3 @@
-#include "disjoint_set.hh"
 #include "maze_algorithms.hh"
 
 #include <climits>

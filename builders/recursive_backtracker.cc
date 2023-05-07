@@ -40,7 +40,8 @@ void generate_recursive_backtracker_maze( Maze& maze )
     }
     if ( !branches_remain && cur != start ) {
       const Maze::Backtrack_marker dir
-        = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+        = static_cast<Maze::Backtrack_marker>( maze[cur.row][cur.col] & Maze::markers_mask_ )
+          >> static_cast<Maze::Backtrack_marker>( Maze::marker_shift_ );
       const Maze::Point& backtracking = Maze::backtracking_marks_.at( dir );
       const Maze::Point next = { cur.row + backtracking.row, cur.col + backtracking.col };
       // We are using fields the threads will use later. Clear bits as we backtrack.
@@ -81,7 +82,8 @@ void animate_recursive_backtracker_maze( Maze& maze, Builder_speed speed )
     }
     if ( !branches_remain && cur != start ) {
       const Maze::Backtrack_marker dir
-        = ( maze[cur.row][cur.col] & Maze::markers_mask_ ) >> Maze::marker_shift_; // NOLINT
+        = static_cast<Maze::Backtrack_marker>( maze[cur.row][cur.col] & Maze::markers_mask_ )
+          >> static_cast<Maze::Backtrack_marker>( Maze::marker_shift_ );
       const Maze::Point& backtracking = Maze::backtracking_marks_.at( dir );
       const Maze::Point next = { cur.row + backtracking.row, cur.col + backtracking.col };
       // We are using fields the threads will use later. Clear bits as we backtrack.

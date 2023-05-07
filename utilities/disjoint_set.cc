@@ -1,4 +1,5 @@
 #include "disjoint_set.hh"
+#include <numeric>
 
 Disjoint_set::Disjoint_set( const std::vector<uint64_t>& maze_square_ids )
   : parent_set_( maze_square_ids.size() ), set_rank_( maze_square_ids.size(), 0 )

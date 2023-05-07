@@ -1,5 +1,6 @@
 #include "maze_algorithms.hh"
 #include "maze_solvers.hh"
+#include "print_utilities.hh"
 
 #include <array>
 #include <exception>
@@ -52,13 +53,13 @@ struct Maze_runner
 
 struct Lookup_tables
 {
-  const std::unordered_set<std::string> argument_flags;
-  const std::unordered_map<std::string, Build_function> builder_table;
-  const std::unordered_map<std::string, Build_function> modification_table;
-  const std::unordered_map<std::string, Solve_function> solver_table;
-  const std::unordered_map<std::string, Builder::Maze::Maze_style> style_table;
-  const std::unordered_map<std::string, Solver::Solver_speed> solver_animation_table;
-  const std::unordered_map<std::string, Builder::Builder_speed> builder_animation_table;
+  std::unordered_set<std::string> argument_flags;
+  std::unordered_map<std::string, Build_function> builder_table;
+  std::unordered_map<std::string, Build_function> modification_table;
+  std::unordered_map<std::string, Solve_function> solver_table;
+  std::unordered_map<std::string, Builder::Maze::Maze_style> style_table;
+  std::unordered_map<std::string, Solver::Solver_speed> solver_animation_table;
+  std::unordered_map<std::string, Builder::Builder_speed> builder_animation_table;
 };
 
 } // namespace
@@ -180,7 +181,7 @@ int main( int argc, char** argv )
   }
 
   // This helps ensure we have a smooth transition from build to solve with no flashing from redrawing frame.
-  Solver::set_cursor_point( { 0, 0 } );
+  Printer::set_cursor_position( { 0, 0 } );
 
   if ( runner.solver_view == animated_playback ) {
     std::get<animated_playback>( runner.solver )( maze, runner.solver_speed );

@@ -67,9 +67,6 @@ bool can_build_new_square( const Maze& maze, const Maze::Point& next );
 bool has_builder_bit( const Maze& maze, const Maze::Point& next );
 bool is_square_within_perimeter_walls( const Maze& maze, const Maze::Point& next );
 
-void clear_screen();
-void set_cursor_position( const Maze::Point& p );
-
 } // namespace Builder
 
 #endif
