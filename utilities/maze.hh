@@ -104,7 +104,7 @@ public:
   static constexpr Square clear_available_bits_ = 0b0001'1111'1111'0000;
   static constexpr Square start_bit_ = 0b0100'0000'0000'0000;
   static constexpr Square builder_bit_ = 0b0001'0000'0000'0000;
-  static constexpr int marker_shift_ = 4;
+  static constexpr uint8_t marker_shift_ = 4;
   static constexpr Backtrack_marker markers_mask_ = 0b1111'0000;
   static constexpr Backtrack_marker is_origin_ = 0b0000'0000;
   static constexpr Backtrack_marker from_north_ = 0b0001'0000;
