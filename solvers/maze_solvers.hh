@@ -38,7 +38,6 @@ void animate_with_bfs_thread_hunt( Builder::Maze& maze, Solver_speed speed );
 void animate_with_bfs_thread_gather( Builder::Maze& maze, Solver_speed speed );
 void animate_with_bfs_thread_corners( Builder::Maze& maze, Solver_speed speed );
 
-
 } // namespace Solver
 
 #endif

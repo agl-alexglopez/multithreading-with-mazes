@@ -153,5 +153,4 @@ constexpr std::array<Speed_unit, 8> solver_speeds_ = { 0, 20000, 10000, 5000, 20
 
 } // namespace Solver
 
-
 #endif
