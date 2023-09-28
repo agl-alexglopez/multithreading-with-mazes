@@ -97,7 +97,7 @@ void generate_eller_maze( Maze& maze )
   std::uniform_int_distribution<int> coin( 0, horizontal_bias );
 
   Sliding_set_window window( maze );
-  std::span<Set_id> init_sets( window.sets.begin(), window.width );
+  std::span<Set_id> init_sets( window.sets.data(), window.width );
   std::iota( std::begin( init_sets ), std::end( init_sets ), 0 );
   Set_id unique_ids = maze.col_size();
   std::unordered_map<Set_id, std::vector<Maze::Point>> sets_in_this_row {};
@@ -151,7 +151,7 @@ void animate_eller_maze( Maze& maze, Builder_speed speed )
   std::uniform_int_distribution<int> coin( 0, horizontal_bias );
 
   Sliding_set_window window( maze );
-  std::span<Set_id> init_sets( window.sets.begin(), window.width );
+  std::span<Set_id> init_sets( window.sets.data(), window.width );
   std::iota( std::begin( init_sets ), std::end( init_sets ), 0 );
   Set_id unique_ids = maze.col_size();
   std::unordered_map<Set_id, std::vector<Maze::Point>> sets_in_this_row {};

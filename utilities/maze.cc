@@ -11,18 +11,18 @@ namespace Builder {
 Maze::Maze( const Maze_args& args )
   : maze_row_size_( static_cast<int>( args.odd_rows ) )
   , maze_col_size_( static_cast<int>( args.odd_cols ) )
-  , maze_( maze_row_size_, std::vector<Square>( maze_col_size_, 0 ) )
+  , maze_( maze_row_size_ * maze_col_size_, 0 )
   , wall_style_index_( static_cast<int>( args.style ) )
 {}
 
-std::vector<Maze::Square>& Maze::operator[]( uint64_t index )
+std::span<Maze::Square> Maze::operator[]( uint64_t index )
 {
-  return maze_.at( index );
+  return { &maze_.at( index * maze_col_size_ ), static_cast<uint64_t>( maze_col_size_ ) };
 }
 
-const std::vector<Maze::Square>& Maze::operator[]( uint64_t index ) const
+std::span<const Maze::Square> Maze::operator[]( uint64_t index ) const
 {
-  return maze_.at( index );
+  return { &maze_.at( index * maze_col_size_ ), static_cast<uint64_t>( maze_col_size_ ) };
 }
 
 int Maze::row_size() const

@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <span>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
@@ -94,8 +95,8 @@ public:
 
   explicit Maze( const Maze_args& args );
 
-  std::vector<Square>& operator[]( uint64_t index );
-  const std::vector<Square>& operator[]( uint64_t index ) const;
+  std::span<Square> operator[]( uint64_t index );
+  std::span<const Square> operator[]( uint64_t index ) const;
   int row_size() const;
   int col_size() const;
   const std::array<std::string_view, 16>& wall_style() const;
@@ -153,7 +154,8 @@ public:
 private:
   int maze_row_size_;
   int maze_col_size_;
-  std::vector<std::vector<Square>> maze_;
+  // Model a ROWxCOLUMN maze with a single flat array and manage indexing with []operators.
+  std::vector<Square> maze_;
   int wall_style_index_;
 };
 

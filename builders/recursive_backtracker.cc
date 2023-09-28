@@ -10,6 +10,8 @@
 
 namespace Builder {
 
+constexpr Speed_unit backtrack_delay = 8;
+
 void generate_recursive_backtracker_maze( Maze& maze )
 {
   fill_maze_with_walls( maze );
@@ -89,7 +91,7 @@ void animate_recursive_backtracker_maze( Maze& maze, Builder_speed speed )
       // We are using fields the threads will use later. Clear bits as we backtrack.
       maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
       flush_cursor_maze_coordinate( maze, cur );
-      std::this_thread::sleep_for( std::chrono::microseconds( animation ) );
+      std::this_thread::sleep_for( std::chrono::microseconds( animation * backtrack_delay ) );
       cur = next;
       branches_remain = true;
     }
