@@ -11,7 +11,7 @@ namespace Builder {
 Maze::Maze( const Maze_args& args )
   : maze_row_size_( static_cast<int>( args.odd_rows ) )
   , maze_col_size_( static_cast<int>( args.odd_cols ) )
-  , maze_( maze_row_size_ * maze_col_size_, 0 )
+  , maze_( args.odd_rows * args.odd_cols, 0 )
   , wall_style_index_( static_cast<int>( args.style ) )
 {}
 
