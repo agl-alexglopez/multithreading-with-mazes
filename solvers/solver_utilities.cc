@@ -114,7 +114,7 @@ void print_point( const Builder::Maze& maze, const Builder::Maze::Point& point )
     return;
   }
   if ( !( square & Builder::Maze::path_bit_ ) ) {
-    std::cout << maze.wall_style().at( square & Builder::Maze::wall_mask_ );
+    std::cout << maze.wall_style()[square & Builder::Maze::wall_mask_];
     return;
   }
   if ( square & Builder::Maze::path_bit_ ) {

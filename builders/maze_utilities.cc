@@ -570,7 +570,7 @@ void print_maze_square( const Maze& maze, const Maze::Point& p )
 {
   const Maze::Square& square = maze[p.row][p.col];
   if ( !( square & Maze::path_bit_ ) ) {
-    std::cout << maze.wall_style().at( square & Maze::wall_mask_ );
+    std::cout << maze.wall_style()[square & Maze::wall_mask_];
   } else if ( square & Maze::path_bit_ ) {
     std::cout << " ";
   } else {
@@ -587,7 +587,7 @@ void print_square( const Maze& maze, const Maze::Point& p )
       = static_cast<Maze::Backtrack_marker>( square & Maze::markers_mask_ ) >> Maze::marker_shift_;
     std::cout << Maze::backtracking_symbols_.at( mark );
   } else if ( !( square & Maze::path_bit_ ) ) {
-    std::cout << maze.wall_style().at( square & Maze::wall_mask_ );
+    std::cout << maze.wall_style()[square & Maze::wall_mask_];
   } else if ( square & Maze::path_bit_ ) {
     std::cout << " ";
   } else {

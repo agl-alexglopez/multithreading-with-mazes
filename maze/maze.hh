@@ -99,7 +99,8 @@ public:
   std::span<const Square> operator[]( uint64_t index ) const;
   int row_size() const;
   int col_size() const;
-  const std::array<std::string_view, 16>& wall_style() const;
+  static constexpr uint64_t wall_row_ = 16;
+  std::span<const std::string_view> wall_style() const;
 
   static constexpr Square path_bit_ = 0b0010'0000'0000'0000;
   static constexpr Square clear_available_bits_ = 0b0001'1111'1111'0000;
@@ -132,16 +133,16 @@ public:
   /* Walls are constructed in terms of other walls they need to connect to. For example, read
    * 0b0011 as, "this is a wall square that must connect to other walls to the East and North."
    */
-  static constexpr std::array<const std::array<std::string_view, 16>, 6> wall_styles_ = { {
+  static constexpr std::array<std::string_view, 96> wall_styles_ = { {
     // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall with no walls around.
     // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
     // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
-    { "■", "╵", "╶", "└", "╷", "│", "┌", "├", "╴", "┘", "─", "┴", "┐", "┤", "┬", "┼" }, // standard
-    { "●", "╵", "╶", "╰", "╷", "│", "╭", "├", "╴", "╯", "─", "┴", "╮", "┤", "┬", "┼" }, // rounded
-    { "◫", "║", "═", "╚", "║", "║", "╔", "╠", "═", "╝", "═", "╩", "╗", "╣", "╦", "╬" }, // doubles
-    { "■", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋" }, // bold
-    { "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█" }, // contrast
-    { "✸", "╀", "┾", "╊", "╁", "╂", "╆", "╊", "┽", "╃", "┿", "╇", "╅", "╉", "╈", "╋" }, // spikes
+    "■", "╵", "╶", "└", "╷", "│", "┌", "├", "╴", "┘", "─", "┴", "┐", "┤", "┬", "┼", // standard
+    "●", "╵", "╶", "╰", "╷", "│", "╭", "├", "╴", "╯", "─", "┴", "╮", "┤", "┬", "┼", // rounded
+    "◫", "║", "═", "╚", "║", "║", "╔", "╠", "═", "╝", "═", "╩", "╗", "╣", "╦", "╬", // doubles
+    "■", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋", // bold
+    "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", "█", // contrast
+    "✸", "╀", "┾", "╊", "╁", "╂", "╆", "╊", "┽", "╃", "┿", "╇", "╅", "╉", "╈", "╋", // spikes
   } };
 
   // north, east, south, west
