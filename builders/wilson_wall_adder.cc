@@ -107,6 +107,7 @@ void animate_walk_to_maze( Maze& maze, const Maze::Point& walk, Speed_unit speed
     maze[half.row][half.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
     maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
     flush_cursor_maze_coordinate( maze, half );
+    std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
     flush_cursor_maze_coordinate( maze, cur );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
     cur = next;
@@ -146,6 +147,7 @@ void animate_erase_loop( Maze& maze, const Loop& loop, Speed_unit speed )
     maze[half.row][half.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
     maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
     flush_cursor_maze_coordinate( maze, half );
+    std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
     flush_cursor_maze_coordinate( maze, cur );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
     cur = next;

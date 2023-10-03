@@ -94,6 +94,7 @@ void animate_recursive_backtracker_maze( Maze& maze, Builder_speed speed )
       maze[half.row][half.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
       maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
       flush_cursor_maze_coordinate( maze, half );
+      std::this_thread::sleep_for( std::chrono::microseconds( animation * backtrack_delay ) );
       flush_cursor_maze_coordinate( maze, cur );
       std::this_thread::sleep_for( std::chrono::microseconds( animation * backtrack_delay ) );
       cur = next;
