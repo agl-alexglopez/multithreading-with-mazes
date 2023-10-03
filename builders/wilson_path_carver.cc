@@ -99,10 +99,14 @@ void animate_walk_to_maze( Maze& maze, const Maze::Point& walk, Speed_unit speed
       = static_cast<Maze::Backtrack_marker>( maze[cur.row][cur.col] & Maze::markers_mask_ )
         >> static_cast<Maze::Backtrack_marker>( Maze::marker_shift_ );
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
+    const Maze::Point& half_step_ = Maze::backtracking_half_marks_.at( mark );
+    const Maze::Point half = { cur.row + half_step_.row, cur.col + half_step_.col };
     const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
     animate_with_marks( maze, cur, next, speed );
     // Clean up after ourselves and leave no marks behind for the maze solvers.
+    maze[half.row][half.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
     maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::markers_mask_ );
+    flush_cursor_maze_coordinate( maze, half );
     flush_cursor_maze_coordinate( maze, cur );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
     cur = next;
@@ -138,8 +142,12 @@ void animate_erase_loop( Maze& maze, const Loop& loop, Speed_unit speed )
       = static_cast<Maze::Backtrack_marker>( maze[cur.row][cur.col] & Maze::markers_mask_ )
         >> static_cast<Maze::Backtrack_marker>( Maze::marker_shift_ );
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
+    const Maze::Point& half_step_ = Maze::backtracking_half_marks_.at( mark );
+    const Maze::Point half = { cur.row + half_step_.row, cur.col + half_step_.col };
     const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
+    maze[half.row][half.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
     maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::markers_mask_ );
+    flush_cursor_maze_coordinate( maze, half );
     flush_cursor_maze_coordinate( maze, cur );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
     cur = next;

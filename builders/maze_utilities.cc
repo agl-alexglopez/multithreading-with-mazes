@@ -291,15 +291,25 @@ void mark_origin( Maze& maze, const Maze::Point& walk, const Maze::Point& next )
 
 void mark_origin_animated( Maze& maze, const Maze::Point& walk, const Maze::Point& next, Speed_unit speed )
 {
+  Maze::Point wall = walk;
   if ( next.row > walk.row ) {
+    wall.row++;
+    maze[wall.row][wall.col] |= Maze::from_north_;
     maze[next.row][next.col] |= Maze::from_north_;
   } else if ( next.row < walk.row ) {
+    wall.row--;
+    maze[wall.row][wall.col] |= Maze::from_south_;
     maze[next.row][next.col] |= Maze::from_south_;
   } else if ( next.col < walk.col ) {
+    wall.col--;
+    maze[wall.row][wall.col] |= Maze::from_east_;
     maze[next.row][next.col] |= Maze::from_east_;
   } else if ( next.col > walk.col ) {
+    wall.col++;
+    maze[wall.row][wall.col] |= Maze::from_west_;
     maze[next.row][next.col] |= Maze::from_west_;
   }
+  flush_cursor_maze_coordinate( maze, wall );
   flush_cursor_maze_coordinate( maze, next );
   std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
 }
@@ -400,15 +410,19 @@ void carve_path_markings_animated( Maze& maze, const Maze::Point& cur, const Maz
   Maze::Point wall = cur;
   if ( next.row < cur.row ) {
     wall.row--;
+    maze[wall.row][wall.col] |= Maze::from_south_;
     maze[next.row][next.col] |= Maze::from_south_;
   } else if ( next.row > cur.row ) {
     wall.row++;
+    maze[wall.row][wall.col] |= Maze::from_north_;
     maze[next.row][next.col] |= Maze::from_north_;
   } else if ( next.col < cur.col ) {
     wall.col--;
+    maze[wall.row][wall.col] |= Maze::from_east_;
     maze[next.row][next.col] |= Maze::from_east_;
   } else if ( next.col > cur.col ) {
     wall.col++;
+    maze[wall.row][wall.col] |= Maze::from_west_;
     maze[next.row][next.col] |= Maze::from_west_;
   } else {
     std::cerr << "Wall break error. Step through wall didn't work" << std::endl;

@@ -122,6 +122,8 @@ public:
     = { { " ", from_north_mark_, from_east_mark_, from_south_mark_, from_west_mark_ } };
   static constexpr std::array<Point, 5> backtracking_marks_
     = { { { 0, 0 }, { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
+  static constexpr std::array<Point, 5> backtracking_half_marks_
+    = { { { 0, 0 }, { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
 
   static constexpr Wall_line wall_mask_ = 0b1111;
   static constexpr Wall_line floating_wall_ = 0b0000;
