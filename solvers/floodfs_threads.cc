@@ -65,10 +65,9 @@ void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
     monitor.monitor.unlock();
 
     // Bias each thread's first choice towards orginal dispatch direction. More coverage.
-    int direction_index = id.index;
     bool found_branch_to_explore = false;
-    do {
-      const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
+    for ( uint64_t count = 0, i = id.index; count < n_e_s_w_.size(); count++, ++i %= n_e_s_w_.size() ) {
+      const Builder::Maze::Point& p = n_e_s_w_.at( i );
       const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
       monitor.monitor.lock();
@@ -81,8 +80,7 @@ void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
         dfs.push_back( next );
         break;
       }
-      ++direction_index %= cardinal_directions_.size();
-    } while ( direction_index != id.index );
+    }
     if ( !found_branch_to_explore ) {
       dfs.pop_back();
     }
@@ -120,10 +118,9 @@ void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
 
     // Bias each thread's first choice towards orginal dispatch direction. More coverage.
-    int direction_index = id.index;
     bool found_branch_to_explore = false;
-    do {
-      const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
+    for ( uint64_t count = 0, i = id.index; count < n_e_s_w_.size(); count++, ++i %= n_e_s_w_.size() ) {
+      const Builder::Maze::Point& p = n_e_s_w_.at( i );
       const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
       const bool push_next
@@ -134,8 +131,7 @@ void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
         dfs.push_back( next );
         break;
       }
-      ++direction_index %= cardinal_directions_.size();
-    } while ( direction_index != id.index );
+    }
 
     if ( !found_branch_to_explore ) {
       dfs.pop_back();
@@ -168,10 +164,9 @@ void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id
     monitor.monitor.unlock();
 
     // Bias each thread's first choice towards orginal dispatch direction. More coverage.
-    int direction_index = id.index;
     bool found_branch_to_explore = false;
-    do {
-      const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
+    for ( uint64_t count = 0, i = id.index; count < n_e_s_w_.size(); count++, ++i %= n_e_s_w_.size() ) {
+      const Builder::Maze::Point& p = n_e_s_w_.at( i );
       const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
       const bool push_next
@@ -182,8 +177,7 @@ void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id
         dfs.push_back( next );
         break;
       }
-      ++direction_index %= cardinal_directions_.size();
-    } while ( direction_index != id.index );
+    }
 
     if ( !found_branch_to_explore ) {
       dfs.pop_back();
@@ -207,16 +201,16 @@ void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id 
       dfs.pop_back();
       return;
     }
+
     maze[cur.row][cur.col] |= seen;
     maze[cur.row][cur.col] |= id.paint;
     flush_cursor_path_coordinate( maze, cur );
     monitor.monitor.unlock();
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
 
-    int direction_index = id.index;
     bool found_branch_to_explore = false;
-    do {
-      const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
+    for ( uint64_t count = 0, i = id.index; count < n_e_s_w_.size(); count++, ++i %= n_e_s_w_.size() ) {
+      const Builder::Maze::Point& p = n_e_s_w_.at( i );
       const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
       const bool push_next
@@ -227,8 +221,8 @@ void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id 
         dfs.push_back( next );
         break;
       }
-      ++direction_index %= cardinal_directions_.size();
-    } while ( direction_index != id.index );
+    }
+
     if ( !found_branch_to_explore ) {
       dfs.pop_back();
     }

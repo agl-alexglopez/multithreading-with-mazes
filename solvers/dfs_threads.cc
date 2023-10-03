@@ -1,8 +1,10 @@
 #include "maze_solvers.hh"
 #include "print_utilities.hh"
+#include "solver_utilities.hh"
 
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <iostream>
 #include <mutex>
 #include <optional>
@@ -64,10 +66,9 @@ void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
     monitor.monitor.unlock();
 
     // Bias each thread's first choice towards orginal dispatch direction. More coverage.
-    int direction_index = id.index;
     bool found_branch_to_explore = false;
-    do {
-      const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
+    for ( uint64_t count = 0, i = id.index; count < n_e_s_w_.size(); count++, ++i %= n_e_s_w_.size() ) {
+      const Builder::Maze::Point& p = n_e_s_w_.at( i );
       const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
       monitor.monitor.lock();
@@ -80,8 +81,7 @@ void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
         dfs.push_back( next );
         break;
       }
-      ++direction_index %= cardinal_directions_.size();
-    } while ( direction_index != id.index );
+    }
     if ( !found_branch_to_explore ) {
       dfs.pop_back();
     }
@@ -125,10 +125,9 @@ void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
 
     // Bias each thread's first choice towards orginal dispatch direction. More coverage.
-    int direction_index = id.index;
     bool found_branch_to_explore = false;
-    do {
-      const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
+    for ( uint64_t count = 0, i = id.index; count < n_e_s_w_.size(); count++, ++i %= n_e_s_w_.size() ) {
+      const Builder::Maze::Point& p = n_e_s_w_.at( i );
       const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
       const bool push_next
@@ -139,8 +138,7 @@ void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
         dfs.push_back( next );
         break;
       }
-      ++direction_index %= cardinal_directions_.size();
-    } while ( direction_index != id.index );
+    }
 
     if ( !found_branch_to_explore ) {
       monitor.monitor.lock();
@@ -177,10 +175,9 @@ void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id
     monitor.monitor.unlock();
 
     // Bias each thread's first choice towards orginal dispatch direction. More coverage.
-    int direction_index = id.index;
     bool found_branch_to_explore = false;
-    do {
-      const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
+    for ( uint64_t count = 0, i = id.index; count < n_e_s_w_.size(); count++, ++i %= n_e_s_w_.size() ) {
+      const Builder::Maze::Point& p = n_e_s_w_.at( i );
       const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
       const bool push_next
@@ -191,8 +188,7 @@ void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id
         dfs.push_back( next );
         break;
       }
-      ++direction_index %= cardinal_directions_.size();
-    } while ( direction_index != id.index );
+    }
 
     if ( !found_branch_to_explore ) {
       dfs.pop_back();
@@ -222,10 +218,9 @@ void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id 
     monitor.monitor.unlock();
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
 
-    int direction_index = id.index;
     bool found_branch_to_explore = false;
-    do {
-      const Builder::Maze::Point& p = cardinal_directions_.at( direction_index );
+    for ( uint64_t count = 0, i = id.index; count < n_e_s_w_.size(); count++, ++i %= n_e_s_w_.size() ) {
+      const Builder::Maze::Point& p = n_e_s_w_.at( i );
       const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
       const bool push_next
@@ -236,8 +231,7 @@ void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id 
         dfs.push_back( next );
         break;
       }
-      ++direction_index %= cardinal_directions_.size();
-    } while ( direction_index != id.index );
+    }
     if ( !found_branch_to_explore ) {
       monitor.monitor.lock();
       maze[cur.row][cur.col] &= static_cast<Thread_paint>( ~id.paint );

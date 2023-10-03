@@ -140,11 +140,7 @@ constexpr std::array<std::string_view, 16> thread_colors_ = {
   ansi_wit_,
 };
 // north, east, south, west
-constexpr std::array<Builder::Maze::Point, 4> cardinal_directions_
-  = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
-// north, east, south, west
-constexpr std::array<Builder::Maze::Point, 4> generate_directions_
-  = { { { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
+constexpr std::array<Builder::Maze::Point, 4> n_e_s_w_ = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
 // north, north-east, east, south-east, south, south-west, west, north-west
 constexpr std::array<Builder::Maze::Point, 7> all_directions_
   = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };

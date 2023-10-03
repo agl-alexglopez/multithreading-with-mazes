@@ -39,7 +39,7 @@ void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
   std::vector<Builder::Maze::Point>& dfs = monitor.thread_paths[id.index];
   dfs.push_back( monitor.starts.at( id.index ) );
   Builder::Maze::Point cur = monitor.starts.at( id.index );
-  std::vector<int> random_direction_indices( generate_directions_.size() );
+  std::vector<int> random_direction_indices( n_e_s_w_.size() );
   std::iota( begin( random_direction_indices ), end( random_direction_indices ), 0 );
   std::mt19937 generator( std::random_device {}() );
   while ( !dfs.empty() ) {
@@ -66,7 +66,7 @@ void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
     bool found_branch_to_explore = false;
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator );
     for ( const int& i : random_direction_indices ) {
-      const Builder::Maze::Point& p = cardinal_directions_.at( i );
+      const Builder::Maze::Point& p = n_e_s_w_.at( i );
       const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
       monitor.monitor.lock();
@@ -99,7 +99,7 @@ void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
   std::vector<Builder::Maze::Point>& dfs = monitor.thread_paths.at( id.index );
   dfs.push_back( monitor.starts.at( id.index ) );
   Builder::Maze::Point cur = monitor.starts.at( id.index );
-  std::vector<int> random_direction_indices( generate_directions_.size() );
+  std::vector<int> random_direction_indices( n_e_s_w_.size() );
   std::iota( begin( random_direction_indices ), end( random_direction_indices ), 0 );
   std::mt19937 generator( std::random_device {}() );
   while ( !dfs.empty() ) {
@@ -130,7 +130,7 @@ void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
     bool found_branch_to_explore = false;
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator );
     for ( const int& i : random_direction_indices ) {
-      const Builder::Maze::Point& p = cardinal_directions_.at( i );
+      const Builder::Maze::Point& p = n_e_s_w_.at( i );
       const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
       monitor.monitor.lock();
@@ -162,7 +162,7 @@ void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id
   std::vector<Builder::Maze::Point>& dfs = monitor.thread_paths[id.index];
   dfs.push_back( monitor.starts.at( id.index ) );
   Builder::Maze::Point cur = monitor.starts.at( id.index );
-  std::vector<int> random_direction_indices( generate_directions_.size() );
+  std::vector<int> random_direction_indices( n_e_s_w_.size() );
   std::iota( begin( random_direction_indices ), end( random_direction_indices ), 0 );
   std::mt19937 generator( std::random_device {}() );
   while ( !dfs.empty() ) {
@@ -186,7 +186,7 @@ void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id
     bool found_branch_to_explore = false;
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator );
     for ( const int& i : random_direction_indices ) {
-      const Builder::Maze::Point& p = cardinal_directions_.at( i );
+      const Builder::Maze::Point& p = n_e_s_w_.at( i );
       const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
       monitor.monitor.lock();
@@ -213,7 +213,7 @@ void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id 
   std::vector<Builder::Maze::Point>& dfs = monitor.thread_paths.at( id.index );
   dfs.push_back( monitor.starts.at( 0 ) );
   Builder::Maze::Point cur = monitor.starts.at( 0 );
-  std::vector<int> random_direction_indices( generate_directions_.size() );
+  std::vector<int> random_direction_indices( n_e_s_w_.size() );
   std::iota( begin( random_direction_indices ), end( random_direction_indices ), 0 );
   std::mt19937 generator( std::random_device {}() );
   while ( !dfs.empty() ) {
@@ -235,7 +235,7 @@ void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id 
     bool found_branch_to_explore = false;
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator );
     for ( const int& i : random_direction_indices ) {
-      const Builder::Maze::Point& p = cardinal_directions_.at( i );
+      const Builder::Maze::Point& p = n_e_s_w_.at( i );
       const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
       monitor.monitor.lock();
