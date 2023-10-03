@@ -310,6 +310,7 @@ void mark_origin_animated( Maze& maze, const Maze::Point& walk, const Maze::Poin
     maze[next.row][next.col] |= Maze::from_west_;
   }
   flush_cursor_maze_coordinate( maze, wall );
+  std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   flush_cursor_maze_coordinate( maze, next );
   std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
 }
