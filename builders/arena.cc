@@ -13,11 +13,11 @@ void generate_arena( Maze& maze )
   clear_and_flush_grid( maze );
 }
 
-void animate_arena( Maze& maze, Builder_speed speed )
+void animate_arena( Maze& maze, Speed::Speed speed )
 {
   fill_maze_with_walls( maze );
   clear_and_flush_grid( maze );
-  const Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   for ( int row = 1; row < maze.row_size() - 1; row++ ) {
     for ( int col = 1; col < maze.col_size() - 1; col++ ) {
       carve_path_walls_animated( maze, { row, col }, animation );

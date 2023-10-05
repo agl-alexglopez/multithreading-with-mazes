@@ -10,7 +10,7 @@
 
 namespace Builder {
 
-constexpr Speed_unit backtrack_delay = 8;
+constexpr Speed::Speed_unit backtrack_delay = 8;
 
 void generate_recursive_backtracker_maze( Maze& maze )
 {
@@ -22,7 +22,7 @@ void generate_recursive_backtracker_maze( Maze& maze )
 
   const Maze::Point start
     = { 2 * ( row_random_( generator_ ) / 2 ) + 1, 2 * ( col_random_( generator_ ) / 2 ) + 1 };
-  std::vector<int> random_direction_indices( Maze::generate_directions_.size() );
+  std::vector<int> random_direction_indices( Maze::build_dirs_.size() );
   std::iota( begin( random_direction_indices ), end( random_direction_indices ), 0 );
   Maze::Point cur = start;
   bool branches_remain = true;
@@ -31,7 +31,7 @@ void generate_recursive_backtracker_maze( Maze& maze )
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator_ );
     branches_remain = false;
     for ( const int& i : random_direction_indices ) {
-      const Maze::Point& direction = Maze::generate_directions_.at( i );
+      const Maze::Point& direction = Maze::build_dirs_.at( i );
       const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
       if ( can_build_new_square( maze, next ) ) {
         branches_remain = true;
@@ -55,9 +55,9 @@ void generate_recursive_backtracker_maze( Maze& maze )
   clear_and_flush_grid( maze );
 }
 
-void animate_recursive_backtracker_maze( Maze& maze, Builder_speed speed )
+void animate_recursive_backtracker_maze( Maze& maze, Speed::Speed speed )
 {
-  const Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );
   clear_and_flush_grid( maze );
   std::mt19937 generator_( std::random_device {}() );
@@ -65,7 +65,7 @@ void animate_recursive_backtracker_maze( Maze& maze, Builder_speed speed )
   std::uniform_int_distribution<int> col_random_( 1, maze.col_size() - 2 );
   const Maze::Point start
     = { 2 * ( row_random_( generator_ ) / 2 ) + 1, 2 * ( col_random_( generator_ ) / 2 ) + 1 };
-  std::vector<int> random_direction_indices( Maze::generate_directions_.size() );
+  std::vector<int> random_direction_indices( Maze::build_dirs_.size() );
   std::iota( begin( random_direction_indices ), end( random_direction_indices ), 0 );
   Maze::Point cur = start;
   bool branches_remain = true;
@@ -73,7 +73,7 @@ void animate_recursive_backtracker_maze( Maze& maze, Builder_speed speed )
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator_ );
     branches_remain = false;
     for ( const int& i : random_direction_indices ) {
-      const Maze::Point& direction = Maze::generate_directions_.at( i );
+      const Maze::Point& direction = Maze::build_dirs_.at( i );
       const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
       if ( can_build_new_square( maze, next ) ) {
         carve_path_markings_animated( maze, cur, next, animation );

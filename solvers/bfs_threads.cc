@@ -18,7 +18,7 @@ namespace {
 struct Solver_monitor
 {
   std::mutex monitor {};
-  std::optional<Speed_unit> speed {};
+  std::optional<Speed::Speed_unit> speed {};
   std::vector<std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>> thread_maps;
   std::vector<My_queue<Builder::Maze::Point>> thread_queues;
   std::vector<Builder::Maze::Point> starts {};
@@ -267,12 +267,12 @@ void solve_with_bfs_thread_hunt( Builder::Maze& maze )
   std::cout << std::endl;
 }
 
-void animate_with_bfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
+void animate_with_bfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   print_overlap_key();
   Solver_monitor monitor;
-  monitor.speed = solver_speeds_.at( static_cast<Speed_unit>( speed ) );
+  monitor.speed = solver_speeds_.at( static_cast<Speed::Speed_unit>( speed ) );
   monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit_;
   const Builder::Maze::Point finish = pick_random_point( maze );
@@ -339,7 +339,7 @@ void solve_with_bfs_thread_gather( Builder::Maze& maze )
   std::cout << std::endl;
 }
 
-void animate_with_bfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
+void animate_with_bfs_thread_gather( Builder::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   print_overlap_key();
@@ -409,7 +409,7 @@ void solve_with_bfs_thread_corners( Builder::Maze& maze )
   std::cout << std::endl;
 }
 
-void animate_with_bfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
+void animate_with_bfs_thread_corners( Builder::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   print_overlap_key();

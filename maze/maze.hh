@@ -148,10 +148,10 @@ public:
   } };
 
   // north, east, south, west
-  static constexpr std::array<Point, 4> cardinal_directions_ = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
-  static constexpr std::array<Point, 4> generate_directions_ = { { { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
+  static constexpr std::array<Point, 4> dirs_ = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
+  static constexpr std::array<Point, 4> build_dirs_ = { { { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
   // south, south-east, east, north-east, north, north-west, west, south-west
-  static constexpr std::array<Point, 8> all_directions_
+  static constexpr std::array<Point, 8> all_dirs_
     = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, -1 } } };
 
 private:

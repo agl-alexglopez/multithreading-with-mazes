@@ -16,7 +16,7 @@ namespace {
 struct Solver_monitor
 {
   std::mutex monitor {};
-  std::optional<Speed_unit> speed {};
+  std::optional<Speed::Speed_unit> speed {};
   std::vector<Builder::Maze::Point> starts {};
   std::optional<int> winning_index {};
   std::vector<std::vector<Builder::Maze::Point>> thread_paths;
@@ -342,7 +342,7 @@ void solve_with_randomized_dfs_thread_corners( Builder::Maze& maze )
   std::cout << std::endl;
 }
 
-void animate_with_randomized_dfs_thread_hunt( Builder::Maze& maze, Solver_speed speed )
+void animate_with_randomized_dfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   print_overlap_key();
@@ -369,7 +369,7 @@ void animate_with_randomized_dfs_thread_hunt( Builder::Maze& maze, Solver_speed 
   std::cout << std::endl;
 }
 
-void animate_with_randomized_dfs_thread_gather( Builder::Maze& maze, Solver_speed speed )
+void animate_with_randomized_dfs_thread_gather( Builder::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   print_overlap_key();
@@ -398,7 +398,7 @@ void animate_with_randomized_dfs_thread_gather( Builder::Maze& maze, Solver_spee
   std::cout << std::endl;
 }
 
-void animate_with_randomized_dfs_thread_corners( Builder::Maze& maze, Solver_speed speed )
+void animate_with_randomized_dfs_thread_corners( Builder::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   print_overlap_key();

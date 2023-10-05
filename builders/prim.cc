@@ -59,7 +59,7 @@ void generate_prim_maze( Maze& maze )
     maze[cur.row][cur.col] |= Maze::builder_bit_;
     Maze::Point min_neighbor = {};
     int min_weight = INT_MAX;
-    for ( const Maze::Point& p : Maze::generate_directions_ ) {
+    for ( const Maze::Point& p : Maze::build_dirs_ ) {
       const Maze::Point next = { cur.row + p.row, cur.col + p.col };
       if ( can_build_new_square( maze, next ) ) {
         const int weight = cell_cost[next];
@@ -79,9 +79,9 @@ void generate_prim_maze( Maze& maze )
   clear_and_flush_grid( maze );
 }
 
-void animate_prim_maze( Maze& maze, Builder_speed speed )
+void animate_prim_maze( Maze& maze, Speed::Speed speed )
 {
-  const Speed_unit animation_speed = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed::Speed_unit animation_speed = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );
   clear_and_flush_grid( maze );
   std::unordered_map<Maze::Point, int> cell_cost = randomize_cell_costs( maze );
@@ -93,7 +93,7 @@ void animate_prim_maze( Maze& maze, Builder_speed speed )
     maze[cur.row][cur.col] |= Maze::builder_bit_;
     Maze::Point min_neighbor = {};
     int min_weight = INT_MAX;
-    for ( const Maze::Point& p : Maze::generate_directions_ ) {
+    for ( const Maze::Point& p : Maze::build_dirs_ ) {
       const Maze::Point next = { cur.row + p.row, cur.col + p.col };
       if ( can_build_new_square( maze, next ) ) {
         const int weight = cell_cost[next];

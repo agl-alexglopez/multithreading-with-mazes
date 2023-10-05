@@ -2,6 +2,8 @@
 #ifndef SOLVER_UTILITIES_HH
 #define SOLVER_UTILITIES_HH
 #include "maze.hh"
+#include "speed.hh"
+
 #include <array>
 #include <optional>
 #include <string_view>
@@ -31,7 +33,6 @@ namespace Solver {
  */
 using Thread_paint = uint16_t;
 using Thread_cache = uint16_t;
-using Speed_unit = int;
 
 struct Thread_id
 {
@@ -44,18 +45,6 @@ enum class Maze_game
   hunt,
   gather,
   corners,
-};
-
-enum class Solver_speed
-{
-  instant,
-  speed_1,
-  speed_2,
-  speed_3,
-  speed_4,
-  speed_5,
-  speed_6,
-  speed_7,
 };
 
 /* * * * * * * * * * * * *   Generic Read-Only Helpers Available to All Solvers  * * * * * * * * * * * * * * * * */
@@ -145,7 +134,7 @@ constexpr std::array<Builder::Maze::Point, 4> n_e_s_w_ = { { { -1, 0 }, { 0, 1 }
 constexpr std::array<Builder::Maze::Point, 7> all_directions_
   = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };
 constexpr int overlap_key_and_message_height = 9;
-constexpr std::array<Speed_unit, 8> solver_speeds_ = { 0, 20000, 10000, 5000, 2000, 1000, 500, 250 };
+constexpr std::array<Speed::Speed_unit, 8> solver_speeds_ = { 0, 20000, 10000, 5000, 2000, 1000, 500, 250 };
 
 } // namespace Solver
 

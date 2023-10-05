@@ -1,6 +1,8 @@
 #include "maze_algorithms.hh"
 #include "maze_solvers.hh"
 #include "print_utilities.hh"
+#include "speed.hh"
+
 #include <chrono>
 #include <cstdint>
 #include <functional>
@@ -12,8 +14,8 @@
 
 namespace {
 
-using Build_demo = std::function<void( Builder::Maze&, Builder::Builder_speed )>;
-using Solve_demo = std::function<void( Builder::Maze&, Solver::Solver_speed )>;
+using Build_demo = std::function<void( Builder::Maze&, Speed::Speed )>;
+using Solve_demo = std::function<void( Builder::Maze&, Speed::Speed )>;
 
 struct Flag_arg
 {
@@ -25,13 +27,13 @@ struct Demo_runner
 {
   Builder::Maze::Maze_args args {};
 
-  std::vector<Builder::Builder_speed> builder_speed { Builder::Builder_speed::speed_1,
-                                                      Builder::Builder_speed::speed_2,
-                                                      Builder::Builder_speed::speed_3,
-                                                      Builder::Builder_speed::speed_4,
-                                                      Builder::Builder_speed::speed_5,
-                                                      Builder::Builder_speed::speed_6,
-                                                      Builder::Builder_speed::speed_7 };
+  std::vector<Speed::Speed> builder_speed { Speed::Speed::speed_1,
+                                            Speed::Speed::speed_2,
+                                            Speed::Speed::speed_3,
+                                            Speed::Speed::speed_4,
+                                            Speed::Speed::speed_5,
+                                            Speed::Speed::speed_6,
+                                            Speed::Speed::speed_7 };
 
   std::vector<Builder::Maze::Maze_style> wall_style {
     Builder::Maze::Maze_style::sharp,
@@ -54,13 +56,13 @@ struct Demo_runner
 
   std::vector<Build_demo> modifications { Builder::add_cross_animated, Builder::add_x_animated };
 
-  std::vector<Solver::Solver_speed> solver_speed { Solver::Solver_speed::speed_1,
-                                                   Solver::Solver_speed::speed_2,
-                                                   Solver::Solver_speed::speed_3,
-                                                   Solver::Solver_speed::speed_4,
-                                                   Solver::Solver_speed::speed_5,
-                                                   Solver::Solver_speed::speed_6,
-                                                   Solver::Solver_speed::speed_7 };
+  std::vector<Speed::Speed> solver_speed { Speed::Speed::speed_1,
+                                           Speed::Speed::speed_2,
+                                           Speed::Speed::speed_3,
+                                           Speed::Speed::speed_4,
+                                           Speed::Speed::speed_5,
+                                           Speed::Speed::speed_6,
+                                           Speed::Speed::speed_7 };
 
   std::vector<Solve_demo> solvers { Solver::animate_with_dfs_thread_hunt,
                                     Solver::animate_with_dfs_thread_gather,

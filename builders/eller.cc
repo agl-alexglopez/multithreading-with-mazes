@@ -64,7 +64,7 @@ void complete_final_row( Maze& maze, Sliding_set_window& window )
   }
 }
 
-void complete_final_row_animated( Maze& maze, Sliding_set_window& window, Speed_unit animation )
+void complete_final_row_animated( Maze& maze, Sliding_set_window& window, Speed::Speed_unit animation )
 {
   const int final_row = maze.row_size() - 2;
   for ( int col = 1; col < maze.col_size() - 2; col += 2 ) {
@@ -142,11 +142,11 @@ void generate_eller_maze( Maze& maze )
   clear_and_flush_grid( maze );
 }
 
-void animate_eller_maze( Maze& maze, Builder_speed speed )
+void animate_eller_maze( Maze& maze, Speed::Speed speed )
 {
   fill_maze_with_walls_animated( maze );
   clear_and_flush_grid( maze );
-  const Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   std::mt19937 gen( std::random_device {}() );
   std::uniform_int_distribution<int> coin( 0, horizontal_bias );
 

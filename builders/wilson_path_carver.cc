@@ -51,7 +51,7 @@ void build_with_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& ne
   carve_path_walls( maze, wall );
 }
 
-void animate_with_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& next, Speed_unit speed )
+void animate_with_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& next, Speed::Speed_unit speed )
 {
   Maze::Point wall = cur;
   if ( next.row < cur.row ) {
@@ -91,7 +91,7 @@ void connect_walk_to_maze( Maze& maze, const Maze::Point& walk )
   carve_path_walls( maze, cur );
 }
 
-void animate_walk_to_maze( Maze& maze, const Maze::Point& walk, Speed_unit speed )
+void animate_walk_to_maze( Maze& maze, const Maze::Point& walk, Speed::Speed_unit speed )
 {
   Maze::Point cur = walk;
   while ( maze[cur.row][cur.col] & Maze::markers_mask_ ) {
@@ -134,7 +134,7 @@ void erase_loop( Maze& maze, const Loop& loop )
   }
 }
 
-void animate_erase_loop( Maze& maze, const Loop& loop, Speed_unit speed )
+void animate_erase_loop( Maze& maze, const Loop& loop, Speed::Speed_unit speed )
 {
   Maze::Point cur = loop.walk;
   while ( cur != loop.root ) {
@@ -188,7 +188,7 @@ bool continue_random_walks( Maze& maze, Random_walk& cur )
   return true;
 }
 
-bool animate_random_walks( Maze& maze, Random_walk& cur, Speed_unit speed )
+bool animate_random_walks( Maze& maze, Random_walk& cur, Speed::Speed_unit speed )
 {
   if ( has_builder_bit( maze, cur.next ) ) {
     animate_with_marks( maze, cur.walk, cur.next, speed );
@@ -240,7 +240,7 @@ void generate_wilson_path_carver_maze( Maze& maze )
   maze[start.row][start.col] |= Maze::builder_bit_;
   Random_walk cur = { {}, { 1, 1 }, {} };
   maze[cur.walk.row][cur.walk.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
-  std::vector<int> random_direction_indices( Maze::generate_directions_.size() );
+  std::vector<int> random_direction_indices( Maze::build_dirs_.size() );
   std::iota( begin( random_direction_indices ), end( random_direction_indices ), 0 );
 
   for ( ;; ) {
@@ -249,7 +249,7 @@ void generate_wilson_path_carver_maze( Maze& maze )
 
     for ( const int& i : random_direction_indices ) {
 
-      const Maze::Point& p = Maze::generate_directions_.at( i );
+      const Maze::Point& p = Maze::build_dirs_.at( i );
       cur.next = { cur.walk.row + p.row, cur.walk.col + p.col };
       if ( !is_valid_random_step( maze, cur.next, cur.prev ) ) {
         continue;
@@ -263,9 +263,9 @@ void generate_wilson_path_carver_maze( Maze& maze )
   }
 }
 
-void animate_wilson_path_carver_maze( Maze& maze, Builder_speed speed )
+void animate_wilson_path_carver_maze( Maze& maze, Speed::Speed speed )
 {
-  const Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );
   clear_and_flush_grid( maze );
   std::mt19937 generator( std::random_device {}() );
@@ -278,7 +278,7 @@ void animate_wilson_path_carver_maze( Maze& maze, Builder_speed speed )
   maze[start.row][start.col] |= Maze::builder_bit_;
   Random_walk cur = { {}, { 1, 1 }, {} };
   maze[cur.walk.row][cur.walk.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
-  std::vector<int> random_direction_indices( Maze::generate_directions_.size() );
+  std::vector<int> random_direction_indices( Maze::build_dirs_.size() );
   std::iota( begin( random_direction_indices ), end( random_direction_indices ), 0 );
 
   for ( ;; ) {
@@ -287,7 +287,7 @@ void animate_wilson_path_carver_maze( Maze& maze, Builder_speed speed )
 
     for ( const int& i : random_direction_indices ) {
 
-      const Maze::Point& p = Maze::generate_directions_.at( i );
+      const Maze::Point& p = Maze::build_dirs_.at( i );
       cur.next = { cur.walk.row + p.row, cur.walk.col + p.col };
       if ( !is_valid_random_step( maze, cur.next, cur.prev ) ) {
         continue;

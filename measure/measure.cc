@@ -1,5 +1,5 @@
 #include "maze_algorithms.hh"
-#include "maze_solvers.hh"
+#include "painters.hh"
 #include "print_utilities.hh"
 #include "speed.hh"
 
@@ -19,7 +19,7 @@ namespace {
 using Build_function
   = std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Speed::Speed )>>;
 
-using Solve_function
+using Paint_function
   = std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Speed::Speed )>>;
 
 constexpr int static_image = 0;
@@ -43,9 +43,9 @@ struct Maze_runner
   int modification_getter { static_image };
   std::optional<Build_function> modder {};
 
-  int solver_view { static_image };
-  Speed::Speed solver_speed {};
-  Solve_function solver { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt };
+  int painter_view { static_image };
+  Speed::Speed painter_speed {};
+  Paint_function painter { Paint::paint_distance_from_center, Paint::animate_distance_from_center };
   Maze_runner() : args {} {}
 };
 
@@ -54,9 +54,9 @@ struct Lookup_tables
   std::unordered_set<std::string> argument_flags;
   std::unordered_map<std::string, Build_function> builder_table;
   std::unordered_map<std::string, Build_function> modification_table;
-  std::unordered_map<std::string, Solve_function> solver_table;
+  std::unordered_map<std::string, Paint_function> painter_table;
   std::unordered_map<std::string, Builder::Maze::Maze_style> style_table;
-  std::unordered_map<std::string, Speed::Speed> solver_animation_table;
+  std::unordered_map<std::string, Speed::Speed> painter_animation_table;
   std::unordered_map<std::string, Speed::Speed> builder_animation_table;
 };
 
@@ -71,7 +71,7 @@ void print_usage();
 int main( int argc, char** argv )
 {
   const Lookup_tables tables = {
-    { "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-sa", "-ba" },
+    { "-r", "-c", "-b", "-p", "-h", "-g", "-d", "-m", "-pa", "-ba" },
     {
       { "rdfs", { Builder::generate_recursive_backtracker_maze, Builder::animate_recursive_backtracker_maze } },
       { "wilson", { Builder::generate_wilson_path_carver_maze, Builder::animate_wilson_path_carver_maze } },
@@ -88,23 +88,7 @@ int main( int argc, char** argv )
       { "x", { Builder::add_x, Builder::add_x_animated } },
     },
     {
-      { "dfs-hunt", { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt } },
-      { "dfs-gather", { Solver::solve_with_dfs_thread_gather, Solver::animate_with_dfs_thread_gather } },
-      { "dfs-corners", { Solver::solve_with_dfs_thread_corners, Solver::animate_with_dfs_thread_corners } },
-      { "floodfs-hunt", { Solver::solve_with_floodfs_thread_hunt, Solver::animate_with_floodfs_thread_hunt } },
-      { "floodfs-gather",
-        { Solver::solve_with_floodfs_thread_gather, Solver::animate_with_floodfs_thread_gather } },
-      { "floodfs-corners",
-        { Solver::solve_with_floodfs_thread_corners, Solver::animate_with_floodfs_thread_corners } },
-      { "rdfs-hunt",
-        { Solver::solve_with_randomized_dfs_thread_hunt, Solver::animate_with_randomized_dfs_thread_hunt } },
-      { "rdfs-gather",
-        { Solver::solve_with_randomized_dfs_thread_gather, Solver::animate_with_randomized_dfs_thread_gather } },
-      { "rdfs-corners",
-        { Solver::solve_with_randomized_dfs_thread_corners, Solver::animate_with_randomized_dfs_thread_corners } },
-      { "bfs-hunt", { Solver::solve_with_bfs_thread_hunt, Solver::animate_with_bfs_thread_hunt } },
-      { "bfs-gather", { Solver::solve_with_bfs_thread_gather, Solver::animate_with_bfs_thread_gather } },
-      { "bfs-corners", { Solver::solve_with_bfs_thread_corners, Solver::animate_with_bfs_thread_corners } },
+      { "distance", { Paint::paint_distance_from_center, Paint::animate_distance_from_center } },
     },
     {
       { "sharp", Builder::Maze::Maze_style::sharp },
@@ -181,10 +165,10 @@ int main( int argc, char** argv )
   // This helps ensure we have a smooth transition from build to solve with no flashing from redrawing frame.
   Printer::set_cursor_position( { 0, 0 } );
 
-  if ( runner.solver_view == animated_playback ) {
-    std::get<animated_playback>( runner.solver )( maze, runner.solver_speed );
+  if ( runner.painter_view == animated_playback ) {
+    std::get<animated_playback>( runner.painter )( maze, runner.painter_speed );
   } else {
-    std::get<static_image>( runner.solver )( maze );
+    std::get<static_image>( runner.painter )( maze );
   }
   return 0;
 }
@@ -215,12 +199,12 @@ void set_relevant_arg( const Lookup_tables& tables, Maze_runner& runner, const F
     runner.modder = found->second;
     return;
   }
-  if ( pairs.flag == "-s" ) {
-    const auto found = tables.solver_table.find( pairs.arg.data() );
-    if ( found == tables.solver_table.end() ) {
+  if ( pairs.flag == "-p" ) {
+    const auto found = tables.painter_table.find( pairs.arg.data() );
+    if ( found == tables.painter_table.end() ) {
       print_invalid_arg( pairs );
     }
-    runner.solver = found->second;
+    runner.painter = found->second;
     return;
   }
   if ( pairs.flag == "-d" ) {
@@ -231,13 +215,13 @@ void set_relevant_arg( const Lookup_tables& tables, Maze_runner& runner, const F
     runner.args.style = found->second;
     return;
   }
-  if ( pairs.flag == "-sa" ) {
-    const auto found = tables.solver_animation_table.find( pairs.arg.data() );
-    if ( found == tables.solver_animation_table.end() ) {
+  if ( pairs.flag == "-pa" ) {
+    const auto found = tables.painter_animation_table.find( pairs.arg.data() );
+    if ( found == tables.painter_animation_table.end() ) {
       print_invalid_arg( pairs );
     }
-    runner.solver_speed = found->second;
-    runner.solver_view = animated_playback;
+    runner.painter_speed = found->second;
+    runner.painter_view = animated_playback;
     return;
   }
   if ( pairs.flag == "-ba" ) {
@@ -308,19 +292,9 @@ void print_usage()
                "├─╴ ├─────-m Modification flag. Add shortcuts to the maze.┘ │ ┌─┐ └─╴ │\n"
                "│   │     │ cross - Add crossroads through the center.      │ │ │     │\n"
                "│ ┌─┘ ┌─┐ │ x - Add an x of crossing paths through center.──┘ │ └─────┤\n"
-               "│ │   │ │ -s Solver flag. Choose the game and solver. │ │     │       │\n"
-               "│ ╵ ┌─┘ │ └─dfs-hunt - Depth First Search ╴ ┌───┴─┬─┘ │ │ ┌───┴─────┐ │\n"
-               "│   │   │   dfs-gather - Depth First Search │     │   │ │ │         │ │\n"
-               "├───┘ ╶─┴─╴ dfs-corners - Depth First Search  ┌─╴ │ ╶─┼─┘ │ ╷ ┌───╴ ╵ │\n"
-               "│           floodfs-hunt - Depth First Search │   │   │   │ │ │       │\n"
-               "│ ┌───────┬─floodfs-gather - Depth First Search ┌─┴─╴ │ ╶─┴─┤ └───────┤\n"
-               "│ │       │ floodfs-corners - Depth First Search│     │     │         │\n"
-               "│ │ ╷ ┌─╴ │ rdfs-hunt - Randomized Depth First Search─┴─┬─╴ │ ┌─────╴ │\n"
-               "│ │ │ │   │ rdfs-gather - Randomized Depth First Search │   │ │       │\n"
-               "│ └─┤ └───┤ rdfs-corners - Randomized Depth First Search┤ ┌─┘ │ ╶───┐ │\n"
-               "│   │     │ bfs-hunt - Breadth First Search     │   │   │ │   │     │ │\n"
-               "├─┐ │ ┌─┐ └─bfs-gather - Breadth First Search─┐ ╵ ╷ ├─╴ │ └─┐ ├───╴ │ │\n"
-               "│ │ │ │ │   bfs-corners - Breadth First Search│   │ │   │   │ │     │ │\n"
+               "│ │   │ │ -s painter flag. Choose the painter measurement.    │       │\n"
+               "├─┐ │ ┌─┐ └─distance - distance from the center     ├─╴ │ └─┐ ├───╴ │ │\n"
+               "│ │ │ │ │   runs - bias of straight line runs       │   │   │ │     │ │\n"
                "│ │ │ ╵ └─-d Draw flag. Set the line style for the maze.┴─┐ └─┘ ┌─┬─┘ │\n"
                "│ │ │       sharp - The default straight lines. │   │     │     │ │   │\n"
                "│ │ └─┬───╴ round - Rounded corners.──╴ │ ╷ ╵ ╵ │ ╶─┴─┐ ╶─┴─────┘ │ ╶─┤\n"
@@ -328,23 +302,14 @@ void print_usage()
                "│ └─┐ └───┬─bold - Thicker straight lines.└─┬───┴─┬─╴ │ ┌───┬───╴ └─┐ │\n"
                "│   │     │ contrast - Full block width and height walls.   │       │ │\n"
                "│ ╷ ├─┬─╴ │ spikes - Connected lines with spikes. ╵ ┌─┘ ╵ ┌─┘ ┌─┐ ┌─┘ │\n"
-               "│ │ │ │   -sa Solver Animation flag. Watch the maze solution. │ │ │   │\n"
+               "│ │ │ │   -pa Painter Animation flag. Watch the maze solution.│ │ │   │\n"
                "│ │ ╵ │ ╶─┤ Any number 1-7. Speed increases with number.┌─┘ ┌─┤ ╵ │ ╶─┤\n"
                "│ │   │   -ba Builder Animation flag. Watch the maze build. │ │   │   │\n"
                "│ ├─╴ ├─┐ └─Any number 1-7. Speed increases with number.┘ ┌─┘ │ ┌─┴─┐ │\n"
                "│ │   │ │ -h Help flag. Make this prompt appear.  │   │   │   │ │   │ │\n"
                "│ └─┐ ╵ └─┐ No arguments.─┘ ┌───┐ └─┐ ├─╴ │ ╵ └───┤ ┌─┘ ┌─┴─╴ │ ├─╴ │ │\n"
                "│   │     -If any flags are omitted, defaults are used. │     │ │   │ │\n"
-               "├─╴ ├───┐ -Examples:┐ ╶─┬─┬─┘ ╷ ├─╴ │ │ ┌─┴───────┘ ├─╴ │ ╶─┐ │ ╵ ┌─┘ │\n"
-               "│   │   │ │ ./run_maze  │ │   │ │   │ │ │           │   │   │ │   │   │\n"
-               "│ ╶─┤ ╶─┘ │ ./run_maze -r 51 -c 111 -b random-dfs -s bfs -hunt┘ ┌─┘ ┌─┤\n"
-               "│   │     │ ./run_maze -c 111 -s bfs -g gather│   │   │   │ │   │   │ │\n"
-               "│ ╷ │ ╶───┤ ./run_maze -s bfs -g corners -d round -b fractal╵ ┌─┤ ╶─┤ │\n"
-               "│ │ │     │ ./run_maze -s dfs -ba 4 -sa 5 -b kruskal -m x │   │ │   │ │\n"
-               "├─┘ ├───┬─┘ │ ╶─┼─╴ │ │ │ ╷ ├─┐ ╵ ╷ ├─┴───╴ │ │ ┌───┤ ╵ │ └─┐ ╵ └─┐ ╵ │\n"
-               "│   │   │   │   │   │ │ │ │ │ │   │ │       │ │ │   │   │   │     │   │\n"
-               "│ ╶─┘ ╷ ╵ ╶─┴───┘ ┌─┘ ╵ ╵ │ ╵ └───┤ ╵ ╶─────┘ │ ╵ ╷ └───┴─┐ └─────┴─╴ │\n"
-               "│     │           │       │       │           │   │       │           │\n"
-               "└─────┴───────────┴───────┴───────┴───────────┴───┴───────┴───────────┘\n";
+               "│   │             │       │       │           │   │     │           │ │\n"
+               "└───┴─────────────┴───────┴───────┴───────────┴───┴─────┴───────────┴─┘\n";
   std::cout << std::endl;
 }
