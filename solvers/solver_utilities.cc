@@ -57,7 +57,7 @@ Bd::Maze::Point pick_random_point( const Bd::Maze& maze )
 Bd::Maze::Point find_nearest_square( const Bd::Maze& maze, const Bd::Maze::Point& choice )
 {
   // Fanning out from a starting point should work on any medium to large maze.
-  for ( const Bd::Maze::Point& p : all_directions_ ) {
+  for ( const Bd::Maze::Point& p : all_dirs_ ) {
     const Bd::Maze::Point next = { choice.row + p.row, choice.col + p.col };
     if ( is_valid_start_or_finish( maze, next ) ) {
       return next;
@@ -112,8 +112,9 @@ void print_point( const Bd::Maze& maze, const Bd::Maze::Point& point )
     std::cout << ansi_start_;
     return;
   }
-  if ( square & thread_mask_ ) {
-    const Thread_paint thread_color = static_cast<Thread_paint>( square & thread_mask_ ) >> thread_tag_offset_;
+  if ( square & thread_paint_mask_ ) {
+    const Thread_paint thread_color
+      = static_cast<Thread_paint>( square & thread_paint_mask_ ) >> thread_paint_shift_;
     std::cout << thread_colors_.at( thread_color );
     return;
   }
@@ -135,14 +136,13 @@ void print_hunt_solution_message( std::optional<int> winning_index )
     std::cout << thread_colors_.at( all_threads_failed_index_ );
     return;
   }
-  std::cout << ( thread_colors_.at( thread_masks_.at( winning_index.value() ) >> thread_tag_offset_ ) )
-            << " thread won!\n";
+  std::cout << ( thread_colors_.at( thread_bits_.at( winning_index.value() ) ) ) << " thread won!\n";
 }
 
 void print_gather_solution_message()
 {
-  for ( const Thread_paint& mask : thread_masks_ ) {
-    std::cout << thread_colors_.at( mask >> thread_tag_offset_ );
+  for ( const Thread_paint& mask : thread_bits_ ) {
+    std::cout << thread_colors_.at( mask );
   }
   std::cout << " All threads found their finish squares!\n";
 }

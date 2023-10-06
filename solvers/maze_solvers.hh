@@ -43,6 +43,18 @@ void animate_darkdfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed );
 void animate_darkdfs_thread_gather( Builder::Maze& maze, Speed::Speed speed );
 void animate_darkdfs_thread_corners( Builder::Maze& maze, Speed::Speed speed );
 
+void animate_darkbfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed );
+void animate_darkbfs_thread_gather( Builder::Maze& maze, Speed::Speed speed );
+void animate_darkbfs_thread_corners( Builder::Maze& maze, Speed::Speed speed );
+
+void animate_darkfloodfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed );
+void animate_darkfloodfs_thread_gather( Builder::Maze& maze, Speed::Speed speed );
+void animate_darkfloodfs_thread_corners( Builder::Maze& maze, Speed::Speed speed );
+
+void animate_darkrandomized_dfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed );
+void animate_darkrandomized_dfs_thread_gather( Builder::Maze& maze, Speed::Speed speed );
+void animate_darkrandomized_dfs_thread_corners( Builder::Maze& maze, Speed::Speed speed );
+
 } // namespace Solver
 
 #endif

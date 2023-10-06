@@ -34,12 +34,11 @@ namespace Solver {
 using Thread_bit = uint16_t;
 using Thread_paint = uint16_t;
 using Thread_cache = uint16_t;
-using Thread_lumen = uint16_t;
 
 struct Thread_id
 {
   int index;
-  Thread_paint paint;
+  Thread_bit bit;
 };
 
 enum class Maze_game
@@ -65,25 +64,19 @@ void print_overlap_key();
 
 /* * * * * * * * * * * * *     Helpful Read-Only Data Available to All Solvers   * * * * * * * * * * * * * * * * */
 
-constexpr Thread_paint zero_bit_ = 0b0001;
-constexpr Thread_paint one_bit_ = 0b0010;
-constexpr Thread_paint two_bit_ = 0b0100;
-constexpr Thread_paint three_bit_ = 0b1000;
-constexpr std::array<Thread_bit, 4> thread_bits_ = { zero_bit_, one_bit_, two_bit_, three_bit_ };
-
-constexpr Thread_paint start_bit_ = 0b0100'0000'0000'0000;
-constexpr Thread_paint finish_bit_ = 0b1000'0000'0000'0000;
 constexpr int num_threads_ = 4;
-constexpr Thread_paint thread_tag_offset_ = 4;
-constexpr int num_gather_finishes_ = 4;
+constexpr Thread_bit start_bit_ = 0b0100'0000'0000'0000;
+constexpr Thread_bit finish_bit_ = 0b1000'0000'0000'0000;
+constexpr Thread_bit zero_bit_ = 0b0001;
+constexpr Thread_bit one_bit_ = 0b0010;
+constexpr Thread_bit two_bit_ = 0b0100;
+constexpr Thread_bit three_bit_ = 0b1000;
+constexpr std::array<Thread_bit, 4> thread_bits_ = { zero_bit_, one_bit_, two_bit_, three_bit_ };
 constexpr int initial_path_len_ = 1024;
-constexpr Thread_paint thread_mask_ = 0b1111'0000;
-constexpr Thread_paint zero_thread_ = 0b0001'0000;
-constexpr Thread_paint one_thread_ = 0b0010'0000;
-constexpr Thread_paint two_thread_ = 0b0100'0000;
-constexpr Thread_paint three_thread_ = 0b1000'0000;
-constexpr Thread_paint error_thread_ = 0b0000'0000;
-constexpr std::array<Thread_paint, 4> thread_masks_ = { zero_thread_, one_thread_, two_thread_, three_thread_ };
+
+constexpr Thread_paint thread_paint_shift_ = 4;
+constexpr Thread_paint thread_paint_mask_ = 0b1111'0000;
+constexpr int num_gather_finishes_ = 4;
 
 constexpr Thread_cache clear_cache_ = 0b0001'1111'1111'0000;
 constexpr Thread_cache cache_mask_ = 0b1111'0000'0000;
@@ -91,9 +84,8 @@ constexpr Thread_cache zero_seen_ = 0b0001'0000'0000;
 constexpr Thread_cache one_seen_ = 0b0010'0000'0000;
 constexpr Thread_cache two_seen_ = 0b0100'0000'0000;
 constexpr Thread_cache three_seen_ = 0b1000'0000'0000;
-constexpr Thread_paint thread_cache_offset_ = 8;
+constexpr Thread_paint thread_cache_shift_ = 8;
 
-constexpr int starting_path_len_ = 2048;
 constexpr std::string_view ansi_red_ = "\033[38;5;1m█\033[0m";
 constexpr std::string_view ansi_grn_ = "\033[38;5;2m█\033[0m";
 constexpr std::string_view ansi_yel_ = "\033[38;5;3m█\033[0m";
@@ -139,9 +131,9 @@ constexpr std::array<std::string_view, 16> thread_colors_ = {
   ansi_wit_,
 };
 // north, east, south, west
-constexpr std::array<Builder::Maze::Point, 4> n_e_s_w_ = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
+constexpr std::array<Builder::Maze::Point, 4> dirs_ = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
 // north, north-east, east, south-east, south, south-west, west, north-west
-constexpr std::array<Builder::Maze::Point, 7> all_directions_
+constexpr std::array<Builder::Maze::Point, 7> all_dirs_
   = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };
 constexpr int overlap_key_and_message_height = 9;
 constexpr std::array<Speed::Speed_unit, 8> solver_speeds_ = { 0, 20000, 10000, 5000, 2000, 1000, 500, 250 };

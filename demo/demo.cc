@@ -64,18 +64,32 @@ struct Demo_runner
                                            Speed::Speed::speed_6,
                                            Speed::Speed::speed_7 };
 
-  std::vector<Solve_demo> solvers { Solver::animate_dfs_thread_hunt,
-                                    Solver::animate_dfs_thread_gather,
-                                    Solver::animate_dfs_thread_corners,
-                                    Solver::animate_floodfs_thread_hunt,
-                                    Solver::animate_floodfs_thread_gather,
-                                    Solver::animate_floodfs_thread_corners,
-                                    Solver::animate_randomized_dfs_thread_hunt,
-                                    Solver::animate_randomized_dfs_thread_gather,
-                                    Solver::animate_randomized_dfs_thread_corners,
-                                    Solver::animate_bfs_thread_hunt,
-                                    Solver::animate_bfs_thread_gather,
-                                    Solver::animate_bfs_thread_corners };
+  std::vector<Solve_demo> solvers {
+    Solver::animate_dfs_thread_hunt,
+    Solver::animate_dfs_thread_gather,
+    Solver::animate_dfs_thread_corners,
+    Solver::animate_floodfs_thread_hunt,
+    Solver::animate_floodfs_thread_gather,
+    Solver::animate_floodfs_thread_corners,
+    Solver::animate_randomized_dfs_thread_hunt,
+    Solver::animate_randomized_dfs_thread_gather,
+    Solver::animate_randomized_dfs_thread_corners,
+    Solver::animate_bfs_thread_hunt,
+    Solver::animate_bfs_thread_gather,
+    Solver::animate_bfs_thread_corners,
+    Solver::animate_darkdfs_thread_hunt,
+    Solver::animate_darkdfs_thread_gather,
+    Solver::animate_darkdfs_thread_corners,
+    Solver::animate_darkbfs_thread_hunt,
+    Solver::animate_darkbfs_thread_gather,
+    Solver::animate_darkbfs_thread_corners,
+    Solver::animate_darkfloodfs_thread_hunt,
+    Solver::animate_darkfloodfs_thread_gather,
+    Solver::animate_darkfloodfs_thread_corners,
+    Solver::animate_darkrandomized_dfs_thread_hunt,
+    Solver::animate_darkrandomized_dfs_thread_gather,
+    Solver::animate_darkrandomized_dfs_thread_corners,
+  };
 };
 
 } // namespace
