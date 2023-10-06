@@ -12,10 +12,10 @@ target_link_libraries(demo_debug PUBLIC
                       maze_algorithms_debug
                       maze_solvers_debug)
 
-add_executable(demo_optimized demo.cc)
-target_compile_options(demo_optimized PUBLIC "-O2")
-target_link_libraries(demo_optimized PUBLIC
+add_executable(demo demo.cc)
+target_compile_options(demo PUBLIC "-O2")
+target_link_libraries(demo PUBLIC
                       maze
-                      maze_algorithms_optimized
-                      maze_solvers_optimized)
+                      maze_algorithms
+                      maze_solvers)
 

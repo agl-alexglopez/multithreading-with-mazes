@@ -14,10 +14,10 @@ target_link_libraries(measure_debug PUBLIC
 #                      maze_algorithms_sanitized
 #                      painters_sanitized)
 
-add_executable(measure_optimized measure.cc)
-target_compile_options(measure_optimized PUBLIC "-O2")
-target_link_libraries(measure_optimized PUBLIC
+add_executable(measure measure.cc)
+target_compile_options(measure PUBLIC "-O2")
+target_link_libraries(measure PUBLIC
                       speed
                       maze
-                      maze_algorithms_optimized
+                      maze_algorithms
                       painters_optimized)

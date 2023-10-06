@@ -14,11 +14,11 @@ target_link_libraries(run_maze_debug PUBLIC
 #                      maze_algorithms_sanitized
 #                      maze_solvers_sanitized)
 
-add_executable(run_maze_optimized run_maze.cc)
-target_compile_options(run_maze_optimized PUBLIC "-O2")
-target_link_libraries(run_maze_optimized PUBLIC
+add_executable(run_maze run_maze.cc)
+target_compile_options(run_maze PUBLIC "-O2")
+target_link_libraries(run_maze PUBLIC
                       speed
                       maze
-                      maze_algorithms_optimized
-                      maze_solvers_optimized)
+                      maze_algorithms
+                      maze_solvers)
 
