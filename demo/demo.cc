@@ -64,18 +64,18 @@ struct Demo_runner
                                            Speed::Speed::speed_6,
                                            Speed::Speed::speed_7 };
 
-  std::vector<Solve_demo> solvers { Solver::animate_with_dfs_thread_hunt,
-                                    Solver::animate_with_dfs_thread_gather,
-                                    Solver::animate_with_dfs_thread_corners,
-                                    Solver::animate_with_floodfs_thread_hunt,
-                                    Solver::animate_with_floodfs_thread_gather,
-                                    Solver::animate_with_floodfs_thread_corners,
-                                    Solver::animate_with_randomized_dfs_thread_hunt,
-                                    Solver::animate_with_randomized_dfs_thread_gather,
-                                    Solver::animate_with_randomized_dfs_thread_corners,
-                                    Solver::animate_with_bfs_thread_hunt,
-                                    Solver::animate_with_bfs_thread_gather,
-                                    Solver::animate_with_bfs_thread_corners };
+  std::vector<Solve_demo> solvers { Solver::animate_dfs_thread_hunt,
+                                    Solver::animate_dfs_thread_gather,
+                                    Solver::animate_dfs_thread_corners,
+                                    Solver::animate_floodfs_thread_hunt,
+                                    Solver::animate_floodfs_thread_gather,
+                                    Solver::animate_floodfs_thread_corners,
+                                    Solver::animate_randomized_dfs_thread_hunt,
+                                    Solver::animate_randomized_dfs_thread_gather,
+                                    Solver::animate_randomized_dfs_thread_corners,
+                                    Solver::animate_bfs_thread_hunt,
+                                    Solver::animate_bfs_thread_gather,
+                                    Solver::animate_bfs_thread_corners };
 };
 
 } // namespace

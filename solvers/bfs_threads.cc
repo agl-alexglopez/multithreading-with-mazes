@@ -236,7 +236,7 @@ void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id 
 
 /* * * * * * * * * * * *  Multithreaded Dispatcher Functions from Header Interface   * * * * * * * * * * * * * * */
 
-void solve_with_bfs_thread_hunt( Builder::Maze& maze )
+void bfs_thread_hunt( Builder::Maze& maze )
 {
   Solver_monitor monitor;
   monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
@@ -267,7 +267,7 @@ void solve_with_bfs_thread_hunt( Builder::Maze& maze )
   std::cout << std::endl;
 }
 
-void animate_with_bfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed )
+void animate_bfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   print_overlap_key();
@@ -306,7 +306,7 @@ void animate_with_bfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed )
   std::cout << std::endl;
 }
 
-void solve_with_bfs_thread_gather( Builder::Maze& maze )
+void bfs_thread_gather( Builder::Maze& maze )
 {
   Solver_monitor monitor;
   monitor.starts = std::vector<Builder::Maze::Point>( num_threads_, pick_random_point( maze ) );
@@ -339,7 +339,7 @@ void solve_with_bfs_thread_gather( Builder::Maze& maze )
   std::cout << std::endl;
 }
 
-void animate_with_bfs_thread_gather( Builder::Maze& maze, Speed::Speed speed )
+void animate_bfs_thread_gather( Builder::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   print_overlap_key();
@@ -378,7 +378,7 @@ void animate_with_bfs_thread_gather( Builder::Maze& maze, Speed::Speed speed )
   std::cout << std::endl;
 }
 
-void solve_with_bfs_thread_corners( Builder::Maze& maze )
+void bfs_thread_corners( Builder::Maze& maze )
 {
   Solver_monitor monitor;
   monitor.starts = set_corner_starts( maze );
@@ -409,7 +409,7 @@ void solve_with_bfs_thread_corners( Builder::Maze& maze )
   std::cout << std::endl;
 }
 
-void animate_with_bfs_thread_corners( Builder::Maze& maze, Speed::Speed speed )
+void animate_bfs_thread_corners( Builder::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   print_overlap_key();

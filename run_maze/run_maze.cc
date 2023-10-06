@@ -45,7 +45,7 @@ struct Maze_runner
 
   int solver_view { static_image };
   Speed::Speed solver_speed {};
-  Solve_function solver { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt };
+  Solve_function solver { Solver::dfs_thread_hunt, Solver::animate_dfs_thread_hunt };
   Maze_runner() : args {} {}
 };
 
@@ -88,23 +88,23 @@ int main( int argc, char** argv )
       { "x", { Builder::add_x, Builder::add_x_animated } },
     },
     {
-      { "dfs-hunt", { Solver::solve_with_dfs_thread_hunt, Solver::animate_with_dfs_thread_hunt } },
-      { "dfs-gather", { Solver::solve_with_dfs_thread_gather, Solver::animate_with_dfs_thread_gather } },
-      { "dfs-corners", { Solver::solve_with_dfs_thread_corners, Solver::animate_with_dfs_thread_corners } },
-      { "floodfs-hunt", { Solver::solve_with_floodfs_thread_hunt, Solver::animate_with_floodfs_thread_hunt } },
+      { "dfs-hunt", { Solver::dfs_thread_hunt, Solver::animate_dfs_thread_hunt } },
+      { "dfs-gather", { Solver::dfs_thread_gather, Solver::animate_dfs_thread_gather } },
+      { "dfs-corners", { Solver::dfs_thread_corners, Solver::animate_dfs_thread_corners } },
+      { "floodfs-hunt", { Solver::floodfs_thread_hunt, Solver::animate_floodfs_thread_hunt } },
       { "floodfs-gather",
-        { Solver::solve_with_floodfs_thread_gather, Solver::animate_with_floodfs_thread_gather } },
+        { Solver::floodfs_thread_gather, Solver::animate_floodfs_thread_gather } },
       { "floodfs-corners",
-        { Solver::solve_with_floodfs_thread_corners, Solver::animate_with_floodfs_thread_corners } },
+        { Solver::floodfs_thread_corners, Solver::animate_floodfs_thread_corners } },
       { "rdfs-hunt",
-        { Solver::solve_with_randomized_dfs_thread_hunt, Solver::animate_with_randomized_dfs_thread_hunt } },
+        { Solver::randomized_dfs_thread_hunt, Solver::animate_randomized_dfs_thread_hunt } },
       { "rdfs-gather",
-        { Solver::solve_with_randomized_dfs_thread_gather, Solver::animate_with_randomized_dfs_thread_gather } },
+        { Solver::randomized_dfs_thread_gather, Solver::animate_randomized_dfs_thread_gather } },
       { "rdfs-corners",
-        { Solver::solve_with_randomized_dfs_thread_corners, Solver::animate_with_randomized_dfs_thread_corners } },
-      { "bfs-hunt", { Solver::solve_with_bfs_thread_hunt, Solver::animate_with_bfs_thread_hunt } },
-      { "bfs-gather", { Solver::solve_with_bfs_thread_gather, Solver::animate_with_bfs_thread_gather } },
-      { "bfs-corners", { Solver::solve_with_bfs_thread_corners, Solver::animate_with_bfs_thread_corners } },
+        { Solver::randomized_dfs_thread_corners, Solver::animate_randomized_dfs_thread_corners } },
+      { "bfs-hunt", { Solver::bfs_thread_hunt, Solver::animate_bfs_thread_hunt } },
+      { "bfs-gather", { Solver::bfs_thread_gather, Solver::animate_bfs_thread_gather } },
+      { "bfs-corners", { Solver::bfs_thread_corners, Solver::animate_bfs_thread_corners } },
     },
     {
       { "sharp", Builder::Maze::Maze_style::sharp },

@@ -29,7 +29,7 @@ bool is_valid_random_step( Maze& maze, const Maze::Point& next, const Maze::Poin
          && next != previous;
 }
 
-void build_with_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& next )
+void build_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& next )
 {
   Maze::Point wall = cur;
   if ( next.row < cur.row ) {
@@ -51,7 +51,7 @@ void build_with_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& ne
   carve_path_walls( maze, wall );
 }
 
-void animate_with_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& next, Speed::Speed_unit speed )
+void animate_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& next, Speed::Speed_unit speed )
 {
   Maze::Point wall = cur;
   if ( next.row < cur.row ) {
@@ -81,7 +81,7 @@ void connect_walk_to_maze( Maze& maze, const Maze::Point& walk )
         >> static_cast<Maze::Backtrack_marker>( Maze::marker_shift_ );
     const Maze::Point& direction = Maze::backtracking_marks_.at( mark );
     const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
-    build_with_marks( maze, cur, next );
+    build_marks( maze, cur, next );
     // Clean up after ourselves and leave no marks behind for the maze solvers.
     maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
     cur = next;
@@ -102,7 +102,7 @@ void animate_walk_to_maze( Maze& maze, const Maze::Point& walk, Speed::Speed_uni
     const Maze::Point& half_step_ = Maze::backtracking_half_marks_.at( mark );
     const Maze::Point half = { cur.row + half_step_.row, cur.col + half_step_.col };
     const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
-    animate_with_marks( maze, cur, next, speed );
+    animate_marks( maze, cur, next, speed );
     // Clean up after ourselves and leave no marks behind for the maze solvers.
     maze[half.row][half.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask_ );
     maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::markers_mask_ );
@@ -159,7 +159,7 @@ void animate_erase_loop( Maze& maze, const Loop& loop, Speed::Speed_unit speed )
 bool continue_random_walks( Maze& maze, Random_walk& cur )
 {
   if ( has_builder_bit( maze, cur.next ) ) {
-    build_with_marks( maze, cur.walk, cur.next );
+    build_marks( maze, cur.walk, cur.next );
     connect_walk_to_maze( maze, cur.walk );
     cur.walk = choose_arbitrary_point( maze, Parity_point::odd );
 
@@ -191,7 +191,7 @@ bool continue_random_walks( Maze& maze, Random_walk& cur )
 bool animate_random_walks( Maze& maze, Random_walk& cur, Speed::Speed_unit speed )
 {
   if ( has_builder_bit( maze, cur.next ) ) {
-    animate_with_marks( maze, cur.walk, cur.next, speed );
+    animate_marks( maze, cur.walk, cur.next, speed );
     animate_walk_to_maze( maze, cur.walk, speed );
     cur.walk = choose_arbitrary_point( maze, Parity_point::odd );
 
