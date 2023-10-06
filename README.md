@@ -189,6 +189,54 @@ Examples:
 ./build/bin/measure -h
 ```
 
+## Settings Detailed
+
+### Painter
+
+#### Distance
+
+This is a basic concept that can reveal great details about mazes that are hard for use to notice just by looking them over. Starting from the center, every cell is simple coded with an intensity corresponding to the distance from the center. Lighter colors mean a path cell is closer to the center while darker colors are further from the center. You can choose to view the image as a static complete image all at once or animate the coloring process. I randomize the color you may see between red, green, and blue. There is no deeper significance to the color channel choice.
+
+![measure-distance-static](https://github.com/agl-alexglopez/multithreading-with-mazes-in-rust/blob/main/images/measure-distance-static.png)
+
+The animated version is basically a visual representation of a breadth first search with coloring parameters added in.
+
+![measure-distance-animated](https://github.com/agl-alexglopez/multithreading-with-mazes-in-rust/blob/main/images/measure-distance-animated.gif)
+
+#### Run Length
+
+This measurement will tell you the bias for straight passages that a maze has. Relative to the center of the maze you will see the bias for straight passages illustrated with a color heat map. For example, compare the tendency for long passages in a algorithm like the recursive backtracker when compared to the short dead ends in one like prim.
+
+![measure-runs-static](https://github.com/agl-alexglopez/multithreading-with-mazes-in-rust/blob/main/images/measure-runs-static.png)
+
+The animated version illustrates the process of finding the runs from a breadth first search perspective.
+
+![measure-runs-animated](https://github.com/agl-alexglopez/multithreading-with-mazes-in-rust/blob/main/images/measure-runs-animated.gif)
+
+### Row and Column
+
+![dimensions](https://github.com/agl-alexglopez/multithreading-with-mazes-in-rust/blob/main/images/dimension-showcase.png)
+
+The `-r` and `-c` flags let you set the dimensions of the maze. Note that my programs enforce that rows and columns must be odd, and it will enforce this by incrementing an even value, but this does not affect your usage of the program. As the image above demonstrates, zooming out with `<CTRL-(-)>`, or `CTRL-(+)` allows you to test huge mazes. Note that performance will decrease with size and WSL2 on Windows seems to struggle the most, while MacOS runs quite smoothly regardless of size. Try the `-d contrast` option as pictured if performance is an issue. This options seems to provide smooth performance on all tested platforms.
+
+### Builder Flag
+
+The `-b` flag allows you to specify the algorithm that builds the maze. Maze generation is a deep and fascinating topic because it touches on so many interesting ideas, data structures, and implementation details. I will try to add a writeup for each algorithm in this repository in further detail below.
+
+### Modification Flag
+
+![modification-demo](https://github.com/agl-alexglopez/multithreading-with-mazes-in-rust/blob/main/images/modification-demo.png)
+
+The `-m` flag places user designated paths in a maze. Most algorithms in the maze generator produce *perfect* mazes. This means that there is a unique path between any two points in the maze, there are no loops, and all locations in the maze are reachable. We can completely ruin this concept by cutting a path through the maze, destroying all walls that lie in the path of our modification. This can create chaotic paths and overlaps between threads.
+
+### Draw Flag
+
+The `-d` flag determines the lines used to draw the maze. The walls are an interesting problem in this project and the way I chose to address walls has allowed me to easily implement both wall adder and path carver algorithms, which I am happy with. Unfortunately, Windows Terminal running WSL2 cannot perfectly connect the horizontal Unicode wall lines, but the result still looks good. MacOS and Linux distributions like PopOS draw everything perfectly and smoothly. You can try all the wall styles out to see which you like the most.
+
+### Animation Flags
+
+The `-ba` flag indicates the speed of the builder animation on a scale from 1-7. The `-pa` flag does the same for the painter animation. This allows you to decide how fast the build or paint process should run. Faster speeds are needed if you zoom out to draw very large mazes.
+
 ## Maze Generation Algorithms
 
 When I started this project I was most interested in multithreading the maze solver algorithms. However, as I needed to come up with mazes for the threads to solve I found that the maze generation algorithms are far more interesting. There are even some algorithms in the collection that I think would be well suited for multithreading and I will definitely extend these when I get the chance. For the design of this project I gave myself some constraints and goals. They are as follows.
