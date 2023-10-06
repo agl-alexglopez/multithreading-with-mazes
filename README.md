@@ -13,7 +13,7 @@ This project is a command line application that can be run with various combinat
 ```zsh
 $ cmake -S . -B build/
 $ cmake --build build
-$ ./build/bin/run_maze_optimized
+$ ./build/bin/run_maze
 ```
 
 If you would rather just see some cool mazes right away, run the demo I have included. It runs infinite random permutations of maze builder and solver animations so you can see a wide range of what the project has to offer. Stop the loop at any time with `CTRL<C>`.
@@ -21,10 +21,10 @@ If you would rather just see some cool mazes right away, run the demo I have inc
 ```zsh
 $ cmake -S . -B build/
 $ cmake --build build
-$ ./build/bin/demo_optimized
+$ ./build/bin/demo
 
 # Or set the rows and columns to your liking for bigger or smaller demo mazes.
-$ ./build/bin/demo_optimized -r 50 -c 50
+$ ./build/bin/demo -r 50 -c 50
 ```
 If you wish to dive into the more specific `run_maze` program, here is the help message that comes with the `-h` flag to get started.
 
@@ -78,12 +78,12 @@ If any flags are omitted, defaults are used.
 Examples:
 
 ```zsh
-./build/bin/run_maze_optimized
-./build/bin/run_maze_optimized -r 51 -c 111 -b rdfs -s bfs-hunt
-./build/bin/run_maze_optimized -c 111 -s bfs-gather
-./build/bin/run_maze_optimized -s bfs-corners -d round -b fractal
-./build/bin/run_maze_optimized -s dfs-hunt -ba 4 -sa 5 -b wilson-walls -m x
-./build/bin/run_maze_optimized -h
+./build/bin/run_maze
+./build/bin/run_maze -r 51 -c 111 -b rdfs -s bfs-hunt
+./build/bin/run_maze -c 111 -s bfs-gather
+./build/bin/run_maze -s bfs-corners -d round -b fractal
+./build/bin/run_maze -s dfs-hunt -ba 4 -sa 5 -b wilson-walls -m x
+./build/bin/run_maze -h
 ```
 
 ## Settings Detailed
@@ -133,6 +133,61 @@ The `-d` flag determines the lines used to draw the maze. The walls are an inter
 ### Animation Flags
 
 The `-ba` flag indicates the speed of the builder animation on a scale from 1-7. The `-sa` flag does the same for the solver animation. This allows you to decide how fast the build or solve process should run. Faster speeds are needed if you zoom out to draw very large mazes.
+
+## Maze Measurement Program
+
+This next section is pretty much directly inspired by Jamis Buck's implementation of colorizing his mazes based upon distance from a starting point, most commonly the center. All settings for this section are based on being able to see some aspect of maze quality rated with a color heat map. The program works by painting the maze, starting at a single point, based on some criterion such as distance from that point. This can help us assess the quality of the mazes that we produce. Here are the settings to use the program.
+
+```zsh
+$ cmake -S . -B build/
+$ cmake --build build
+$ ./build/bin/measure
+```
+Use flags, followed by arguments, in any order:
+
+- `-r` Rows flag. Set rows for the maze.
+	- Any number > 7. Zoom out for larger mazes!
+- `-c` Columns flag. Set columns for the maze.
+	- Any number > 7. Zoom out for larger mazes!
+- `-b` Builder flag. Set maze building algorithm.
+	- `rdfs` - Randomized Depth First Search.
+	- `kruskal` - Randomized Kruskal's algorithm.
+	- `prim` - Randomized Prim's algorithm.
+	- `eller` - Randomized Eller's algorithm.
+	- `wilson` - Loop-Erased Random Path Carver.
+	- `wilson-walls` - Loop-Erased Random Wall Adder.
+	- `fractal` - Randomized recursive subdivision.
+	- `grid` - A random grid pattern.
+	- `arena` - Open floor with no walls.
+- `-m` Modification flag. Add shortcuts to the maze.
+	- `cross` - Add crossroads through the center.
+	- `x` - Add an x of crossing paths through center.
+- `-p` Painter flag. Set maze measuring algorithm.
+    - `distance` - Distance from the center.
+    - `runs` - Run length bias of straight passages.
+- `-d` Draw flag. Set the line style for the maze.
+	- `sharp` - The default straight lines.
+	- `round` - Rounded corners.
+	- `doubles` - Sharp double lines.
+	- `bold` - Thicker straight lines.
+	- `contrast` - Full block width and height walls.
+	- `spikes` - Connected lines with spikes.
+- `-pa` Painter Animation flag. Watch the maze solution.
+	- Any number 1-7. Speed increases with number.
+- `-ba` Builder Animation flag. Watch the maze build.
+	- Any number 1-7. Speed increases with number.
+- `-h` Help flag. Make this prompt appear.
+
+If any flags are omitted, defaults are used.
+
+Examples:
+
+```zsh
+./build/bin/measure
+./build/bin/measure -r 51 -c 111 -b rdfs
+./build/bin/measure -c 111 -p distance -ba 5 -pa 5
+./build/bin/measure -h
+```
 
 ## Maze Generation Algorithms
 
