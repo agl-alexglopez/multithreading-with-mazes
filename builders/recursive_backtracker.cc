@@ -12,7 +12,7 @@ namespace Builder {
 
 constexpr Speed::Speed_unit backtrack_delay = 8;
 
-void generate_recursive_backtracker_maze( Maze& maze )
+void generate_recursive_backtracker( Maze& maze )
 {
   fill_maze_with_walls( maze );
   // Note that backtracking occurs by encoding directions into path bits. No stack needed.
@@ -55,7 +55,7 @@ void generate_recursive_backtracker_maze( Maze& maze )
   clear_and_flush_grid( maze );
 }
 
-void animate_recursive_backtracker_maze( Maze& maze, Speed::Speed speed )
+void animate_recursive_backtracker( Maze& maze, Speed::Speed speed )
 {
   const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );

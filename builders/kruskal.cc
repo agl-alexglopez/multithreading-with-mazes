@@ -48,7 +48,7 @@ std::unordered_map<Maze::Point, int> tag_cells( Maze& maze )
 
 } // namespace
 
-void generate_kruskal_maze( Maze& maze )
+void generate_kruskal( Maze& maze )
 {
   fill_maze_with_walls( maze );
   const std::vector<Maze::Point> walls = load_shuffled_walls( maze );
@@ -72,7 +72,7 @@ void generate_kruskal_maze( Maze& maze )
   clear_and_flush_grid( maze );
 }
 
-void animate_kruskal_maze( Maze& maze, Speed::Speed speed )
+void animate_kruskal( Maze& maze, Speed::Speed speed )
 {
   const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );

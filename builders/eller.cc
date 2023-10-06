@@ -90,7 +90,7 @@ void complete_final_row_animated( Maze& maze, Sliding_set_window& window, Speed:
  * randomized technique to choose dropping squares. Find a better strategy.
  */
 
-void generate_eller_maze( Maze& maze )
+void generate_eller( Maze& maze )
 {
   fill_maze_with_walls( maze );
   std::mt19937 gen( std::random_device {}() );
@@ -142,7 +142,7 @@ void generate_eller_maze( Maze& maze )
   clear_and_flush_grid( maze );
 }
 
-void animate_eller_maze( Maze& maze, Speed::Speed speed )
+void animate_eller( Maze& maze, Speed::Speed speed )
 {
   fill_maze_with_walls_animated( maze );
   clear_and_flush_grid( maze );

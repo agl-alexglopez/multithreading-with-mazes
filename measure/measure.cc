@@ -37,8 +37,8 @@ struct Maze_runner
 
   int builder_view { static_image };
   Speed::Speed builder_speed {};
-  Build_function builder { Builder::generate_recursive_backtracker_maze,
-                           Builder::animate_recursive_backtracker_maze };
+  Build_function builder { Builder::generate_recursive_backtracker,
+                           Builder::animate_recursive_backtracker };
 
   int modification_getter { static_image };
   std::optional<Build_function> modder {};
@@ -73,14 +73,14 @@ int main( int argc, char** argv )
   const Lookup_tables tables = {
     { "-r", "-c", "-b", "-p", "-h", "-g", "-d", "-m", "-pa", "-ba" },
     {
-      { "rdfs", { Builder::generate_recursive_backtracker_maze, Builder::animate_recursive_backtracker_maze } },
-      { "wilson", { Builder::generate_wilson_path_carver_maze, Builder::animate_wilson_path_carver_maze } },
-      { "wilson-walls", { Builder::generate_wilson_wall_adder_maze, Builder::animate_wilson_wall_adder_maze } },
-      { "fractal", { Builder::generate_recursive_subdivision_maze, Builder::animate_recursive_subdivision_maze } },
-      { "kruskal", { Builder::generate_kruskal_maze, Builder::animate_kruskal_maze } },
-      { "eller", { Builder::generate_eller_maze, Builder::animate_eller_maze } },
-      { "prim", { Builder::generate_prim_maze, Builder::animate_prim_maze } },
-      { "grid", { Builder::generate_grid_maze, Builder::animate_grid_maze } },
+      { "rdfs", { Builder::generate_recursive_backtracker, Builder::animate_recursive_backtracker } },
+      { "wilson", { Builder::generate_wilson_path_carver, Builder::animate_wilson_path_carver } },
+      { "wilson-walls", { Builder::generate_wilson_wall_adder, Builder::animate_wilson_wall_adder } },
+      { "fractal", { Builder::generate_recursive_subdivision, Builder::animate_recursive_subdivision } },
+      { "kruskal", { Builder::generate_kruskal, Builder::animate_kruskal } },
+      { "eller", { Builder::generate_eller, Builder::animate_eller } },
+      { "prim", { Builder::generate_prim, Builder::animate_prim } },
+      { "grid", { Builder::generate_grid, Builder::animate_grid } },
       { "arena", { Builder::generate_arena, Builder::animate_arena } },
     },
     {

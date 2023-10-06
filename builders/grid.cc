@@ -50,7 +50,7 @@ void animate_run( Maze& maze, std::stack<Maze::Point>& dfs, Run_start run, Speed
 
 } // namespace
 
-void generate_grid_maze( Maze& maze )
+void generate_grid( Maze& maze )
 {
   fill_maze_with_walls( maze );
   std::mt19937 generator( std::random_device {}() );
@@ -80,7 +80,7 @@ void generate_grid_maze( Maze& maze )
   clear_and_flush_grid( maze );
 }
 
-void animate_grid_maze( Maze& maze, Speed::Speed speed )
+void animate_grid( Maze& maze, Speed::Speed speed )
 {
   const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );

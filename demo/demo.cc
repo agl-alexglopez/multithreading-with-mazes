@@ -44,14 +44,14 @@ struct Demo_runner
     Builder::Maze::Maze_style::spikes,
   };
 
-  std::vector<Build_demo> builders { Builder::animate_recursive_backtracker_maze,
-                                     Builder::animate_recursive_subdivision_maze,
-                                     Builder::animate_wilson_path_carver_maze,
-                                     Builder::animate_wilson_wall_adder_maze,
-                                     Builder::animate_prim_maze,
-                                     Builder::animate_kruskal_maze,
-                                     Builder::animate_eller_maze,
-                                     Builder::animate_grid_maze,
+  std::vector<Build_demo> builders { Builder::animate_recursive_backtracker,
+                                     Builder::animate_recursive_subdivision,
+                                     Builder::animate_wilson_path_carver,
+                                     Builder::animate_wilson_wall_adder,
+                                     Builder::animate_prim,
+                                     Builder::animate_kruskal,
+                                     Builder::animate_eller,
+                                     Builder::animate_grid,
                                      Builder::animate_arena };
 
   std::vector<Build_demo> modifications { Builder::add_cross_animated, Builder::add_x_animated };

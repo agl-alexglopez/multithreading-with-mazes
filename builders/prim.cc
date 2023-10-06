@@ -35,7 +35,7 @@ Maze::Point pick_random_odd_point( Maze& maze )
 
 } // namespace
 
-void generate_prim_maze( Maze& maze )
+void generate_prim( Maze& maze )
 {
   fill_maze_with_walls( maze );
   std::unordered_map<Maze::Point, int> cell_cost {};
@@ -72,7 +72,7 @@ void generate_prim_maze( Maze& maze )
   clear_and_flush_grid( maze );
 }
 
-void animate_prim_maze( Maze& maze, Speed::Speed speed )
+void animate_prim( Maze& maze, Speed::Speed speed )
 {
   const Speed::Speed_unit animation_speed = builder_speeds_.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );
