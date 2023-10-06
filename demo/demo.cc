@@ -1,5 +1,6 @@
 #include "maze_algorithms.hh"
 #include "maze_solvers.hh"
+#include "painters.hh"
 #include "print_utilities.hh"
 #include "speed.hh"
 
@@ -89,6 +90,8 @@ struct Demo_runner
     Solver::animate_darkrandomized_dfs_thread_hunt,
     Solver::animate_darkrandomized_dfs_thread_gather,
     Solver::animate_darkrandomized_dfs_thread_corners,
+    Paint::animate_distance_from_center,
+    Paint::animate_runs,
   };
 };
 

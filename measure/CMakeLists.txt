@@ -20,4 +20,4 @@ target_link_libraries(measure PUBLIC
                       speed
                       maze
                       maze_algorithms
-                      painters_optimized)
+                      painters)

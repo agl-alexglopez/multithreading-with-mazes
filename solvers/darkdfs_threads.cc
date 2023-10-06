@@ -1,6 +1,6 @@
 #include "maze_solvers.hh"
 #include "print_utilities.hh"
-#include "solver_utilities.hh"
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <mutex>
@@ -159,7 +159,7 @@ void animate_darkdfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed )
   std::array<std::thread, num_threads_> threads;
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_light this_thread { i_thread, thread_bits_.at( i_thread ) };
-    threads[i_thread] = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads.at( i_thread ) = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -187,7 +187,7 @@ void animate_darkdfs_thread_gather( Builder::Maze& maze, Speed::Speed speed )
   std::vector<std::thread> threads( num_threads_ );
   for ( int i_thread = 0; i_thread < num_threads_; i_thread++ ) {
     const Thread_light this_thread { i_thread, thread_bits_.at( i_thread ) };
-    threads[i_thread] = std::thread( animate_gather, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads.at( i_thread ) = std::thread( animate_gather, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
