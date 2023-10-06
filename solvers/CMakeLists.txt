@@ -1,4 +1,4 @@
-add_library(my_queue INTERFACE my_queue.hh)
+add_library(my_queue INTERFACE)
 add_library(solver_utilities solver_utilities.hh solver_utilities.cc)
 target_link_libraries(solver_utilities PRIVATE maze speed)
 
