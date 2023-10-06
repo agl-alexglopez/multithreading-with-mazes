@@ -327,6 +327,7 @@ void print_usage()
                "│   │     │ bfs-hunt - Breadth First Search     │   │   │ │   │     │ │\n"
                "├─┐ │ ┌─┐ └─bfs-gather - Breadth First Search─┐ ╵ ╷ ├─╴ │ └─┐ ├───╴ │ │\n"
                "│ │ │ │ │   bfs-corners - Breadth First Search│   │ │   │   │ │     │ │\n"
+               "│ │ │ │ │   dark[solver]-[game] - A mystery...    │ │   │   │ │     │ │\n"
                "│ │ │ ╵ └─-d Draw flag. Set the line style for the maze.┴─┐ └─┘ ┌─┬─┘ │\n"
                "│ │ │       sharp - The default straight lines. │   │     │     │ │   │\n"
                "│ │ └─┬───╴ round - Rounded corners.──╴ │ ╷ ╵ ╵ │ ╶─┴─┐ ╶─┴─────┘ │ ╶─┤\n"

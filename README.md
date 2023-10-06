@@ -60,6 +60,7 @@ Use flags, followed by arguments, in any order:
 	- `bfs-hunt` - Breadth First Search
 	- `bfs-gather` - Breadth First Search
 	- `bfs-corners` - Breadth First Search
+    - `dark[solver]-[game]` - A mystery...
 - `-d` Draw flag. Set the line style for the maze.
 	- `sharp` - The default straight lines.
 	- `round` - Rounded corners.
