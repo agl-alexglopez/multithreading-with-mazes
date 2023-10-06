@@ -3,30 +3,40 @@
 #include "print_utilities.hh"
 #include "rgb.hh"
 
+#include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <mutex>
 #include <random>
 #include <thread>
 #include <unordered_map>
-#include <unordered_set>
 
 namespace Paint {
 
-namespace {
 namespace Bd = Builder;
 
-struct Distance_map
+namespace {
+
+struct Run_map
 {
-  uint64_t max;
-  std::unordered_map<Bd::Maze::Point, uint64_t> distances;
-  Distance_map( Bd::Maze::Point p, const uint64_t dist ) : max( dist ), distances( { { p, dist } } ) {}
+  uint32_t max;
+  std::unordered_map<Bd::Maze::Point, uint32_t> runs;
+  Run_map( Bd::Maze::Point p, uint32_t run ) : max( run ), runs( { { p, run } } ) {}
 };
 
-struct Point_dist
+struct Run_point
 {
+  uint32_t len;
+  Bd::Maze::Point prev;
+  Bd::Maze::Point cur;
+};
+
+struct Thread_guide
+{
+  uint64_t bias;
+  uint64_t color_i;
+  Speed::Speed_unit animation;
   Bd::Maze::Point p;
-  uint64_t dist;
 };
 
 struct Bfs_monitor
@@ -43,15 +53,7 @@ struct Bfs_monitor
   }
 };
 
-struct Thread_guide
-{
-  uint64_t bias;
-  uint64_t color_i;
-  Speed::Speed_unit animation;
-  Bd::Maze::Point p;
-};
-
-void painter( Bd::Maze& maze, const Distance_map& map )
+void painter( Bd::Maze& maze, const Run_map& map )
 {
   std::mt19937 rng( std::random_device {}() );
   std::uniform_int_distribution<int> uid( 0, 2 );
@@ -59,8 +61,8 @@ void painter( Bd::Maze& maze, const Distance_map& map )
   for ( int row = 0; row < maze.row_size(); row++ ) {
     for ( int col = 0; col < maze.col_size(); col++ ) {
       const Bd::Maze::Point cur = { row, col };
-      const auto path_point = map.distances.find( cur );
-      if ( path_point != map.distances.end() ) {
+      const auto path_point = map.runs.find( cur );
+      if ( path_point != map.runs.end() ) {
         const auto intensity = static_cast<double>( map.max - path_point->second ) / static_cast<double>( map.max );
         const auto dark = static_cast<uint8_t>( 255.0 * intensity );
         const auto bright = static_cast<uint8_t>( 128 ) + static_cast<uint8_t>( 127.0 * intensity );
@@ -75,7 +77,7 @@ void painter( Bd::Maze& maze, const Distance_map& map )
   std::cout << std::endl;
 }
 
-void painter_animated( Bd::Maze& maze, const Distance_map& map, Bfs_monitor& monitor, Thread_guide guide )
+void painter_animated( Bd::Maze& maze, const Run_map& map, Bfs_monitor& monitor, Thread_guide guide )
 {
   My_queue<Bd::Maze::Point>& bfs = monitor.paths[guide.bias];
   std::unordered_set<Bd::Maze::Point>& seen = monitor.seen[guide.bias];
@@ -85,12 +87,12 @@ void painter_animated( Bd::Maze& maze, const Distance_map& map, Bfs_monitor& mon
     bfs.pop();
 
     monitor.monitor.lock();
-    if ( monitor.count == map.distances.size() ) {
+    if ( monitor.count == map.runs.size() ) {
       monitor.monitor.unlock();
       return;
     }
     if ( !( maze[cur.row][cur.col] & paint_ ) ) {
-      const uint64_t dist = map.distances.at( cur );
+      const uint64_t dist = map.runs.at( cur );
       const auto intensity = static_cast<double>( map.max - dist ) / static_cast<double>( map.max );
       const auto dark = static_cast<uint8_t>( 255.0 * intensity );
       const auto bright = static_cast<uint8_t>( 128 ) + static_cast<uint8_t>( 127.0 * intensity );
@@ -104,7 +106,7 @@ void painter_animated( Bd::Maze& maze, const Distance_map& map, Bfs_monitor& mon
     std::this_thread::sleep_for( std::chrono::microseconds( guide.animation ) );
 
     for ( uint64_t count = 0, i = guide.bias; count < Bd::Maze::dirs_.size();
-          count++, ++i %= Bd::Maze::dirs_.size() ) {
+          ++count, ++i %= Bd::Maze::dirs_.size() ) {
       const Bd::Maze::Point& p = Bd::Maze::dirs_.at( i );
       const Bd::Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
@@ -122,54 +124,58 @@ void painter_animated( Bd::Maze& maze, const Distance_map& map, Bfs_monitor& mon
 
 } // namespace
 
-void paint_distance_from_center( Bd::Maze& maze )
+void paint_runs( Builder::Maze& maze )
 {
   const int row_mid = maze.row_size() / 2;
   const int col_mid = maze.col_size() / 2;
   const Bd::Maze::Point start = { row_mid + 1 - ( row_mid % 2 ), col_mid + 1 - ( col_mid % 2 ) };
-  Distance_map map( start, 0 );
-  My_queue<Point_dist> bfs;
-  bfs.push( { start, 0 } );
+  Run_map map( start, 0 );
+  My_queue<Run_point> bfs;
+  bfs.push( { 0, start, start } );
   maze[start.row][start.col] |= measure_;
   while ( !bfs.empty() ) {
-    const Point_dist cur = bfs.front();
+    const Run_point cur = bfs.front();
     bfs.pop();
-    map.max = std::max( map.max, cur.dist );
+    map.max = std::max( map.max, cur.len );
     for ( const Bd::Maze::Point& p : Bd::Maze::dirs_ ) {
-      const Bd::Maze::Point next = { cur.p.row + p.row, cur.p.col + p.col };
+      const Bd::Maze::Point next = { cur.cur.row + p.row, cur.cur.col + p.col };
       if ( !( maze[next.row][next.col] & Bd::Maze::path_bit_ ) || ( maze[next.row][next.col] & measure_ ) ) {
         continue;
       }
+      const uint32_t len
+        = std::abs( next.row - cur.prev.row ) == std::abs( next.col - cur.prev.col ) ? 1 : cur.len + 1;
       maze[next.row][next.col] |= measure_;
-      map.distances.insert( { next, cur.dist + 1 } );
-      bfs.push( { next, cur.dist + 1 } );
+      map.runs.insert( { next, len } );
+      bfs.push( { len, cur.cur, next } );
     }
   }
   painter( maze, map );
   std::cout << std::endl;
 }
 
-void animate_distance_from_center( Bd::Maze& maze, Speed::Speed speed )
+void animate_runs( Builder::Maze& maze, Speed::Speed speed )
 {
   const int row_mid = maze.row_size() / 2;
   const int col_mid = maze.col_size() / 2;
   const Bd::Maze::Point start = { row_mid + 1 - ( row_mid % 2 ), col_mid + 1 - ( col_mid % 2 ) };
-  Distance_map map( start, 0 );
-  My_queue<Point_dist> bfs;
-  bfs.push( { start, 0 } );
+  Run_map map( start, 0 );
+  My_queue<Run_point> bfs;
+  bfs.push( { 0, start, start } );
   maze[start.row][start.col] |= measure_;
   while ( !bfs.empty() ) {
-    const Point_dist cur = bfs.front();
+    const Run_point cur = bfs.front();
     bfs.pop();
-    map.max = std::max( map.max, cur.dist );
+    map.max = std::max( map.max, cur.len );
     for ( const Bd::Maze::Point& p : Bd::Maze::dirs_ ) {
-      const Bd::Maze::Point next = { cur.p.row + p.row, cur.p.col + p.col };
+      const Bd::Maze::Point next = { cur.cur.row + p.row, cur.cur.col + p.col };
       if ( !( maze[next.row][next.col] & Bd::Maze::path_bit_ ) || ( maze[next.row][next.col] & measure_ ) ) {
         continue;
       }
+      const uint32_t len
+        = std::abs( next.row - cur.prev.row ) == std::abs( next.col - cur.prev.col ) ? 1 : cur.len + 1;
       maze[next.row][next.col] |= measure_;
-      map.distances.insert( { next, cur.dist + 1 } );
-      bfs.push( { next, cur.dist + 1 } );
+      map.runs.insert( { next, len } );
+      bfs.push( { len, cur.cur, next } );
     }
   }
 

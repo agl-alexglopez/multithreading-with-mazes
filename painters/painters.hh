@@ -10,6 +10,9 @@ namespace Paint {
 void paint_distance_from_center( Builder::Maze& maze );
 void animate_distance_from_center( Builder::Maze& maze, Speed::Speed speed );
 
+void paint_runs( Builder::Maze& maze );
+void animate_runs( Builder::Maze& maze, Speed::Speed speed );
+
 } // namespace Paint
 
 #endif // PAINTERS_HH

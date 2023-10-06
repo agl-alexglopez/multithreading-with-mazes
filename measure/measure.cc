@@ -89,6 +89,7 @@ int main( int argc, char** argv )
     },
     {
       { "distance", { Paint::paint_distance_from_center, Paint::animate_distance_from_center } },
+      { "runs", { Paint::paint_runs, Paint::animate_runs } },
     },
     {
       { "sharp", Builder::Maze::Maze_style::sharp },

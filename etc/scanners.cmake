@@ -1,4 +1,13 @@
-file (GLOB_RECURSE MAZE_CC_FILES ${CMAKE_SOURCE_DIR}/src/*.cc ${CMAKE_SOURCE_DIR}/builders/*.cc ${CMAKE_SOURCE_DIR}/solvers/*.cc ${CMAKE_SOURCE_DIR}/utilities/*.cc)
+file (GLOB_RECURSE MAZE_CC_FILES
+  ${CMAKE_SOURCE_DIR}/demo/*.cc
+  ${CMAKE_SOURCE_DIR}/run_maze/*.cc
+  ${CMAKE_SOURCE_DIR}/measure/*.cc
+  ${CMAKE_SOURCE_DIR}/speed/*.cc
+  ${CMAKE_SOURCE_DIR}/maze/*.cc
+  ${CMAKE_SOURCE_DIR}/painters/*.cc
+  ${CMAKE_SOURCE_DIR}/printers/*.cc
+  ${CMAKE_SOURCE_DIR}/builders/*.cc
+  ${CMAKE_SOURCE_DIR}/solvers/*.cc)
 
 file (GLOB_RECURSE ALL_SRC_FILES *.hh *.cc)
 
