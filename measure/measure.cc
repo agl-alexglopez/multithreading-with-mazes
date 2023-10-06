@@ -37,8 +37,7 @@ struct Maze_runner
 
   int builder_view { static_image };
   Speed::Speed builder_speed {};
-  Build_function builder { Builder::generate_recursive_backtracker,
-                           Builder::animate_recursive_backtracker };
+  Build_function builder { Builder::generate_recursive_backtracker, Builder::animate_recursive_backtracker };
 
   int modification_getter { static_image };
   std::optional<Build_function> modder {};

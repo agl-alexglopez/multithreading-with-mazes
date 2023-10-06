@@ -37,8 +37,7 @@ struct Maze_runner
 
   int builder_view { static_image };
   Speed::Speed builder_speed {};
-  Build_function builder { Builder::generate_recursive_backtracker,
-                           Builder::animate_recursive_backtracker };
+  Build_function builder { Builder::generate_recursive_backtracker, Builder::animate_recursive_backtracker };
 
   int modification_getter { static_image };
   std::optional<Build_function> modder {};
@@ -92,19 +91,18 @@ int main( int argc, char** argv )
       { "dfs-gather", { Solver::dfs_thread_gather, Solver::animate_dfs_thread_gather } },
       { "dfs-corners", { Solver::dfs_thread_corners, Solver::animate_dfs_thread_corners } },
       { "floodfs-hunt", { Solver::floodfs_thread_hunt, Solver::animate_floodfs_thread_hunt } },
-      { "floodfs-gather",
-        { Solver::floodfs_thread_gather, Solver::animate_floodfs_thread_gather } },
-      { "floodfs-corners",
-        { Solver::floodfs_thread_corners, Solver::animate_floodfs_thread_corners } },
-      { "rdfs-hunt",
-        { Solver::randomized_dfs_thread_hunt, Solver::animate_randomized_dfs_thread_hunt } },
-      { "rdfs-gather",
-        { Solver::randomized_dfs_thread_gather, Solver::animate_randomized_dfs_thread_gather } },
-      { "rdfs-corners",
-        { Solver::randomized_dfs_thread_corners, Solver::animate_randomized_dfs_thread_corners } },
+      { "floodfs-gather", { Solver::floodfs_thread_gather, Solver::animate_floodfs_thread_gather } },
+      { "floodfs-corners", { Solver::floodfs_thread_corners, Solver::animate_floodfs_thread_corners } },
+      { "rdfs-hunt", { Solver::randomized_dfs_thread_hunt, Solver::animate_randomized_dfs_thread_hunt } },
+      { "rdfs-gather", { Solver::randomized_dfs_thread_gather, Solver::animate_randomized_dfs_thread_gather } },
+      { "rdfs-corners", { Solver::randomized_dfs_thread_corners, Solver::animate_randomized_dfs_thread_corners } },
       { "bfs-hunt", { Solver::bfs_thread_hunt, Solver::animate_bfs_thread_hunt } },
       { "bfs-gather", { Solver::bfs_thread_gather, Solver::animate_bfs_thread_gather } },
       { "bfs-corners", { Solver::bfs_thread_corners, Solver::animate_bfs_thread_corners } },
+
+      { "darkdfs-hunt", { Solver::dfs_thread_hunt, Solver::animate_darkdfs_thread_hunt } },
+      { "darkdfs-gather", { Solver::dfs_thread_gather, Solver::animate_darkdfs_thread_gather } },
+      { "darkdfs-corners", { Solver::dfs_thread_gather, Solver::animate_darkdfs_thread_corners } },
     },
     {
       { "sharp", Builder::Maze::Maze_style::sharp },

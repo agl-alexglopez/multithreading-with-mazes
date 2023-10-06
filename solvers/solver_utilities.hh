@@ -31,8 +31,10 @@ namespace Solver {
  * maze goals bit-------|||| |||| |||| ||||
  *                    0b0000 0000 0000 0000
  */
+using Thread_bit = uint16_t;
 using Thread_paint = uint16_t;
 using Thread_cache = uint16_t;
+using Thread_lumen = uint16_t;
 
 struct Thread_id
 {
@@ -55,12 +57,19 @@ Builder::Maze::Point find_nearest_square( const Builder::Maze& maze, const Build
 void print_point( const Builder::Maze& maze, const Builder::Maze::Point& point );
 void print_maze( const Builder::Maze& maze );
 void flush_cursor_path_coordinate( const Builder::Maze& maze, const Builder::Maze::Point& point );
+void deluminate_maze( Builder::Maze& maze );
 void clear_and_flush_paths( const Builder::Maze& maze );
 void print_hunt_solution_message( std::optional<int> winning_index );
 void print_gather_solution_message();
 void print_overlap_key();
 
 /* * * * * * * * * * * * *     Helpful Read-Only Data Available to All Solvers   * * * * * * * * * * * * * * * * */
+
+constexpr Thread_paint zero_bit_ = 0b0001;
+constexpr Thread_paint one_bit_ = 0b0010;
+constexpr Thread_paint two_bit_ = 0b0100;
+constexpr Thread_paint three_bit_ = 0b1000;
+constexpr std::array<Thread_bit, 4> thread_bits_ = { zero_bit_, one_bit_, two_bit_, three_bit_ };
 
 constexpr Thread_paint start_bit_ = 0b0100'0000'0000'0000;
 constexpr Thread_paint finish_bit_ = 0b1000'0000'0000'0000;
@@ -82,6 +91,7 @@ constexpr Thread_cache zero_seen_ = 0b0001'0000'0000;
 constexpr Thread_cache one_seen_ = 0b0010'0000'0000;
 constexpr Thread_cache two_seen_ = 0b0100'0000'0000;
 constexpr Thread_cache three_seen_ = 0b1000'0000'0000;
+constexpr Thread_paint thread_cache_offset_ = 8;
 
 constexpr int starting_path_len_ = 2048;
 constexpr std::string_view ansi_red_ = "\033[38;5;1m█\033[0m";
