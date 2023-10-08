@@ -1,5 +1,5 @@
-#include "maze.hh"
 #include "print_utilities.hh"
+#include "maze.hh"
 
 #include <iostream>
 #include <string>

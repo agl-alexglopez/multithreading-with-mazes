@@ -47,7 +47,8 @@ void join_walk_walls( Maze& maze, const Maze::Point& cur, const Maze::Point& nex
   } else if ( next.col > cur.col ) {
     wall.col++;
   } else {
-    std::cerr << "Wall join error. Step through wall didn't work" << "\n";
+    std::cerr << "Wall join error. Step through wall didn't work"
+              << "\n";
     std::abort();
   }
   maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
@@ -69,7 +70,8 @@ void animate_walk_walls( Maze& maze, const Maze::Point& cur, const Maze::Point& 
   } else if ( next.col > cur.col ) {
     wall.col++;
   } else {
-    std::cerr << "Wall join error. Step through wall didn't work" << "\n";
+    std::cerr << "Wall join error. Step through wall didn't work"
+              << "\n";
     std::abort();
   }
   maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );

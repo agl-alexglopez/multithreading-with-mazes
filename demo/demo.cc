@@ -126,7 +126,8 @@ int main( int argc, char** argv )
       if ( arg_str == "-r" || arg_str == "-c" ) {
         flags.flag = arg;
       } else {
-        std::cerr << "The only arguments are optional row [-r] or column [-c] dimensions." << "\n";
+        std::cerr << "The only arguments are optional row [-r] or column [-c] dimensions."
+                  << "\n";
         std::abort();
       }
       process_current = true;
@@ -166,7 +167,8 @@ void set_rows( Demo_runner& runner, const Flag_arg& pairs )
     runner.args.odd_rows++;
   }
   if ( runner.args.odd_rows < 7 ) {
-    std::cerr << "Minimum row may be 7." << "\n";
+    std::cerr << "Minimum row may be 7."
+              << "\n";
     std::abort();
   }
 }
@@ -178,7 +180,8 @@ void set_cols( Demo_runner& runner, const Flag_arg& pairs )
     runner.args.odd_cols++;
   }
   if ( runner.args.odd_cols < 7 ) {
-    std::cerr << "Minimum col may be 7." << "\n";
+    std::cerr << "Minimum col may be 7."
+              << "\n";
     std::abort();
   }
 }

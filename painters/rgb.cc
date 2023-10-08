@@ -1,6 +1,6 @@
+#include "rgb.hh"
 #include "maze.hh"
 #include "print_utilities.hh"
-#include "rgb.hh"
 
 #include <iostream>
 #include <string_view>

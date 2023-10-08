@@ -1,5 +1,5 @@
-#include "maze.hh"
 #include "maze_utilities.hh"
+#include "maze.hh"
 #include "print_utilities.hh"
 #include "speed.hh"
 
@@ -351,7 +351,8 @@ void carve_path_markings( Maze& maze, const Maze::Point& cur, const Maze::Point&
     wall.col++;
     maze[next.row][next.col] |= Maze::from_west_;
   } else {
-    std::cerr << "Wall break error. Step through wall didn't work" << "\n";
+    std::cerr << "Wall break error. Step through wall didn't work"
+              << "\n";
   }
   carve_path_walls( maze, cur );
   carve_path_walls( maze, next );
@@ -381,7 +382,8 @@ void carve_path_markings_animated( Maze& maze,
     maze[wall.row][wall.col] |= Maze::from_west_;
     maze[next.row][next.col] |= Maze::from_west_;
   } else {
-    std::cerr << "Wall break error. Step through wall didn't work" << "\n";
+    std::cerr << "Wall break error. Step through wall didn't work"
+              << "\n";
   }
   carve_path_walls_animated( maze, cur, speed );
   carve_path_walls_animated( maze, wall, speed );
@@ -402,7 +404,8 @@ void join_squares( Maze& maze, const Maze::Point& cur, const Maze::Point& next )
   } else if ( next.col > cur.col ) {
     wall.col++;
   } else {
-    std::cerr << "Wall break error. Step through wall didn't work" << "\n";
+    std::cerr << "Wall break error. Step through wall didn't work"
+              << "\n";
   }
   build_path( maze, wall );
   maze[wall.row][wall.col] |= Maze::builder_bit_;
@@ -422,7 +425,8 @@ void join_squares_animated( Maze& maze, const Maze::Point& cur, const Maze::Poin
   } else if ( next.col > cur.col ) {
     wall.col++;
   } else {
-    std::cerr << "Wall break error. Step through wall didn't work" << "\n";
+    std::cerr << "Wall break error. Step through wall didn't work"
+              << "\n";
   }
   carve_path_walls_animated( maze, cur, speed );
   carve_path_walls_animated( maze, wall, speed );
@@ -544,7 +548,8 @@ void print_maze_square( const Maze& maze, const Maze::Point& p )
   } else if ( square & Maze::path_bit_ ) {
     std::cout << " ";
   } else {
-    std::cerr << "Printed maze and a square was not categorized." << "\n";
+    std::cerr << "Printed maze and a square was not categorized."
+              << "\n";
     std::abort();
   }
 }
@@ -561,7 +566,8 @@ void print_square( const Maze& maze, const Maze::Point& p )
   } else if ( square & Maze::path_bit_ ) {
     std::cout << " ";
   } else {
-    std::cerr << "Printed maze and a square was not categorized." << "\n";
+    std::cerr << "Printed maze and a square was not categorized."
+              << "\n";
     std::abort();
   }
 }

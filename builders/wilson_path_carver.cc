@@ -48,7 +48,8 @@ void build_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& next )
   } else if ( next.col > cur.col ) {
     wall.col++;
   } else {
-    std::cerr << "Wall break error. Step through wall didn't work" << "\n";
+    std::cerr << "Wall break error. Step through wall didn't work"
+              << "\n";
     std::abort();
   }
   maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
@@ -70,7 +71,8 @@ void animate_marks( Maze& maze, const Maze::Point& cur, const Maze::Point& next,
   } else if ( next.col > cur.col ) {
     wall.col++;
   } else {
-    std::cerr << "Wall break error. Step through wall didn't work" << "\n";
+    std::cerr << "Wall break error. Step through wall didn't work"
+              << "\n";
   }
   maze[cur.row][cur.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
   maze[next.row][next.col] &= static_cast<Maze::Square>( ~Maze::start_bit_ );
