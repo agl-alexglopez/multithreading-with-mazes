@@ -1,6 +1,9 @@
+#include "maze.hh"
 #include "print_utilities.hh"
+
 #include <iostream>
 #include <string>
+#include <string_view>
 
 namespace Printer {
 

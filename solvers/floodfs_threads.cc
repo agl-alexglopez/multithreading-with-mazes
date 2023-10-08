@@ -1,9 +1,13 @@
+#include "maze.hh"
 #include "maze_solvers.hh"
 #include "print_utilities.hh"
 #include "solver_utilities.hh"
+#include "speed.hh"
 
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
+#include <functional>
 #include <iostream>
 #include <mutex>
 #include <optional>
@@ -265,7 +269,7 @@ void floodfs_thread_hunt( Builder::Maze& maze )
   print_maze( maze );
   print_overlap_key();
   print_hunt_solution_message( monitor.winning_index );
-  std::cout << std::endl;
+  std::cout << "\n";
 }
 
 void floodfs_thread_gather( Builder::Maze& maze )
@@ -297,7 +301,7 @@ void floodfs_thread_gather( Builder::Maze& maze )
   print_maze( maze );
   print_overlap_key();
   print_gather_solution_message();
-  std::cout << std::endl;
+  std::cout << "\n";
 }
 
 void floodfs_thread_corners( Builder::Maze& maze )
@@ -335,7 +339,7 @@ void floodfs_thread_corners( Builder::Maze& maze )
   print_maze( maze );
   print_overlap_key();
   print_hunt_solution_message( monitor.winning_index );
-  std::cout << std::endl;
+  std::cout << "\n";
 }
 
 void animate_floodfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed )
@@ -370,7 +374,7 @@ void animate_floodfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed )
   }
   Printer::set_cursor_position( { maze.row_size() + overlap_key_and_message_height, 0 } );
   print_hunt_solution_message( monitor.winning_index );
-  std::cout << std::endl;
+  std::cout << "\n";
 }
 
 void animate_floodfs_thread_gather( Builder::Maze& maze, Speed::Speed speed )
@@ -410,7 +414,7 @@ void animate_floodfs_thread_gather( Builder::Maze& maze, Speed::Speed speed )
   }
   Printer::set_cursor_position( { maze.row_size() + overlap_key_and_message_height, 0 } );
   print_gather_solution_message();
-  std::cout << std::endl;
+  std::cout << "\n";
 }
 
 void animate_floodfs_thread_corners( Builder::Maze& maze, Speed::Speed speed )
@@ -458,7 +462,7 @@ void animate_floodfs_thread_corners( Builder::Maze& maze, Speed::Speed speed )
 
   Printer::set_cursor_position( { maze.row_size() + overlap_key_and_message_height, 0 } );
   print_hunt_solution_message( monitor.winning_index );
-  std::cout << std::endl;
+  std::cout << "\n";
 }
 
 } // namespace Solver

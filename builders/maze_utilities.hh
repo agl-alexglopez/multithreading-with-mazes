@@ -33,10 +33,6 @@ void carve_path_markings_animated( Maze& maze,
 void build_wall_outline( Maze& maze );
 void fill_maze_with_walls( Maze& maze );
 void fill_maze_with_walls_animated( Maze& maze );
-void add_cross( Maze& maze );
-void add_cross_animated( Maze& maze, Speed::Speed speed );
-void add_x( Maze& maze );
-void add_x_animated( Maze& maze, Speed::Speed speed );
 void join_squares( Maze& maze, const Maze::Point& cur, const Maze::Point& next );
 void join_squares_animated( Maze& maze, const Maze::Point& cur, const Maze::Point& next, Speed::Speed_unit speed );
 void mark_origin( Maze& maze, const Maze::Point& walk, const Maze::Point& next );

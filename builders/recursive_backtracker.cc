@@ -1,12 +1,15 @@
+#include "maze.hh"
 #include "maze_algorithms.hh"
 #include "maze_utilities.hh"
+#include "speed.hh"
 
 #include <algorithm>
 #include <chrono>
-#include <cstdint>
-#include <iostream>
+#include <iterator>
+#include <numeric>
 #include <random>
 #include <thread>
+#include <vector>
 
 namespace Builder {
 

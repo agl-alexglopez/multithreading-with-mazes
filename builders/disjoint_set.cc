@@ -1,5 +1,9 @@
 #include "disjoint_set.hh"
+
+#include <cstdint>
+#include <iterator>
 #include <numeric>
+#include <vector>
 
 Disjoint_set::Disjoint_set( const std::vector<uint64_t>& maze_square_ids )
   : parent_set_( maze_square_ids.size() ), set_rank_( maze_square_ids.size(), 0 )
@@ -11,7 +15,7 @@ Disjoint_set::Disjoint_set( const std::vector<uint64_t>& maze_square_ids )
 
 Disjoint_set::Disjoint_set( uint64_t num_sets ) : parent_set_( num_sets ), set_rank_( num_sets, 0 )
 {
-  std::iota( begin( parent_set_ ), end( parent_set_ ), 0 );
+  std::iota( std::begin( parent_set_ ), std::end( parent_set_ ), 0 );
 }
 
 uint64_t Disjoint_set::find( uint64_t p )

@@ -1,10 +1,13 @@
-#include "solver_utilities.hh"
+#include "maze.hh"
 #include "print_utilities.hh"
+#include "solver_utilities.hh"
 
-#include <chrono>
+#include <cstdlib>
 #include <iostream>
+#include <optional>
 #include <random>
-#include <thread>
+#include <vector>
+
 
 namespace Solver {
 
@@ -72,7 +75,7 @@ Bd::Maze::Point find_nearest_square( const Bd::Maze& maze, const Bd::Maze::Point
     }
   }
   std::cerr << "Could not place a point. Bad point = "
-            << "{" << choice.row << "," << choice.col << "}" << std::endl;
+            << "{" << choice.row << "," << choice.col << "}" << "\n";
   print_maze( maze );
   std::abort();
 }
@@ -126,8 +129,8 @@ void print_point( const Bd::Maze& maze, const Bd::Maze::Point& point )
     std::cout << " ";
     return;
   }
-  std::cerr << "Printed maze and a square was not categorized." << std::endl;
-  abort();
+  std::cerr << "Printed maze and a square was not categorized." << "\n";
+  std::abort();
 }
 
 void print_hunt_solution_message( std::optional<int> winning_index )

@@ -1,18 +1,19 @@
+#include "maze.hh"
 #include "maze_algorithms.hh"
 #include "painters.hh"
 #include "print_utilities.hh"
 #include "speed.hh"
 
+#include <cstdlib>
 #include <functional>
 #include <iostream>
 #include <optional>
 #include <span>
+#include <string>
 #include <string_view>
 #include <tuple>
-#include <unistd.h>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
 
 namespace {
 
@@ -133,7 +134,7 @@ int main( int argc, char** argv )
     } else {
       const auto& found_arg = tables.argument_flags.find( arg );
       if ( found_arg == tables.argument_flags.end() ) {
-        std::cerr << "Invalid argument flag: " << arg << std::endl;
+        std::cerr << "Invalid argument flag: " << arg << "\n";
         print_usage();
         std::abort();
       }
@@ -260,10 +261,10 @@ void set_cols( Maze_runner& runner, const Flag_arg& pairs )
 
 void print_invalid_arg( const Flag_arg& pairs )
 {
-  std::cerr << "Flag was: " << pairs.flag << std::endl;
-  std::cerr << "Invalid argument: " << pairs.arg << std::endl;
+  std::cerr << "Flag was: " << pairs.flag << "\n";
+  std::cerr << "Invalid argument: " << pairs.arg << "\n";
   print_usage();
-  abort();
+  std::abort();
 }
 
 void print_usage()
@@ -311,5 +312,5 @@ void print_usage()
                "│   │     -If any flags are omitted, defaults are used. │     │ │   │ │\n"
                "│   │             │       │       │           │   │     │           │ │\n"
                "└───┴─────────────┴───────┴───────┴───────────┴───┴─────┴───────────┴─┘\n";
-  std::cout << std::endl;
+  std::cout << "\n";
 }

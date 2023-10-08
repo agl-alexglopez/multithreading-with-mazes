@@ -1,15 +1,22 @@
+#include "maze.hh"
 #include "my_queue.hh"
 #include "painters.hh"
 #include "print_utilities.hh"
 #include "rgb.hh"
+#include "speed.hh"
 
+#include <algorithm>
+#include <array>
+#include <chrono>
 #include <cstdint>
+#include <functional>
 #include <iostream>
 #include <mutex>
 #include <random>
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace Paint {
 
@@ -65,14 +72,14 @@ void painter( Bd::Maze& maze, const Distance_map& map )
         const auto dark = static_cast<uint8_t>( 255.0 * intensity );
         const auto bright = static_cast<uint8_t>( 128 ) + static_cast<uint8_t>( 127.0 * intensity );
         Rgb color { dark, dark, dark };
-        color[rand_color_choice] = bright;
+        color.at( rand_color_choice ) = bright;
         print_rgb( color, cur );
       } else {
         print_wall( maze, cur );
       }
     }
   }
-  std::cout << std::endl;
+  std::cout << "\n";
 }
 
 void painter_animated( Bd::Maze& maze, const Distance_map& map, Bfs_monitor& monitor, Thread_guide guide )
@@ -95,7 +102,7 @@ void painter_animated( Bd::Maze& maze, const Distance_map& map, Bfs_monitor& mon
       const auto dark = static_cast<uint8_t>( 255.0 * intensity );
       const auto bright = static_cast<uint8_t>( 128 ) + static_cast<uint8_t>( 127.0 * intensity );
       Rgb color { dark, dark, dark };
-      color[guide.color_i] = bright;
+      color.at( guide.color_i ) = bright;
       animate_rgb( color, cur );
       maze[cur.row][cur.col] |= paint_;
     }
@@ -146,7 +153,7 @@ void paint_distance_from_center( Bd::Maze& maze )
     }
   }
   painter( maze, map );
-  std::cout << std::endl;
+  std::cout << "\n";
 }
 
 void animate_distance_from_center( Bd::Maze& maze, Speed::Speed speed )
@@ -189,7 +196,7 @@ void animate_distance_from_center( Bd::Maze& maze, Speed::Speed speed )
     t.join();
   }
   Printer::set_cursor_position( { maze.row_size(), maze.col_size() } );
-  std::cout << std::endl;
+  std::cout << "\n";
 }
 
 } // namespace Paint

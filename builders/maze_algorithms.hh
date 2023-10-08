@@ -33,6 +33,11 @@ void animate_grid( Maze& maze, Speed::Speed speed );
 void generate_arena( Maze& maze );
 void animate_arena( Maze& maze, Speed::Speed speed );
 
+void add_x( Maze& maze );
+void add_x_animated( Maze& maze, Speed::Speed speed );
+void add_cross( Maze& maze );
+void add_cross_animated( Maze& maze, Speed::Speed speed );
+
 } // namespace Builder
 
 #endif

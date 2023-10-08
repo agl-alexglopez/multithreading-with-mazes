@@ -1,9 +1,8 @@
 #include "maze.hh"
 
-#include <chrono>
 #include <cstdint>
-#include <iostream>
-#include <thread>
+#include <span>
+#include <string_view>
 #include <vector>
 
 namespace Builder {

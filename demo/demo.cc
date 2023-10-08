@@ -1,3 +1,4 @@
+#include "maze.hh"
 #include "maze_algorithms.hh"
 #include "maze_solvers.hh"
 #include "painters.hh"
@@ -6,12 +7,16 @@
 
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <functional>
 #include <iostream>
 #include <ostream>
 #include <random>
 #include <span>
+#include <string>
+#include <string_view>
 #include <thread>
+#include <vector>
 
 namespace {
 
@@ -103,10 +108,10 @@ void set_cols( Demo_runner& runner, const Flag_arg& pairs );
 int main( int argc, char** argv )
 {
   Demo_runner demo;
-  const auto args = std::span( argv, static_cast<size_t>( argc ) );
+  const auto args = std::span( argv, static_cast<uint64_t>( argc ) );
   bool process_current = false;
   Flag_arg flags = {};
-  for ( size_t i = 1; i < args.size(); i++ ) {
+  for ( uint64_t i = 1; i < args.size(); i++ ) {
     const auto* arg = args[i];
     if ( process_current ) {
       flags.arg = arg;
@@ -121,8 +126,8 @@ int main( int argc, char** argv )
       if ( arg_str == "-r" || arg_str == "-c" ) {
         flags.flag = arg;
       } else {
-        std::cerr << "The only arguments are optional row [-r] or column [-c] dimensions." << std::endl;
-        abort();
+        std::cerr << "The only arguments are optional row [-r] or column [-c] dimensions." << "\n";
+        std::abort();
       }
       process_current = true;
     }
@@ -161,8 +166,8 @@ void set_rows( Demo_runner& runner, const Flag_arg& pairs )
     runner.args.odd_rows++;
   }
   if ( runner.args.odd_rows < 7 ) {
-    std::cerr << "Minimum row may be 7." << std::endl;
-    abort();
+    std::cerr << "Minimum row may be 7." << "\n";
+    std::abort();
   }
 }
 
@@ -173,7 +178,7 @@ void set_cols( Demo_runner& runner, const Flag_arg& pairs )
     runner.args.odd_cols++;
   }
   if ( runner.args.odd_cols < 7 ) {
-    std::cerr << "Minimum col may be 7." << std::endl;
-    abort();
+    std::cerr << "Minimum col may be 7." << "\n";
+    std::abort();
   }
 }

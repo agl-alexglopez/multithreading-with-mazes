@@ -1,18 +1,20 @@
+#include "maze.hh"
 #include "maze_algorithms.hh"
 #include "maze_solvers.hh"
 #include "print_utilities.hh"
 #include "speed.hh"
 
+#include <cstdint>
+#include <cstdlib>
 #include <functional>
 #include <iostream>
 #include <optional>
 #include <span>
+#include <string>
 #include <string_view>
 #include <tuple>
-#include <unistd.h>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
 
 namespace {
 
@@ -143,11 +145,11 @@ int main( int argc, char** argv )
   };
 
   Maze_runner runner;
-  const auto args = std::span( argv, static_cast<size_t>( argc ) );
+  const auto args = std::span( argv, static_cast<uint64_t>( argc ) );
   bool process_current = false;
   std::string_view prev_flag = {};
   // In the case of no arguments this is skipped and we use our sensible defaults.
-  for ( size_t i = 1; i < args.size(); i++ ) {
+  for ( uint64_t i = 1; i < args.size(); i++ ) {
     auto* arg = args[i];
     if ( process_current ) {
       set_relevant_arg( tables, runner, { prev_flag, arg } );
@@ -155,7 +157,7 @@ int main( int argc, char** argv )
     } else {
       const auto& found_arg = tables.argument_flags.find( arg );
       if ( found_arg == tables.argument_flags.end() ) {
-        std::cerr << "Invalid argument flag: " << arg << std::endl;
+        std::cerr << "Invalid argument flag: " << arg << "\n";
         print_usage();
         std::abort();
       }
@@ -282,10 +284,10 @@ void set_cols( Maze_runner& runner, const Flag_arg& pairs )
 
 void print_invalid_arg( const Flag_arg& pairs )
 {
-  std::cerr << "Flag was: " << pairs.flag << std::endl;
-  std::cerr << "Invalid argument: " << pairs.arg << std::endl;
+  std::cerr << "Flag was: " << pairs.flag << "\n";
+  std::cerr << "Invalid argument: " << pairs.arg << "\n";
   print_usage();
-  abort();
+  std::abort();
 }
 
 void print_usage()
@@ -353,5 +355,5 @@ void print_usage()
                "│ ╶─┘ ╷ ╵ ╶─┴───┘ ┌─┘ ╵ ╵ │ ╵ └───┤ ╵ ╶─────┘ │ ╵ ╷ └───┴─┐ └─────┴─╴ │\n"
                "│     │           │       │       │           │   │       │           │\n"
                "└─────┴───────────┴───────┴───────┴───────────┴───┴───────┴───────────┘\n";
-  std::cout << std::endl;
+  std::cout << "\n";
 }

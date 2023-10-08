@@ -1,10 +1,15 @@
+#include "maze.hh"
 #include "maze_algorithms.hh"
+#include "maze_utilities.hh"
+#include "speed.hh"
 
 #include <climits>
+#include <functional>
 #include <optional>
 #include <queue>
 #include <random>
 #include <unordered_map>
+#include <vector>
 
 namespace Builder {
 

@@ -1,9 +1,11 @@
+#include "maze.hh"
 #include "maze_algorithms.hh"
+#include "maze_utilities.hh"
+#include "speed.hh"
 
-#include <chrono>
 #include <random>
 #include <stack>
-#include <thread>
+#include <tuple>
 
 namespace Builder {
 

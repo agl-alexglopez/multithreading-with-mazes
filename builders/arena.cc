@@ -1,4 +1,7 @@
+#include "maze.hh"
 #include "maze_algorithms.hh"
+#include "maze_utilities.hh"
+#include "speed.hh"
 
 namespace Builder {
 
