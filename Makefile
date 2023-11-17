@@ -1,4 +1,4 @@
-.PHONY: default release debug arm-release arm-debug clang-release clang-debug build format tidy clean
+.PHONY: default gcc-release gcc-debug arm-release arm-debug clang-release clang-debug build format tidy clean
 
 MAKE := $(MAKE)
 # Adjust parallel build jobs based on your available cores. 
@@ -7,11 +7,11 @@ JOBS ?= $(shell (command -v nproc > /dev/null 2>&1 && echo "-j$$(nproc)") || (co
 
 default: build
 
-release:
+gcc-release:
 	cmake --preset=gcc-release
 	$(MAKE) --no-print-directory -C build/ $(JOBS)
 
-debug:
+gcc-debug:
 	cmake --preset=gcc-debug
 	$(MAKE) --no-print-directory -C build/ $(JOBS)
 
