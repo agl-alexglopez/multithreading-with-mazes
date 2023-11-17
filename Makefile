@@ -1,4 +1,4 @@
-.PHONY: default release debug build format tidy clean
+.PHONY: default release debug arm-release arm-debug build format tidy clean
 
 MAKE := $(MAKE)
 # Adjust parallel build jobs based on your available cores.
@@ -12,6 +12,14 @@ release:
 
 debug:
 	@cmake --preset=gcc-debug
+	@$(MAKE) --no-print-directory -C build/ -j$(JOBS)
+
+arm-release:
+	@cmake --preset=arm-release
+	@$(MAKE) --no-print-directory -C build/ -j$(JOBS)
+
+arm-debug:
+	@cmake --preset=arm-debug
 	@$(MAKE) --no-print-directory -C build/ -j$(JOBS)
 
 build:

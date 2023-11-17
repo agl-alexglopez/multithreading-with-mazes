@@ -59,6 +59,39 @@
         "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/release",
         "CMAKE_CXX_FLAGS": "-Wall -Wpedantic -Wextra -Werror -Wshadow -Wpointer-arith -Wcast-qual -Wformat=2 -Wno-unqualified-std-cast-call"
       }
+    },
+    {
+      "name": "arm-debug",
+      "displayName": "ARM-Debug",
+      "description": "Default build options for Clang",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_THREAD_LIBS_INIT": "-lpthread",
+        "CMAKE_USE_PTHREADS_INIT": "1",
+        "THREADS_PREFER_PTHREAD_FLAG": "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/debug",
+        "CMAKE_CXX_FLAGS": "-g3 -Wall -Wpedantic -Wextra -Werror -Wshadow -Wpointer-arith -Wcast-qual -Wformat=2 -fno-sanitize-recover=all -fsanitize=undefined -fsanitize=address",
+        "CMAKE_EXE_LINKER_FLAGS": "-fno-sanitize-recover=all -fsanitize=undefined -fsanitize=address"
+      }
+    },
+    {
+      "name": "arm-release",
+      "displayName": "ARM-Release",
+      "description": "Default build options for Clang",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_THREAD_LIBS_INIT": "-lpthread",
+        "CMAKE_USE_PTHREADS_INIT": "1",
+        "THREADS_PREFER_PTHREAD_FLAG": "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/release",
+        "CMAKE_CXX_FLAGS": "-Wall -Wpedantic -Wextra -Werror -Wshadow -Wpointer-arith -Wcast-qual -Wformat=2"
+      }
     }
   ]
 }
