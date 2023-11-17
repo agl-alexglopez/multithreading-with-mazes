@@ -10,6 +10,7 @@ BreakBeforeBinaryOperators: All
 Cpp11BracedListStyle: true
 AllowShortBlocksOnASingleLine: Always
 BreakBeforeBraces: Custom
+NamespaceIndentation: None
 BraceWrapping:
   AfterClass: true
   AfterControlStatement: Never

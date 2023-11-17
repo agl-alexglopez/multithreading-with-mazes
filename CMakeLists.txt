@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24.2)
 
 project(mazes CXX)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set (CMAKE_CXX_STANDARD 20)
 
 
 if(${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
@@ -16,10 +16,9 @@ if(${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "Maze must be built outside its source directory, e.g. `cmake -B build`.")
 endif()
 
-find_package( Threads REQUIRED )
+find_package(Threads REQUIRED)
 
 include(etc/build_type.cmake)
-include(etc/cflags.cmake)
 include(etc/scanners.cmake)
 
 include_directories("${PROJECT_SOURCE_DIR}/run_maze")
@@ -41,5 +40,3 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/painters")
 add_subdirectory("${PROJECT_SOURCE_DIR}/speed")
 add_subdirectory("${PROJECT_SOURCE_DIR}/builders")
 add_subdirectory("${PROJECT_SOURCE_DIR}/solvers")
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
