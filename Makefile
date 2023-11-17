@@ -1,8 +1,9 @@
 .PHONY: default release debug arm-release arm-debug build format tidy clean
 
 MAKE := $(MAKE)
-# Adjust parallel build jobs based on your available cores.
-JOBS ?= $(shell (command -v nproc > /dev/null 2>&1 && nproc) || echo 1)
+# Adjust parallel build jobs based on your available cores. 
+# Try linux environment first then applex86 or M1, then give up and just do one
+JOBS ?= $(shell (command -v nproc > /dev/null 2>&1 && nproc) || (command -v sysctl -n hw.ncpu > /dev/null 2>&1 && sysctl -n hw.ncpu) || echo 1)
 
 default: build
 
