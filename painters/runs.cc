@@ -53,10 +53,10 @@ struct Bfs_monitor
   uint64_t count { 0 };
   std::vector<My_queue<Bd::Maze::Point>> paths;
   std::vector<std::unordered_set<Bd::Maze::Point>> seen;
-  Bfs_monitor() : paths { num_painters_ }, seen { num_painters_ }
+  Bfs_monitor() : paths { num_painters }, seen { num_painters }
   {
     for ( My_queue<Bd::Maze::Point>& p : paths ) {
-      p.reserve( initial_path_len_ );
+      p.reserve( initial_path_len );
     }
   }
 };
@@ -99,7 +99,7 @@ void painter_animated( Bd::Maze& maze, const Run_map& map, Bfs_monitor& monitor,
       monitor.monitor.unlock();
       return;
     }
-    if ( !( maze[cur.row][cur.col] & paint_ ) ) {
+    if ( !( maze[cur.row][cur.col] & paint ) ) {
       const uint64_t dist = map.runs.at( cur );
       const auto intensity = static_cast<double>( map.max - dist ) / static_cast<double>( map.max );
       const auto dark = static_cast<uint8_t>( 255.0 * intensity );
@@ -107,19 +107,19 @@ void painter_animated( Bd::Maze& maze, const Run_map& map, Bfs_monitor& monitor,
       Rgb color { dark, dark, dark };
       color.at( guide.color_i ) = bright;
       animate_rgb( color, cur );
-      maze[cur.row][cur.col] |= paint_;
+      maze[cur.row][cur.col] |= paint;
     }
     monitor.monitor.unlock();
 
     std::this_thread::sleep_for( std::chrono::microseconds( guide.animation ) );
 
-    for ( uint64_t count = 0, i = guide.bias; count < Bd::Maze::dirs_.size();
-          ++count, ++i %= Bd::Maze::dirs_.size() ) {
-      const Bd::Maze::Point& p = Bd::Maze::dirs_.at( i );
+    for ( uint64_t count = 0, i = guide.bias; count < Bd::Maze::dirs.size();
+          ++count, ++i %= Bd::Maze::dirs.size() ) {
+      const Bd::Maze::Point& p = Bd::Maze::dirs.at( i );
       const Bd::Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
       monitor.monitor.lock();
-      const bool is_path = maze[next.row][next.col] & Bd::Maze::path_bit_;
+      const bool is_path = maze[next.row][next.col] & Bd::Maze::path_bit;
       monitor.monitor.unlock();
 
       if ( is_path && !seen.contains( next ) ) {
@@ -140,19 +140,19 @@ void paint_runs( Builder::Maze& maze )
   Run_map map( start, 0 );
   My_queue<Run_point> bfs;
   bfs.push( { 0, start, start } );
-  maze[start.row][start.col] |= measure_;
+  maze[start.row][start.col] |= measure;
   while ( !bfs.empty() ) {
     const Run_point cur = bfs.front();
     bfs.pop();
     map.max = std::max( map.max, cur.len );
-    for ( const Bd::Maze::Point& p : Bd::Maze::dirs_ ) {
+    for ( const Bd::Maze::Point& p : Bd::Maze::dirs ) {
       const Bd::Maze::Point next = { cur.cur.row + p.row, cur.cur.col + p.col };
-      if ( !( maze[next.row][next.col] & Bd::Maze::path_bit_ ) || ( maze[next.row][next.col] & measure_ ) ) {
+      if ( !( maze[next.row][next.col] & Bd::Maze::path_bit ) || ( maze[next.row][next.col] & measure ) ) {
         continue;
       }
       const uint32_t len
         = std::abs( next.row - cur.prev.row ) == std::abs( next.col - cur.prev.col ) ? 1 : cur.len + 1;
-      maze[next.row][next.col] |= measure_;
+      maze[next.row][next.col] |= measure;
       map.runs.insert( { next, len } );
       bfs.push( { len, cur.cur, next } );
     }
@@ -169,19 +169,19 @@ void animate_runs( Builder::Maze& maze, Speed::Speed speed )
   Run_map map( start, 0 );
   My_queue<Run_point> bfs;
   bfs.push( { 0, start, start } );
-  maze[start.row][start.col] |= measure_;
+  maze[start.row][start.col] |= measure;
   while ( !bfs.empty() ) {
     const Run_point cur = bfs.front();
     bfs.pop();
     map.max = std::max( map.max, cur.len );
-    for ( const Bd::Maze::Point& p : Bd::Maze::dirs_ ) {
+    for ( const Bd::Maze::Point& p : Bd::Maze::dirs ) {
       const Bd::Maze::Point next = { cur.cur.row + p.row, cur.cur.col + p.col };
-      if ( !( maze[next.row][next.col] & Bd::Maze::path_bit_ ) || ( maze[next.row][next.col] & measure_ ) ) {
+      if ( !( maze[next.row][next.col] & Bd::Maze::path_bit ) || ( maze[next.row][next.col] & measure ) ) {
         continue;
       }
       const uint32_t len
         = std::abs( next.row - cur.prev.row ) == std::abs( next.col - cur.prev.col ) ? 1 : cur.len + 1;
-      maze[next.row][next.col] |= measure_;
+      maze[next.row][next.col] |= measure;
       map.runs.insert( { next, len } );
       bfs.push( { len, cur.cur, next } );
     }
@@ -190,8 +190,8 @@ void animate_runs( Builder::Maze& maze, Speed::Speed speed )
   std::mt19937 rng( std::random_device {}() );
   std::uniform_int_distribution<uint64_t> uid( 0, 2 );
   const uint64_t rand_color_choice = uid( rng );
-  std::array<std::thread, num_painters_> handles;
-  const Speed::Speed_unit animation = animation_speeds_.at( static_cast<uint64_t>( speed ) );
+  std::array<std::thread, num_painters> handles;
+  const Speed::Speed_unit animation = animation_speeds.at( static_cast<uint64_t>( speed ) );
   Bfs_monitor monitor;
   for ( uint64_t i = 0; i < handles.size(); i++ ) {
     Thread_guide this_thread = { i, rand_color_choice, animation, start };

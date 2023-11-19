@@ -8,9 +8,10 @@
  * taking place behind the scenes, slowing parallelism.
  */
 #pragma once
+#include <cstdlib>
+#include <iostream>
 #ifndef MY_QUEUE_HH
 #define MY_QUEUE_HH
-#include <stdexcept>
 #include <vector>
 
 template<class Value_type>
@@ -18,7 +19,7 @@ class My_queue
 {
 
 public:
-  My_queue() : elems_( initial_size_ ), allocated_size_( initial_size_ ) {}
+  My_queue() : elems_( initial_size ), allocated_size_( initial_size ) {}
 
   void reserve( size_t capacity )
   {
@@ -32,8 +33,9 @@ public:
   void push( const Value_type& elem )
   {
     // Doubling allocations so we can't acheive ULLONG_MAX for our container size. Slightly less.
-    if ( logical_size_ == full_queue_ ) {
-      throw std::logic_error( "My_queue is at max capacity." );
+    if ( logical_size_ == full_queue ) {
+      std::cerr << "My_queue is at max capacity.\n";
+      std::abort();
     }
     if ( logical_size_ == allocated_size_ ) {
       grow();
@@ -46,7 +48,8 @@ public:
   void pop()
   {
     if ( logical_size_ == 0 ) {
-      throw std::logic_error( "My_queue is empty." );
+      std::cerr << "My_queue is empty.\n";
+      std::abort();
     }
     ++front_ %= allocated_size_;
     logical_size_--;
@@ -55,7 +58,8 @@ public:
   const Value_type& front() const
   {
     if ( logical_size_ == 0 ) {
-      throw std::logic_error( "My_queue is empty." );
+      std::cerr << "My_queue is empty.\n";
+      std::abort();
     }
     return elems_[front_];
   }
@@ -63,7 +67,8 @@ public:
   Value_type& front()
   {
     if ( logical_size_ == 0 ) {
-      throw std::logic_error( "My_queue is empty." );
+      std::cerr << "My_queue is empty.\n";
+      std::abort();
     }
     return elems_[front_];
   }
@@ -73,8 +78,8 @@ public:
   bool empty() const { return logical_size_ == 0; }
 
 private:
-  static constexpr size_t initial_size_ = 8;
-  static constexpr size_t full_queue_ = 1UL << 63;
+  static constexpr size_t initial_size = 8;
+  static constexpr size_t full_queue = 1UL << 63;
   std::vector<Value_type> elems_;
   size_t allocated_size_;
   size_t logical_size_ { 0 };

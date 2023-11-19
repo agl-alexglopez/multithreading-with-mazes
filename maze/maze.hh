@@ -99,43 +99,43 @@ public:
   std::span<const Square> operator[]( uint64_t index ) const;
   int row_size() const;
   int col_size() const;
-  static constexpr uint64_t wall_row_ = 16;
+  static constexpr uint64_t wall_row = 16;
   std::span<const std::string_view> wall_style() const;
 
-  static constexpr Square path_bit_ = 0b0010'0000'0000'0000;
-  static constexpr Square clear_available_bits_ = 0b0001'1111'1111'0000;
-  static constexpr Square start_bit_ = 0b0100'0000'0000'0000;
-  static constexpr Square builder_bit_ = 0b0001'0000'0000'0000;
-  static constexpr uint8_t marker_shift_ = 4;
-  static constexpr Backtrack_marker markers_mask_ = 0b1111'0000;
-  static constexpr Backtrack_marker is_origin_ = 0b0000'0000;
-  static constexpr Backtrack_marker from_north_ = 0b0001'0000;
-  static constexpr Backtrack_marker from_east_ = 0b0010'0000;
-  static constexpr Backtrack_marker from_south_ = 0b0011'0000;
-  static constexpr Backtrack_marker from_west_ = 0b0100'0000;
-  static constexpr std::string_view from_north_mark_ = "\033[38;5;15m\033[48;5;1m↑\033[0m";
-  static constexpr std::string_view from_east_mark_ = "\033[38;5;15m\033[48;5;2m→\033[0m";
-  static constexpr std::string_view from_south_mark_ = "\033[38;5;15m\033[48;5;3m↓\033[0m";
-  static constexpr std::string_view from_west_mark_ = "\033[38;5;15m\033[48;5;4m←\033[0m";
+  static constexpr Square path_bit = 0b0010'0000'0000'0000;
+  static constexpr Square clear_available_bits = 0b0001'1111'1111'0000;
+  static constexpr Square start_bit = 0b0100'0000'0000'0000;
+  static constexpr Square builder_bit = 0b0001'0000'0000'0000;
+  static constexpr uint8_t marker_shift = 4;
+  static constexpr Backtrack_marker markers_mask = 0b1111'0000;
+  static constexpr Backtrack_marker is_origin = 0b0000'0000;
+  static constexpr Backtrack_marker from_north = 0b0001'0000;
+  static constexpr Backtrack_marker from_east = 0b0010'0000;
+  static constexpr Backtrack_marker from_south = 0b0011'0000;
+  static constexpr Backtrack_marker from_west = 0b0100'0000;
+  static constexpr std::string_view from_north_mark = "\033[38;5;15m\033[48;5;1m↑\033[0m";
+  static constexpr std::string_view from_east_mark = "\033[38;5;15m\033[48;5;2m→\033[0m";
+  static constexpr std::string_view from_south_mark = "\033[38;5;15m\033[48;5;3m↓\033[0m";
+  static constexpr std::string_view from_west_mark = "\033[38;5;15m\033[48;5;4m←\033[0m";
 
-  static constexpr std::array<std::string_view, 5> backtracking_symbols_
-    = { { " ", from_north_mark_, from_east_mark_, from_south_mark_, from_west_mark_ } };
-  static constexpr std::array<Point, 5> backtracking_marks_
+  static constexpr std::array<std::string_view, 5> backtracking_symbols
+    = { { " ", from_north_mark, from_east_mark, from_south_mark, from_west_mark } };
+  static constexpr std::array<Point, 5> backtracking_marks
     = { { { 0, 0 }, { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
-  static constexpr std::array<Point, 5> backtracking_half_marks_
+  static constexpr std::array<Point, 5> backtracking_half_marks
     = { { { 0, 0 }, { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
 
-  static constexpr Wall_line wall_mask_ = 0b1111;
-  static constexpr Wall_line floating_wall_ = 0b0000;
-  static constexpr Wall_line north_wall_ = 0b0001;
-  static constexpr Wall_line east_wall_ = 0b0010;
-  static constexpr Wall_line south_wall_ = 0b0100;
-  static constexpr Wall_line west_wall_ = 0b1000;
+  static constexpr Wall_line wall_mask = 0b1111;
+  static constexpr Wall_line floating_wall = 0b0000;
+  static constexpr Wall_line north_wall = 0b0001;
+  static constexpr Wall_line east_wall = 0b0010;
+  static constexpr Wall_line south_wall = 0b0100;
+  static constexpr Wall_line west_wall = 0b1000;
 
   /* Walls are constructed in terms of other walls they need to connect to. For example, read
    * 0b0011 as, "this is a wall square that must connect to other walls to the East and North."
    */
-  static constexpr std::array<std::string_view, 96> wall_styles_ = { {
+  static constexpr std::array<std::string_view, 96> wall_styles = { {
     // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall with no walls around.
     // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
     // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
@@ -148,10 +148,10 @@ public:
   } };
 
   // north, east, south, west
-  static constexpr std::array<Point, 4> dirs_ = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
-  static constexpr std::array<Point, 4> build_dirs_ = { { { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
+  static constexpr std::array<Point, 4> dirs = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
+  static constexpr std::array<Point, 4> build_dirs = { { { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
   // south, south-east, east, north-east, north, north-west, west, south-west
-  static constexpr std::array<Point, 8> all_dirs_
+  static constexpr std::array<Point, 8> all_dirs
     = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, -1 } } };
 
 private:

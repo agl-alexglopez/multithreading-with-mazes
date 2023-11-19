@@ -133,7 +133,7 @@ void generate_eller( Maze& maze )
         std::uniform_int_distribution<uint64_t> rand_drop( 0, s.second.size() - 1 );
         const Maze::Point chosen = s.second[rand_drop( gen )];
         // We already linked this up and rondomness dropped us here again. More important for animated version.
-        if ( !( maze[chosen.row + 2][chosen.col] & Maze::builder_bit_ ) ) {
+        if ( !( maze[chosen.row + 2][chosen.col] & Maze::builder_bit ) ) {
           window.sets[next_row * window.width + chosen.col] = s.first;
           join_squares( maze, chosen, { chosen.row + 2, chosen.col } );
         }
@@ -150,7 +150,7 @@ void animate_eller( Maze& maze, Speed::Speed speed )
 {
   fill_maze_with_walls_animated( maze );
   clear_and_flush_grid( maze );
-  const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed::Speed_unit animation = builder_speeds.at( static_cast<int>( speed ) );
   std::mt19937 gen( std::random_device {}() );
   std::uniform_int_distribution<int> coin( 0, horizontal_bias );
 
@@ -187,7 +187,7 @@ void animate_eller( Maze& maze, Speed::Speed speed )
         std::uniform_int_distribution<uint64_t> rand_drop( 0, s.second.size() - 1 );
         const Maze::Point chosen = s.second[rand_drop( gen )];
         // We already linked this up and rondomness dropped us here again. Save pointless cursor movements.
-        if ( !( maze[chosen.row + 2][chosen.col] & Maze::builder_bit_ ) ) {
+        if ( !( maze[chosen.row + 2][chosen.col] & Maze::builder_bit ) ) {
           window.sets[next_row * window.width + chosen.col] = s.first;
           join_squares_animated( maze, chosen, { chosen.row + 2, chosen.col }, animation );
         }

@@ -45,7 +45,7 @@ void generate_recursive_subdivision( Maze& maze )
       for ( int col = 0; col < chamber_width; col++ ) {
         if ( col != passage ) {
           maze[chamber_offset.row + divide][chamber_offset.col + col]
-            &= static_cast<Maze::Square>( ~Maze::path_bit_ );
+            &= static_cast<Maze::Square>( ~Maze::path_bit );
           build_wall_line( maze, { chamber_offset.row + divide, chamber_offset.col + col } );
         }
       }
@@ -59,7 +59,7 @@ void generate_recursive_subdivision( Maze& maze )
       for ( int row = 0; row < chamber_height; row++ ) {
         if ( row != passage ) {
           maze[chamber_offset.row + row][chamber_offset.col + divide]
-            &= static_cast<Maze::Square>( ~Maze::path_bit_ );
+            &= static_cast<Maze::Square>( ~Maze::path_bit );
           build_wall_line( maze, { chamber_offset.row + row, chamber_offset.col + divide } );
         }
       }
@@ -76,7 +76,7 @@ void generate_recursive_subdivision( Maze& maze )
 
 void animate_recursive_subdivision( Maze& maze, Speed::Speed speed )
 {
-  const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed::Speed_unit animation = builder_speeds.at( static_cast<int>( speed ) );
   build_wall_outline( maze );
   clear_and_flush_grid( maze );
   std::mt19937 generator( std::random_device {}() );
@@ -93,7 +93,7 @@ void animate_recursive_subdivision( Maze& maze, Speed::Speed speed )
       for ( int col = 0; col < chamber_width; col++ ) {
         if ( col != passage ) {
           maze[chamber_offset.row + divide][chamber_offset.col + col]
-            &= static_cast<Maze::Square>( ~Maze::path_bit_ );
+            &= static_cast<Maze::Square>( ~Maze::path_bit );
           build_wall_line_animated( maze, { chamber_offset.row + divide, chamber_offset.col + col }, animation );
         }
       }
@@ -106,7 +106,7 @@ void animate_recursive_subdivision( Maze& maze, Speed::Speed speed )
       for ( int row = 0; row < chamber_height; row++ ) {
         if ( row != passage ) {
           maze[chamber_offset.row + row][chamber_offset.col + divide]
-            &= static_cast<Maze::Square>( ~Maze::path_bit_ );
+            &= static_cast<Maze::Square>( ~Maze::path_bit );
           build_wall_line_animated( maze, { chamber_offset.row + row, chamber_offset.col + divide }, animation );
         }
       }

@@ -17,8 +17,8 @@ namespace {
 bool is_valid_start_or_finish( const Bd::Maze& maze, const Bd::Maze::Point& choice )
 {
   return choice.row > 0 && choice.row < maze.row_size() - 1 && choice.col > 0 && choice.col < maze.col_size() - 1
-         && ( maze[choice.row][choice.col] & Bd::Maze::path_bit_ )
-         && !( maze[choice.row][choice.col] & finish_bit_ ) && !( maze[choice.row][choice.col] & start_bit_ );
+         && ( maze[choice.row][choice.col] & Bd::Maze::path_bit ) && !( maze[choice.row][choice.col] & finish_bit )
+         && !( maze[choice.row][choice.col] & start_bit );
 }
 
 } // namespace
@@ -26,19 +26,19 @@ bool is_valid_start_or_finish( const Bd::Maze& maze, const Bd::Maze::Point& choi
 std::vector<Bd::Maze::Point> set_corner_starts( const Bd::Maze& maze )
 {
   Bd::Maze::Point point1 = { 1, 1 };
-  if ( !( maze[point1.row][point1.col] & Bd::Maze::path_bit_ ) ) {
+  if ( !( maze[point1.row][point1.col] & Bd::Maze::path_bit ) ) {
     point1 = find_nearest_square( maze, point1 );
   }
   Bd::Maze::Point point2 = { 1, maze.col_size() - 2 };
-  if ( !( maze[point2.row][point2.col] & Bd::Maze::path_bit_ ) ) {
+  if ( !( maze[point2.row][point2.col] & Bd::Maze::path_bit ) ) {
     point2 = find_nearest_square( maze, point2 );
   }
   Bd::Maze::Point point3 = { maze.row_size() - 2, 1 };
-  if ( !( maze[point3.row][point3.col] & Bd::Maze::path_bit_ ) ) {
+  if ( !( maze[point3.row][point3.col] & Bd::Maze::path_bit ) ) {
     point3 = find_nearest_square( maze, point3 );
   }
   Bd::Maze::Point point4 = { maze.row_size() - 2, maze.col_size() - 2 };
-  if ( !( maze[point4.row][point4.col] & Bd::Maze::path_bit_ ) ) {
+  if ( !( maze[point4.row][point4.col] & Bd::Maze::path_bit ) ) {
     point4 = find_nearest_square( maze, point4 );
   }
   return { point1, point2, point3, point4 };
@@ -59,7 +59,7 @@ Bd::Maze::Point pick_random_point( const Bd::Maze& maze )
 Bd::Maze::Point find_nearest_square( const Bd::Maze& maze, const Bd::Maze::Point& choice )
 {
   // Fanning out from a starting point should work on any medium to large maze.
-  for ( const Bd::Maze::Point& p : all_dirs_ ) {
+  for ( const Bd::Maze::Point& p : all_dirs ) {
     const Bd::Maze::Point next = { choice.row + p.row, choice.col + p.col };
     if ( is_valid_start_or_finish( maze, next ) ) {
       return next;
@@ -107,25 +107,24 @@ void flush_cursor_path_coordinate( const Bd::Maze& maze, const Bd::Maze::Point& 
 void print_point( const Bd::Maze& maze, const Bd::Maze::Point& point )
 {
   const Bd::Maze::Square& square = maze[point.row][point.col];
-  if ( square & finish_bit_ ) {
-    std::cout << ansi_finish_;
+  if ( square & finish_bit ) {
+    std::cout << ansi_finish;
     return;
   }
-  if ( square & start_bit_ ) {
-    std::cout << ansi_start_;
+  if ( square & start_bit ) {
+    std::cout << ansi_start;
     return;
   }
-  if ( square & thread_paint_mask_ ) {
-    const Thread_paint thread_color
-      = static_cast<Thread_paint>( square & thread_paint_mask_ ) >> thread_paint_shift_;
-    std::cout << thread_colors_.at( thread_color );
+  if ( square & thread_paint_mask ) {
+    const Thread_paint thread_color = static_cast<Thread_paint>( square & thread_paint_mask ) >> thread_paint_shift;
+    std::cout << thread_colors.at( thread_color );
     return;
   }
-  if ( !( square & Bd::Maze::path_bit_ ) ) {
-    std::cout << maze.wall_style()[square & Bd::Maze::wall_mask_];
+  if ( !( square & Bd::Maze::path_bit ) ) {
+    std::cout << maze.wall_style()[square & Bd::Maze::wall_mask];
     return;
   }
-  if ( square & Bd::Maze::path_bit_ ) {
+  if ( square & Bd::Maze::path_bit ) {
     std::cout << " ";
     return;
   }
@@ -137,16 +136,16 @@ void print_point( const Bd::Maze& maze, const Bd::Maze::Point& point )
 void print_hunt_solution_message( std::optional<int> winning_index )
 {
   if ( !winning_index ) {
-    std::cout << thread_colors_.at( all_threads_failed_index_ );
+    std::cout << thread_colors.at( all_threads_failed_index );
     return;
   }
-  std::cout << ( thread_colors_.at( thread_bits_.at( winning_index.value() ) ) ) << " thread won!\n";
+  std::cout << ( thread_colors.at( thread_bits.at( winning_index.value() ) ) ) << " thread won!\n";
 }
 
 void print_gather_solution_message()
 {
-  for ( const Thread_paint& mask : thread_bits_ ) {
-    std::cout << thread_colors_.at( mask );
+  for ( const Thread_paint& mask : thread_bits ) {
+    std::cout << thread_colors.at( mask );
   }
   std::cout << " All threads found their finish squares!\n";
 }
@@ -168,17 +167,17 @@ void print_overlap_key()
   std::cout << "┌────────────────────────────────────────────────────────────────┐\n"
             << "│     Overlap Key: 3_THREAD | 2_THREAD | 1_THREAD | 0_THREAD     │\n"
             << "├────────────┬────────────┬────────────┬────────────┬────────────┤\n"
-            << "│ " << thread_colors_.at( 1 ) << " = 0      │ " << thread_colors_.at( 2 ) << " = 1      │ "
-            << thread_colors_.at( 3 ) << " = 1|0    │ " << thread_colors_.at( 4 ) << " = 2      │ "
-            << thread_colors_.at( 5 ) << " = 2|0    │\n"
+            << "│ " << thread_colors.at( 1 ) << " = 0      │ " << thread_colors.at( 2 ) << " = 1      │ "
+            << thread_colors.at( 3 ) << " = 1|0    │ " << thread_colors.at( 4 ) << " = 2      │ "
+            << thread_colors.at( 5 ) << " = 2|0    │\n"
             << "├────────────┼────────────┼────────────┼────────────┼────────────┤\n"
-            << "│ " << thread_colors_.at( 6 ) << " = 2|1    │ " << thread_colors_.at( 7 ) << " = 2|1|0  │ "
-            << thread_colors_.at( 8 ) << " = 3      │ " << thread_colors_.at( 9 ) << " = 3|0    │ "
-            << thread_colors_.at( 10 ) << " = 3|1    │\n"
+            << "│ " << thread_colors.at( 6 ) << " = 2|1    │ " << thread_colors.at( 7 ) << " = 2|1|0  │ "
+            << thread_colors.at( 8 ) << " = 3      │ " << thread_colors.at( 9 ) << " = 3|0    │ "
+            << thread_colors.at( 10 ) << " = 3|1    │\n"
             << "├────────────┼────────────┼────────────┼────────────┼────────────┤\n"
-            << "│ " << thread_colors_.at( 11 ) << " = 3|1|0  │ " << thread_colors_.at( 12 ) << " = 3|2    │ "
-            << thread_colors_.at( 13 ) << " = 3|2|0  │ " << thread_colors_.at( 14 ) << " = 3|2|1  │ "
-            << thread_colors_.at( 15 ) << " = 3|2|1|0│\n"
+            << "│ " << thread_colors.at( 11 ) << " = 3|1|0  │ " << thread_colors.at( 12 ) << " = 3|2    │ "
+            << thread_colors.at( 13 ) << " = 3|2|0  │ " << thread_colors.at( 14 ) << " = 3|2|1  │ "
+            << thread_colors.at( 15 ) << " = 3|2|1|0│\n"
             << "└────────────┴────────────┴────────────┴────────────┴────────────┘\n";
 }
 

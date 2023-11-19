@@ -1,8 +1,34 @@
-Checks:
-   '*,-altera-*,-llvmlibc-*,-google-build-using-namespace,-modernize-use-trailing-return-type,-readability-implicit-bool-conversion,-*-non-private-member-variables-in-classes,-modernize-use-nodiscard,-*-magic-numbers,-readability-identifier-length,-concurrency-mt-unsafe,-llvm-header-guard,-fuchsia-default-arguments-calls,-fuchsia-default-arguments-declarations,-fuchsia-overloaded-operator,-android-cloexec-accept'
+---
+Checks: >
+   *,
+   -altera-*,
+   -llvmlibc-*,
+   -google-build-using-namespace,
+   -modernize-use-trailing-return-type,
+   -readability-implicit-bool-conversion,
+   -*-non-private-member-variables-in-classes,
+   -modernize-use-nodiscard,
+   -*-magic-numbers,
+   -readability-identifier-length,
+   -concurrency-mt-unsafe,
+   -llvm-header-guard,
+   -fuchsia-default-arguments-calls,
+   -fuchsia-default-arguments-declarations,
+   -fuchsia-overloaded-operator,
+   -android-cloexec-accept
 
 WarningsAsErrors:
    '*'
 
 CheckOptions:
-   hicpp-signed-bitwise.IgnorePositiveIntegerLiterals: 'true'
+   - { key: hicpp-signed-bitwise.IgnorePositiveIntegerLiterals, value: true }
+   - { key: readability-identifier-naming.EnumConstantCase, value: lower_case }
+   - { key: readability-identifier-naming.ClassMemberCase, value: lower_case }
+   - { key: readability-identifier-naming.ConstantMemberCase, value: lower_case }
+   - { key: readability-identifier-naming.ConstantMemberSuffix, value: _ }
+   - { key: readability-identifier-naming.ClassMemberSuffix, value: _ }
+   - { key: readability-identifier-naming.FunctionCase, value: lower_case }
+   - { key: readability-identifier-naming.ConstantCase, value: lower_case }
+   - { key: readability-identifier-naming.VariableCase, value: lower_case }
+
+

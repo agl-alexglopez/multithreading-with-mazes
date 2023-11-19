@@ -75,7 +75,7 @@ void generate_kruskal( Maze& maze )
 
 void animate_kruskal( Maze& maze, Speed::Speed speed )
 {
-  const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed::Speed_unit animation = builder_speeds.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );
   clear_and_flush_grid( maze );
   const std::vector<Maze::Point> walls = load_shuffled_walls( maze );

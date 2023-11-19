@@ -13,20 +13,20 @@ constexpr std::string_view brush = "m█\033[0m";
 void print_rgb( Rgb rgb, Builder::Maze::Point p )
 {
   Printer::set_cursor_position( p );
-  std::cout << rgb_escape << rgb[R] << ";" << rgb[G] << ";" << rgb[B] << brush;
+  std::cout << rgb_escape << rgb[r] << ";" << rgb[g] << ";" << rgb[b] << brush;
 }
 
 void animate_rgb( Rgb rgb, Builder::Maze::Point p )
 {
   Printer::set_cursor_position( p );
-  std::cout << rgb_escape << rgb[R] << ";" << rgb[G] << ";" << rgb[B] << brush << std::flush;
+  std::cout << rgb_escape << rgb[r] << ";" << rgb[g] << ";" << rgb[b] << brush << std::flush;
 }
 
 void print_wall( Builder::Maze& maze, Builder::Maze::Point p )
 {
   Printer::set_cursor_position( p );
   const Builder::Maze::Square& square = maze[p.row][p.col];
-  std::cout << maze.wall_style()[square & Builder::Maze::wall_mask_];
+  std::cout << maze.wall_style()[square & Builder::Maze::wall_mask];
 }
 
 } // namespace Paint

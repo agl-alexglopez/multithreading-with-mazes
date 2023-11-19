@@ -36,7 +36,7 @@ int Maze::col_size() const
 
 std::span<const std::string_view> Maze::wall_style() const
 {
-  return { &wall_styles_.at( wall_style_index_ * wall_row_ ), wall_row_ };
+  return { &wall_styles.at( wall_style_index_ * wall_row ), wall_row };
 }
 
 bool operator==( const Maze::Point& lhs, const Maze::Point& rhs )

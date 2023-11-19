@@ -119,7 +119,7 @@ void build_wall_outline( Maze& maze )
   for ( int row = 0; row < maze.row_size(); row++ ) {
     for ( int col = 0; col < maze.col_size(); col++ ) {
       if ( col == 0 || col == maze.col_size() - 1 || row == 0 || row == maze.row_size() - 1 ) {
-        maze[row][col] |= Maze::builder_bit_;
+        maze[row][col] |= Maze::builder_bit;
         build_wall_carefully( maze, { row, col } );
       } else {
         build_path( maze, { row, col } );
@@ -133,7 +133,7 @@ Maze::Point choose_arbitrary_point( const Maze& maze, Parity_point parity )
   const int init = parity == Parity_point::even ? 2 : 1;
   for ( int row = init; row < maze.row_size() - 1; row += 2 ) {
     for ( int col = init; col < maze.col_size() - 1; col += 2 ) {
-      if ( !( maze[row][col] & Maze::builder_bit_ ) ) {
+      if ( !( maze[row][col] & Maze::builder_bit ) ) {
         return { row, col };
       }
     }
@@ -144,12 +144,12 @@ Maze::Point choose_arbitrary_point( const Maze& maze, Parity_point parity )
 bool can_build_new_square( const Maze& maze, const Maze::Point& next )
 {
   return next.row > 0 && next.row < maze.row_size() - 1 && next.col > 0 && next.col < maze.col_size() - 1
-         && !( maze[next.row][next.col] & Maze::builder_bit_ );
+         && !( maze[next.row][next.col] & Maze::builder_bit );
 }
 
 bool has_builder_bit( const Maze& maze, const Maze::Point& next )
 {
-  return maze[next.row][next.col] & Maze::builder_bit_;
+  return maze[next.row][next.col] & Maze::builder_bit;
 }
 
 bool is_square_within_perimeter_walls( const Maze& maze, const Maze::Point& next )
@@ -160,57 +160,57 @@ bool is_square_within_perimeter_walls( const Maze& maze, const Maze::Point& next
 void build_wall_line( Maze& maze, const Maze::Point& p )
 {
   Maze::Wall_line wall = 0b0;
-  if ( p.row - 1 >= 0 && !( maze[p.row - 1][p.col] & Maze::path_bit_ ) ) {
-    wall |= Maze::north_wall_;
-    maze[p.row - 1][p.col] |= Maze::south_wall_;
+  if ( p.row - 1 >= 0 && !( maze[p.row - 1][p.col] & Maze::path_bit ) ) {
+    wall |= Maze::north_wall;
+    maze[p.row - 1][p.col] |= Maze::south_wall;
   }
-  if ( p.row + 1 < maze.row_size() && !( maze[p.row + 1][p.col] & Maze::path_bit_ ) ) {
-    wall |= Maze::south_wall_;
-    maze[p.row + 1][p.col] |= Maze::north_wall_;
+  if ( p.row + 1 < maze.row_size() && !( maze[p.row + 1][p.col] & Maze::path_bit ) ) {
+    wall |= Maze::south_wall;
+    maze[p.row + 1][p.col] |= Maze::north_wall;
   }
-  if ( p.col - 1 >= 0 && !( maze[p.row][p.col - 1] & Maze::path_bit_ ) ) {
-    wall |= Maze::west_wall_;
-    maze[p.row][p.col - 1] |= Maze::east_wall_;
+  if ( p.col - 1 >= 0 && !( maze[p.row][p.col - 1] & Maze::path_bit ) ) {
+    wall |= Maze::west_wall;
+    maze[p.row][p.col - 1] |= Maze::east_wall;
   }
-  if ( p.col + 1 < maze.col_size() && !( maze[p.row][p.col + 1] & Maze::path_bit_ ) ) {
-    wall |= Maze::east_wall_;
-    maze[p.row][p.col + 1] |= Maze::west_wall_;
+  if ( p.col + 1 < maze.col_size() && !( maze[p.row][p.col + 1] & Maze::path_bit ) ) {
+    wall |= Maze::east_wall;
+    maze[p.row][p.col + 1] |= Maze::west_wall;
   }
   maze[p.row][p.col] |= wall;
-  maze[p.row][p.col] |= Maze::builder_bit_;
-  maze[p.row][p.col] &= static_cast<Maze::Square>( ~Maze::path_bit_ );
+  maze[p.row][p.col] |= Maze::builder_bit;
+  maze[p.row][p.col] &= static_cast<Maze::Square>( ~Maze::path_bit );
 }
 
 void build_wall_line_animated( Maze& maze, const Maze::Point& p, Speed::Speed_unit speed )
 {
   Maze::Wall_line wall = 0b0;
-  if ( p.row - 1 >= 0 && !( maze[p.row - 1][p.col] & Maze::path_bit_ ) ) {
-    wall |= Maze::north_wall_;
-    maze[p.row - 1][p.col] |= Maze::south_wall_;
+  if ( p.row - 1 >= 0 && !( maze[p.row - 1][p.col] & Maze::path_bit ) ) {
+    wall |= Maze::north_wall;
+    maze[p.row - 1][p.col] |= Maze::south_wall;
     flush_cursor_maze_coordinate( maze, { p.row - 1, p.col } );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   }
-  if ( p.row + 1 < maze.row_size() && !( maze[p.row + 1][p.col] & Maze::path_bit_ ) ) {
-    wall |= Maze::south_wall_;
-    maze[p.row + 1][p.col] |= Maze::north_wall_;
+  if ( p.row + 1 < maze.row_size() && !( maze[p.row + 1][p.col] & Maze::path_bit ) ) {
+    wall |= Maze::south_wall;
+    maze[p.row + 1][p.col] |= Maze::north_wall;
     flush_cursor_maze_coordinate( maze, { p.row + 1, p.col } );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   }
-  if ( p.col - 1 >= 0 && !( maze[p.row][p.col - 1] & Maze::path_bit_ ) ) {
-    wall |= Maze::west_wall_;
-    maze[p.row][p.col - 1] |= Maze::east_wall_;
+  if ( p.col - 1 >= 0 && !( maze[p.row][p.col - 1] & Maze::path_bit ) ) {
+    wall |= Maze::west_wall;
+    maze[p.row][p.col - 1] |= Maze::east_wall;
     flush_cursor_maze_coordinate( maze, { p.row, p.col - 1 } );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   }
-  if ( p.col + 1 < maze.col_size() && !( maze[p.row][p.col + 1] & Maze::path_bit_ ) ) {
-    wall |= Maze::east_wall_;
-    maze[p.row][p.col + 1] |= Maze::west_wall_;
+  if ( p.col + 1 < maze.col_size() && !( maze[p.row][p.col + 1] & Maze::path_bit ) ) {
+    wall |= Maze::east_wall;
+    maze[p.row][p.col + 1] |= Maze::west_wall;
     flush_cursor_maze_coordinate( maze, { p.row, p.col + 1 } );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   }
   maze[p.row][p.col] |= wall;
-  maze[p.row][p.col] |= Maze::builder_bit_;
-  maze[p.row][p.col] &= static_cast<Maze::Square>( ~Maze::path_bit_ );
+  maze[p.row][p.col] |= Maze::builder_bit;
+  maze[p.row][p.col] &= static_cast<Maze::Square>( ~Maze::path_bit );
   flush_cursor_maze_coordinate( maze, p );
   std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
 }
@@ -220,7 +220,7 @@ void clear_for_wall_adders( Maze& maze )
   for ( int row = 0; row < maze.row_size(); row++ ) {
     for ( int col = 0; col < maze.col_size(); col++ ) {
       if ( col == 0 || col == maze.col_size() - 1 || row == 0 || row == maze.row_size() - 1 ) {
-        maze[row][col] |= Maze::builder_bit_;
+        maze[row][col] |= Maze::builder_bit;
       } else {
         build_path( maze, { row, col } );
       }
@@ -231,13 +231,13 @@ void clear_for_wall_adders( Maze& maze )
 void mark_origin( Maze& maze, const Maze::Point& walk, const Maze::Point& next )
 {
   if ( next.row > walk.row ) {
-    maze[next.row][next.col] |= Maze::from_north_;
+    maze[next.row][next.col] |= Maze::from_north;
   } else if ( next.row < walk.row ) {
-    maze[next.row][next.col] |= Maze::from_south_;
+    maze[next.row][next.col] |= Maze::from_south;
   } else if ( next.col < walk.col ) {
-    maze[next.row][next.col] |= Maze::from_east_;
+    maze[next.row][next.col] |= Maze::from_east;
   } else if ( next.col > walk.col ) {
-    maze[next.row][next.col] |= Maze::from_west_;
+    maze[next.row][next.col] |= Maze::from_west;
   }
 }
 
@@ -246,20 +246,20 @@ void mark_origin_animated( Maze& maze, const Maze::Point& walk, const Maze::Poin
   Maze::Point wall = walk;
   if ( next.row > walk.row ) {
     wall.row++;
-    maze[wall.row][wall.col] |= Maze::from_north_;
-    maze[next.row][next.col] |= Maze::from_north_;
+    maze[wall.row][wall.col] |= Maze::from_north;
+    maze[next.row][next.col] |= Maze::from_north;
   } else if ( next.row < walk.row ) {
     wall.row--;
-    maze[wall.row][wall.col] |= Maze::from_south_;
-    maze[next.row][next.col] |= Maze::from_south_;
+    maze[wall.row][wall.col] |= Maze::from_south;
+    maze[next.row][next.col] |= Maze::from_south;
   } else if ( next.col < walk.col ) {
     wall.col--;
-    maze[wall.row][wall.col] |= Maze::from_east_;
-    maze[next.row][next.col] |= Maze::from_east_;
+    maze[wall.row][wall.col] |= Maze::from_east;
+    maze[next.row][next.col] |= Maze::from_east;
   } else if ( next.col > walk.col ) {
     wall.col++;
-    maze[wall.row][wall.col] |= Maze::from_west_;
-    maze[next.row][next.col] |= Maze::from_west_;
+    maze[wall.row][wall.col] |= Maze::from_west;
+    maze[next.row][next.col] |= Maze::from_west;
   }
   flush_cursor_maze_coordinate( maze, wall );
   std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
@@ -290,49 +290,49 @@ void fill_maze_with_walls_animated( Maze& maze )
 
 void carve_path_walls( Maze& maze, const Maze::Point& p )
 {
-  maze[p.row][p.col] |= Maze::path_bit_;
+  maze[p.row][p.col] |= Maze::path_bit;
   if ( p.row - 1 >= 0 ) {
-    maze[p.row - 1][p.col] &= static_cast<Maze::Square>( ~Maze::south_wall_ );
+    maze[p.row - 1][p.col] &= static_cast<Maze::Square>( ~Maze::south_wall );
   }
   if ( p.row + 1 < maze.row_size() ) {
-    maze[p.row + 1][p.col] &= static_cast<Maze::Square>( ~Maze::north_wall_ );
+    maze[p.row + 1][p.col] &= static_cast<Maze::Square>( ~Maze::north_wall );
   }
   if ( p.col - 1 >= 0 ) {
-    maze[p.row][p.col - 1] &= static_cast<Maze::Square>( ~Maze::east_wall_ );
+    maze[p.row][p.col - 1] &= static_cast<Maze::Square>( ~Maze::east_wall );
   }
   if ( p.col + 1 < maze.col_size() ) {
-    maze[p.row][p.col + 1] &= static_cast<Maze::Square>( ~Maze::west_wall_ );
+    maze[p.row][p.col + 1] &= static_cast<Maze::Square>( ~Maze::west_wall );
   }
-  maze[p.row][p.col] |= Maze::builder_bit_;
+  maze[p.row][p.col] |= Maze::builder_bit;
 }
 
 // The animated version tries to save cursor movements if they are not necessary.
 void carve_path_walls_animated( Maze& maze, const Maze::Point& p, Speed::Speed_unit speed )
 {
-  maze[p.row][p.col] |= Maze::path_bit_;
+  maze[p.row][p.col] |= Maze::path_bit;
   flush_cursor_maze_coordinate( maze, p );
   std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
-  if ( p.row - 1 >= 0 && !( maze[p.row - 1][p.col] & Maze::path_bit_ ) ) {
-    maze[p.row - 1][p.col] &= static_cast<Maze::Square>( ~Maze::south_wall_ );
+  if ( p.row - 1 >= 0 && !( maze[p.row - 1][p.col] & Maze::path_bit ) ) {
+    maze[p.row - 1][p.col] &= static_cast<Maze::Square>( ~Maze::south_wall );
     flush_cursor_maze_coordinate( maze, { p.row - 1, p.col } );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   }
-  if ( p.row + 1 < maze.row_size() && !( maze[p.row + 1][p.col] & Maze::path_bit_ ) ) {
-    maze[p.row + 1][p.col] &= static_cast<Maze::Square>( ~Maze::north_wall_ );
+  if ( p.row + 1 < maze.row_size() && !( maze[p.row + 1][p.col] & Maze::path_bit ) ) {
+    maze[p.row + 1][p.col] &= static_cast<Maze::Square>( ~Maze::north_wall );
     flush_cursor_maze_coordinate( maze, { p.row + 1, p.col } );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   }
-  if ( p.col - 1 >= 0 && !( maze[p.row][p.col - 1] & Maze::path_bit_ ) ) {
-    maze[p.row][p.col - 1] &= static_cast<Maze::Square>( ~Maze::east_wall_ );
+  if ( p.col - 1 >= 0 && !( maze[p.row][p.col - 1] & Maze::path_bit ) ) {
+    maze[p.row][p.col - 1] &= static_cast<Maze::Square>( ~Maze::east_wall );
     flush_cursor_maze_coordinate( maze, { p.row, p.col - 1 } );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   }
-  if ( p.col + 1 < maze.col_size() && !( maze[p.row][p.col + 1] & Maze::path_bit_ ) ) {
-    maze[p.row][p.col + 1] &= static_cast<Maze::Square>( ~Maze::west_wall_ );
+  if ( p.col + 1 < maze.col_size() && !( maze[p.row][p.col + 1] & Maze::path_bit ) ) {
+    maze[p.row][p.col + 1] &= static_cast<Maze::Square>( ~Maze::west_wall );
     flush_cursor_maze_coordinate( maze, { p.row, p.col + 1 } );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   }
-  maze[p.row][p.col] |= Maze::builder_bit_;
+  maze[p.row][p.col] |= Maze::builder_bit;
 }
 
 void carve_path_markings( Maze& maze, const Maze::Point& cur, const Maze::Point& next )
@@ -340,16 +340,16 @@ void carve_path_markings( Maze& maze, const Maze::Point& cur, const Maze::Point&
   Maze::Point wall = cur;
   if ( next.row < cur.row ) {
     wall.row--;
-    maze[next.row][next.col] |= Maze::from_south_;
+    maze[next.row][next.col] |= Maze::from_south;
   } else if ( next.row > cur.row ) {
     wall.row++;
-    maze[next.row][next.col] |= Maze::from_north_;
+    maze[next.row][next.col] |= Maze::from_north;
   } else if ( next.col < cur.col ) {
     wall.col--;
-    maze[next.row][next.col] |= Maze::from_east_;
+    maze[next.row][next.col] |= Maze::from_east;
   } else if ( next.col > cur.col ) {
     wall.col++;
-    maze[next.row][next.col] |= Maze::from_west_;
+    maze[next.row][next.col] |= Maze::from_west;
   } else {
     std::cerr << "Wall break error. Step through wall didn't work\n";
   }
@@ -366,20 +366,20 @@ void carve_path_markings_animated( Maze& maze,
   Maze::Point wall = cur;
   if ( next.row < cur.row ) {
     wall.row--;
-    maze[wall.row][wall.col] |= Maze::from_south_;
-    maze[next.row][next.col] |= Maze::from_south_;
+    maze[wall.row][wall.col] |= Maze::from_south;
+    maze[next.row][next.col] |= Maze::from_south;
   } else if ( next.row > cur.row ) {
     wall.row++;
-    maze[wall.row][wall.col] |= Maze::from_north_;
-    maze[next.row][next.col] |= Maze::from_north_;
+    maze[wall.row][wall.col] |= Maze::from_north;
+    maze[next.row][next.col] |= Maze::from_north;
   } else if ( next.col < cur.col ) {
     wall.col--;
-    maze[wall.row][wall.col] |= Maze::from_east_;
-    maze[next.row][next.col] |= Maze::from_east_;
+    maze[wall.row][wall.col] |= Maze::from_east;
+    maze[next.row][next.col] |= Maze::from_east;
   } else if ( next.col > cur.col ) {
     wall.col++;
-    maze[wall.row][wall.col] |= Maze::from_west_;
-    maze[next.row][next.col] |= Maze::from_west_;
+    maze[wall.row][wall.col] |= Maze::from_west;
+    maze[next.row][next.col] |= Maze::from_west;
   } else {
     std::cerr << "Wall break error. Step through wall didn't work\n";
   }
@@ -392,7 +392,7 @@ void join_squares( Maze& maze, const Maze::Point& cur, const Maze::Point& next )
 {
   Maze::Point wall = cur;
   build_path( maze, cur );
-  maze[cur.row][cur.col] |= Maze::builder_bit_;
+  maze[cur.row][cur.col] |= Maze::builder_bit;
   if ( next.row < cur.row ) {
     wall.row--;
   } else if ( next.row > cur.row ) {
@@ -405,9 +405,9 @@ void join_squares( Maze& maze, const Maze::Point& cur, const Maze::Point& next )
     std::cerr << "Wall break error. Step through wall didn't work\n";
   }
   build_path( maze, wall );
-  maze[wall.row][wall.col] |= Maze::builder_bit_;
+  maze[wall.row][wall.col] |= Maze::builder_bit;
   build_path( maze, next );
-  maze[next.row][next.col] |= Maze::builder_bit_;
+  maze[next.row][next.col] |= Maze::builder_bit;
 }
 
 void join_squares_animated( Maze& maze, const Maze::Point& cur, const Maze::Point& next, Speed::Speed_unit speed )
@@ -433,83 +433,83 @@ void build_wall( Maze& maze, const Maze::Point& p )
 {
   Maze::Wall_line wall = 0b0;
   if ( p.row - 1 >= 0 ) {
-    wall |= Maze::north_wall_;
+    wall |= Maze::north_wall;
   }
   if ( p.row + 1 < maze.row_size() ) {
-    wall |= Maze::south_wall_;
+    wall |= Maze::south_wall;
   }
   if ( p.col - 1 >= 0 ) {
-    wall |= Maze::west_wall_;
+    wall |= Maze::west_wall;
   }
   if ( p.col + 1 < maze.col_size() ) {
-    wall |= Maze::east_wall_;
+    wall |= Maze::east_wall;
   }
   maze[p.row][p.col] |= wall;
-  maze[p.row][p.col] &= static_cast<Maze::Square>( ~Maze::path_bit_ );
+  maze[p.row][p.col] &= static_cast<Maze::Square>( ~Maze::path_bit );
 }
 
 void build_wall_carefully( Maze& maze, const Maze::Point& p )
 {
   Maze::Wall_line wall = 0b0;
-  if ( p.row - 1 >= 0 && !( maze[p.row - 1][p.col] & Maze::path_bit_ ) ) {
-    wall |= Maze::north_wall_;
-    maze[p.row - 1][p.col] |= Maze::south_wall_;
+  if ( p.row - 1 >= 0 && !( maze[p.row - 1][p.col] & Maze::path_bit ) ) {
+    wall |= Maze::north_wall;
+    maze[p.row - 1][p.col] |= Maze::south_wall;
   }
-  if ( p.row + 1 < maze.row_size() && !( maze[p.row + 1][p.col] & Maze::path_bit_ ) ) {
-    wall |= Maze::south_wall_;
-    maze[p.row + 1][p.col] |= Maze::north_wall_;
+  if ( p.row + 1 < maze.row_size() && !( maze[p.row + 1][p.col] & Maze::path_bit ) ) {
+    wall |= Maze::south_wall;
+    maze[p.row + 1][p.col] |= Maze::north_wall;
   }
-  if ( p.col - 1 >= 0 && !( maze[p.row][p.col - 1] & Maze::path_bit_ ) ) {
-    wall |= Maze::west_wall_;
-    maze[p.row][p.col - 1] |= Maze::east_wall_;
+  if ( p.col - 1 >= 0 && !( maze[p.row][p.col - 1] & Maze::path_bit ) ) {
+    wall |= Maze::west_wall;
+    maze[p.row][p.col - 1] |= Maze::east_wall;
   }
-  if ( p.col + 1 < maze.col_size() && !( maze[p.row][p.col + 1] & Maze::path_bit_ ) ) {
-    wall |= Maze::east_wall_;
-    maze[p.row][p.col + 1] |= Maze::west_wall_;
+  if ( p.col + 1 < maze.col_size() && !( maze[p.row][p.col + 1] & Maze::path_bit ) ) {
+    wall |= Maze::east_wall;
+    maze[p.row][p.col + 1] |= Maze::west_wall;
   }
   maze[p.row][p.col] |= wall;
-  maze[p.row][p.col] &= static_cast<Maze::Square>( ~Maze::path_bit_ );
+  maze[p.row][p.col] &= static_cast<Maze::Square>( ~Maze::path_bit );
 }
 
 void build_path( Maze& maze, const Maze::Point& p )
 {
   if ( p.row - 1 >= 0 ) {
-    maze[p.row - 1][p.col] &= static_cast<Maze::Square>( ~Maze::south_wall_ );
+    maze[p.row - 1][p.col] &= static_cast<Maze::Square>( ~Maze::south_wall );
   }
   if ( p.row + 1 < maze.row_size() ) {
-    maze[p.row + 1][p.col] &= static_cast<Maze::Square>( ~Maze::north_wall_ );
+    maze[p.row + 1][p.col] &= static_cast<Maze::Square>( ~Maze::north_wall );
   }
   if ( p.col - 1 >= 0 ) {
-    maze[p.row][p.col - 1] &= static_cast<Maze::Square>( ~Maze::east_wall_ );
+    maze[p.row][p.col - 1] &= static_cast<Maze::Square>( ~Maze::east_wall );
   }
   if ( p.col + 1 < maze.col_size() ) {
-    maze[p.row][p.col + 1] &= static_cast<Maze::Square>( ~Maze::west_wall_ );
+    maze[p.row][p.col + 1] &= static_cast<Maze::Square>( ~Maze::west_wall );
   }
-  maze[p.row][p.col] |= Maze::path_bit_;
+  maze[p.row][p.col] |= Maze::path_bit;
 }
 
 void build_path_animated( Maze& maze, const Maze::Point& p, Speed::Speed_unit speed )
 {
-  maze[p.row][p.col] |= Maze::path_bit_;
+  maze[p.row][p.col] |= Maze::path_bit;
   flush_cursor_maze_coordinate( maze, p );
   std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
-  if ( p.row - 1 >= 0 && !( maze[p.row - 1][p.col] & Maze::path_bit_ ) ) {
-    maze[p.row - 1][p.col] &= static_cast<Maze::Square>( ~Maze::south_wall_ );
+  if ( p.row - 1 >= 0 && !( maze[p.row - 1][p.col] & Maze::path_bit ) ) {
+    maze[p.row - 1][p.col] &= static_cast<Maze::Square>( ~Maze::south_wall );
     flush_cursor_maze_coordinate( maze, { p.row - 1, p.col } );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   }
-  if ( p.row + 1 < maze.row_size() && !( maze[p.row + 1][p.col] & Maze::path_bit_ ) ) {
-    maze[p.row + 1][p.col] &= static_cast<Maze::Square>( ~Maze::north_wall_ );
+  if ( p.row + 1 < maze.row_size() && !( maze[p.row + 1][p.col] & Maze::path_bit ) ) {
+    maze[p.row + 1][p.col] &= static_cast<Maze::Square>( ~Maze::north_wall );
     flush_cursor_maze_coordinate( maze, { p.row + 1, p.col } );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   }
-  if ( p.col - 1 >= 0 && !( maze[p.row][p.col - 1] & Maze::path_bit_ ) ) {
-    maze[p.row][p.col - 1] &= static_cast<Maze::Square>( ~Maze::east_wall_ );
+  if ( p.col - 1 >= 0 && !( maze[p.row][p.col - 1] & Maze::path_bit ) ) {
+    maze[p.row][p.col - 1] &= static_cast<Maze::Square>( ~Maze::east_wall );
     flush_cursor_maze_coordinate( maze, { p.row, p.col - 1 } );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   }
-  if ( p.col + 1 < maze.col_size() && !( maze[p.row][p.col + 1] & Maze::path_bit_ ) ) {
-    maze[p.row][p.col + 1] &= static_cast<Maze::Square>( ~Maze::west_wall_ );
+  if ( p.col + 1 < maze.col_size() && !( maze[p.row][p.col + 1] & Maze::path_bit ) ) {
+    maze[p.row][p.col + 1] &= static_cast<Maze::Square>( ~Maze::west_wall );
     flush_cursor_maze_coordinate( maze, { p.row, p.col + 1 } );
     std::this_thread::sleep_for( std::chrono::microseconds( speed ) );
   }
@@ -539,9 +539,9 @@ void flush_cursor_maze_coordinate( const Maze& maze, const Maze::Point& p )
 void print_maze_square( const Maze& maze, const Maze::Point& p )
 {
   const Maze::Square& square = maze[p.row][p.col];
-  if ( !( square & Maze::path_bit_ ) ) {
-    std::cout << maze.wall_style()[square & Maze::wall_mask_];
-  } else if ( square & Maze::path_bit_ ) {
+  if ( !( square & Maze::path_bit ) ) {
+    std::cout << maze.wall_style()[square & Maze::wall_mask];
+  } else if ( square & Maze::path_bit ) {
     std::cout << " ";
   } else {
     std::cerr << "Printed maze and a square was not categorized.\n";
@@ -552,13 +552,13 @@ void print_maze_square( const Maze& maze, const Maze::Point& p )
 void print_square( const Maze& maze, const Maze::Point& p )
 {
   const Maze::Square& square = maze[p.row][p.col];
-  if ( square & Maze::markers_mask_ ) {
+  if ( square & Maze::markers_mask ) {
     const Maze::Backtrack_marker mark
-      = static_cast<Maze::Backtrack_marker>( square & Maze::markers_mask_ ) >> Maze::marker_shift_;
-    std::cout << Maze::backtracking_symbols_.at( mark );
-  } else if ( !( square & Maze::path_bit_ ) ) {
-    std::cout << maze.wall_style()[square & Maze::wall_mask_];
-  } else if ( square & Maze::path_bit_ ) {
+      = static_cast<Maze::Backtrack_marker>( square & Maze::markers_mask ) >> Maze::marker_shift;
+    std::cout << Maze::backtracking_symbols.at( mark );
+  } else if ( !( square & Maze::path_bit ) ) {
+    std::cout << maze.wall_style()[square & Maze::wall_mask];
+  } else if ( square & Maze::path_bit ) {
     std::cout << " ";
   } else {
     std::cerr << "Printed maze and a square was not categorized.\n";

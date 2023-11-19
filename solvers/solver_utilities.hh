@@ -64,79 +64,79 @@ void print_overlap_key();
 
 /* * * * * * * * * * * * *     Helpful Read-Only Data Available to All Solvers   * * * * * * * * * * * * * * * * */
 
-constexpr int num_threads_ = 4;
-constexpr Thread_bit start_bit_ = 0b0100'0000'0000'0000;
-constexpr Thread_bit finish_bit_ = 0b1000'0000'0000'0000;
-constexpr Thread_bit zero_bit_ = 0b0001;
-constexpr Thread_bit one_bit_ = 0b0010;
-constexpr Thread_bit two_bit_ = 0b0100;
-constexpr Thread_bit three_bit_ = 0b1000;
-constexpr std::array<Thread_bit, 4> thread_bits_ = { zero_bit_, one_bit_, two_bit_, three_bit_ };
-constexpr int initial_path_len_ = 1024;
+constexpr int num_threads = 4;
+constexpr Thread_bit start_bit = 0b0100'0000'0000'0000;
+constexpr Thread_bit finish_bit = 0b1000'0000'0000'0000;
+constexpr Thread_bit zero_bit = 0b0001;
+constexpr Thread_bit one_bit = 0b0010;
+constexpr Thread_bit two_bit = 0b0100;
+constexpr Thread_bit three_bit = 0b1000;
+constexpr std::array<Thread_bit, 4> thread_bits = { zero_bit, one_bit, two_bit, three_bit };
+constexpr int initial_path_len = 1024;
 
-constexpr Thread_paint thread_paint_shift_ = 4;
-constexpr Thread_paint thread_paint_mask_ = 0b1111'0000;
-constexpr int num_gather_finishes_ = 4;
+constexpr Thread_paint thread_paint_shift = 4;
+constexpr Thread_paint thread_paint_mask = 0b1111'0000;
+constexpr int num_gather_finishes = 4;
 
-constexpr Thread_cache clear_cache_ = 0b0001'1111'1111'0000;
-constexpr Thread_cache cache_mask_ = 0b1111'0000'0000;
-constexpr Thread_cache zero_seen_ = 0b0001'0000'0000;
-constexpr Thread_cache one_seen_ = 0b0010'0000'0000;
-constexpr Thread_cache two_seen_ = 0b0100'0000'0000;
-constexpr Thread_cache three_seen_ = 0b1000'0000'0000;
-constexpr Thread_paint thread_cache_shift_ = 8;
+constexpr Thread_cache clear_cache = 0b0001'1111'1111'0000;
+constexpr Thread_cache cache_mask = 0b1111'0000'0000;
+constexpr Thread_cache zero_seen = 0b0001'0000'0000;
+constexpr Thread_cache one_seen = 0b0010'0000'0000;
+constexpr Thread_cache two_seen = 0b0100'0000'0000;
+constexpr Thread_cache three_seen = 0b1000'0000'0000;
+constexpr Thread_paint thread_cache_shift = 8;
 
-constexpr std::string_view ansi_red_ = "\033[38;5;1m█\033[0m";
-constexpr std::string_view ansi_grn_ = "\033[38;5;2m█\033[0m";
-constexpr std::string_view ansi_yel_ = "\033[38;5;3m█\033[0m";
-constexpr std::string_view ansi_blu_ = "\033[38;5;4m█\033[0m";
-constexpr std::string_view ansi_prp_ = "\033[38;5;183m█\033[0m";
-constexpr std::string_view ansi_mag_ = "\033[38;5;201m█\033[0m";
-constexpr std::string_view ansi_cyn_ = "\033[38;5;87m█\033[0m";
-constexpr std::string_view ansi_wit_ = "\033[38;5;231m█\033[0m";
-constexpr std::string_view ansi_prp_red_ = "\033[38;5;204m█\033[0m";
-constexpr std::string_view ansi_blu_mag_ = "\033[38;5;105m█\033[0m";
-constexpr std::string_view ansi_red_grn_blu_ = "\033[38;5;121m█\033[0m";
-constexpr std::string_view ansi_grn_prp_ = "\033[38;5;106m█\033[0m";
-constexpr std::string_view ansi_grn_blu_prp_ = "\033[38;5;60m█\033[0m";
-constexpr std::string_view ansi_red_grn_prp_ = "\033[38;5;105m█\033[0m";
-constexpr std::string_view ansi_red_blu_prp_ = "\033[38;5;89m█\033[0m";
-constexpr std::string_view ansi_dark_blu_mag_ = "\033[38;5;57m█\033[0m";
-constexpr std::string_view ansi_bold_ = "\033[1m";
-constexpr std::string_view ansi_nil_ = "\033[0m";
-constexpr std::string_view ansi_no_solution_ = "\033[38;5;15m\033[48;255;0;0m╳ no thread won..\033[0m";
-constexpr std::string_view ansi_finish_ = "\033[1m\033[38;5;87mF\033[0m";
-constexpr std::string_view ansi_start_ = "\033[1m\033[38;5;87mS\033[0m";
-constexpr Thread_paint all_threads_failed_index_ = 0;
-constexpr std::array<std::string_view, 16> thread_colors_ = {
-  ansi_no_solution_,
+constexpr std::string_view ansi_red = "\033[38;5;1m█\033[0m";
+constexpr std::string_view ansi_grn = "\033[38;5;2m█\033[0m";
+constexpr std::string_view ansi_yel = "\033[38;5;3m█\033[0m";
+constexpr std::string_view ansi_blu = "\033[38;5;4m█\033[0m";
+constexpr std::string_view ansi_prp = "\033[38;5;183m█\033[0m";
+constexpr std::string_view ansi_mag = "\033[38;5;201m█\033[0m";
+constexpr std::string_view ansi_cyn = "\033[38;5;87m█\033[0m";
+constexpr std::string_view ansi_wit = "\033[38;5;231m█\033[0m";
+constexpr std::string_view ansi_prp_red = "\033[38;5;204m█\033[0m";
+constexpr std::string_view ansi_blu_mag = "\033[38;5;105m█\033[0m";
+constexpr std::string_view ansi_red_grn_blu = "\033[38;5;121m█\033[0m";
+constexpr std::string_view ansi_grn_prp = "\033[38;5;106m█\033[0m";
+constexpr std::string_view ansi_grn_blu_prp = "\033[38;5;60m█\033[0m";
+constexpr std::string_view ansi_red_grn_prp = "\033[38;5;105m█\033[0m";
+constexpr std::string_view ansi_red_blu_prp = "\033[38;5;89m█\033[0m";
+constexpr std::string_view ansi_dark_blu_mag = "\033[38;5;57m█\033[0m";
+constexpr std::string_view ansi_bold = "\033[1m";
+constexpr std::string_view ansi_nil = "\033[0m";
+constexpr std::string_view ansi_no_solution = "\033[38;5;15m\033[48;255;0;0m╳ no thread won..\033[0m";
+constexpr std::string_view ansi_finish = "\033[1m\033[38;5;87mF\033[0m";
+constexpr std::string_view ansi_start = "\033[1m\033[38;5;87mS\033[0m";
+constexpr Thread_paint all_threads_failed_index = 0;
+constexpr std::array<std::string_view, 16> thread_colors = {
+  ansi_no_solution,
   // Threads Overlaps. The zero thread is the zero index bit with a value of 1.
   // 0b0001   0b0010     0b0011     0b0100     0b0101     0b0110        0b0111
-  ansi_red_,
-  ansi_grn_,
-  ansi_yel_,
-  ansi_blu_,
-  ansi_mag_,
-  ansi_cyn_,
-  ansi_red_grn_blu_,
+  ansi_red,
+  ansi_grn,
+  ansi_yel,
+  ansi_blu,
+  ansi_mag,
+  ansi_cyn,
+  ansi_red_grn_blu,
   // 0b1000    0b1001          0b1010           0b1011            0b1100
-  ansi_prp_,
-  ansi_prp_red_,
-  ansi_grn_prp_,
-  ansi_red_grn_prp_,
-  ansi_dark_blu_mag_,
+  ansi_prp,
+  ansi_prp_red,
+  ansi_grn_prp,
+  ansi_red_grn_prp,
+  ansi_dark_blu_mag,
   // 0b1101              0b1110          0b1111
-  ansi_red_blu_prp_,
-  ansi_grn_blu_prp_,
-  ansi_wit_,
+  ansi_red_blu_prp,
+  ansi_grn_blu_prp,
+  ansi_wit,
 };
 // north, east, south, west
-constexpr std::array<Builder::Maze::Point, 4> dirs_ = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
+constexpr std::array<Builder::Maze::Point, 4> dirs = { { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
 // north, north-east, east, south-east, south, south-west, west, north-west
-constexpr std::array<Builder::Maze::Point, 7> all_dirs_
+constexpr std::array<Builder::Maze::Point, 7> all_dirs
   = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };
 constexpr int overlap_key_and_message_height = 9;
-constexpr std::array<Speed::Speed_unit, 8> solver_speeds_ = { 0, 20000, 10000, 5000, 2000, 1000, 500, 250 };
+constexpr std::array<Speed::Speed_unit, 8> solver_speeds = { 0, 20000, 10000, 5000, 2000, 1000, 500, 250 };
 
 } // namespace Solver
 

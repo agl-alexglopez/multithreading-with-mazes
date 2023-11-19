@@ -16,7 +16,7 @@ void add_x( Maze& maze )
 
 void add_x_animated( Maze& maze, Speed::Speed speed )
 {
-  const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed::Speed_unit animation = builder_speeds.at( static_cast<int>( speed ) );
   for ( int row = 1; row < maze.row_size() - 1; row++ ) {
     for ( int col = 1; col < maze.col_size() - 1; col++ ) {
       add_positive_slope_animated( maze, { row, col }, animation );
@@ -42,7 +42,7 @@ void add_cross( Maze& maze )
 
 void add_cross_animated( Maze& maze, Speed::Speed speed )
 {
-  const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed::Speed_unit animation = builder_speeds.at( static_cast<int>( speed ) );
   for ( int row = 1; row < maze.row_size() - 1; row++ ) {
     for ( int col = 1; col < maze.col_size() - 1; col++ ) {
       if ( ( row == maze.row_size() / 2 && col > 1 && col < maze.col_size() - 2 )

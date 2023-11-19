@@ -64,14 +64,14 @@ void generate_grid( Maze& maze )
   std::uniform_int_distribution col_random( 1, maze.col_size() - 2 );
   std::stack<Maze::Point> dfs(
     { { 2 * ( row_random( generator ) / 2 ) + 1, 2 * ( col_random( generator ) / 2 ) + 1 } } );
-  std::vector<int> random_direction_indices( Maze::build_dirs_.size() );
+  std::vector<int> random_direction_indices( Maze::build_dirs.size() );
   std::iota( begin( random_direction_indices ), end( random_direction_indices ), 0 );
   while ( !dfs.empty() ) {
     const Maze::Point cur = dfs.top();
     std::shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator );
     bool branches_remain = false;
     for ( const int& i : random_direction_indices ) {
-      const Maze::Point& direction = Maze::build_dirs_.at( i );
+      const Maze::Point& direction = Maze::build_dirs.at( i );
       const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
       if ( can_build_new_square( maze, next ) ) {
         complete_run( maze, dfs, { cur, direction } );
@@ -88,7 +88,7 @@ void generate_grid( Maze& maze )
 
 void animate_grid( Maze& maze, Speed::Speed speed )
 {
-  const Speed::Speed_unit animation = builder_speeds_.at( static_cast<int>( speed ) );
+  const Speed::Speed_unit animation = builder_speeds.at( static_cast<int>( speed ) );
   fill_maze_with_walls_animated( maze );
   clear_and_flush_grid( maze );
   std::mt19937 generator( std::random_device {}() );
@@ -96,14 +96,14 @@ void animate_grid( Maze& maze, Speed::Speed speed )
   std::uniform_int_distribution col_random( 1, maze.col_size() - 2 );
   std::stack<Maze::Point> dfs(
     { { 2 * ( row_random( generator ) / 2 ) + 1, 2 * ( col_random( generator ) / 2 ) + 1 } } );
-  std::vector<int> random_direction_indices( Maze::build_dirs_.size() );
+  std::vector<int> random_direction_indices( Maze::build_dirs.size() );
   std::iota( begin( random_direction_indices ), end( random_direction_indices ), 0 );
   while ( !dfs.empty() ) {
     const Maze::Point cur = dfs.top();
     shuffle( begin( random_direction_indices ), end( random_direction_indices ), generator );
     bool branches_remain = false;
     for ( const int& i : random_direction_indices ) {
-      const Maze::Point& direction = Maze::build_dirs_.at( i );
+      const Maze::Point& direction = Maze::build_dirs.at( i );
       const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
       if ( can_build_new_square( maze, next ) ) {
         animate_run( maze, dfs, { cur, direction }, animation );
