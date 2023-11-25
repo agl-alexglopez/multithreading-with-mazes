@@ -38,7 +38,7 @@ format:
 	$(MAKE) --no-print-directory -C build/ format
 
 tidy:
-	$(MAKE) --no-print-directory -C build/ tidy
+	$(MAKE) --no-print-directory -C build/ tidy $(JOBS)
 
 clean:
 	rm -rf build/
