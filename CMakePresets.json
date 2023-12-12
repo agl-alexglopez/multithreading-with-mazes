@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 5,
   "cmakeMinimumRequired": {
     "major": 3,
     "minor": 24,
@@ -10,7 +10,7 @@
       "name": "gcc-debug",
       "displayName": "GCC",
       "description": "Default build options for GCC",
-      "generator": "Unix Makefiles",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
@@ -26,7 +26,7 @@
       "name": "gcc-release",
       "displayName": "GCC",
       "description": "Default build options for GCC",
-      "generator": "Unix Makefiles",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
@@ -74,7 +74,7 @@
       "name": "arm-debug",
       "displayName": "ARM-Debug",
       "description": "Default build options for Clang",
-      "generator": "Unix Makefiles",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
@@ -92,7 +92,7 @@
       "name": "arm-release",
       "displayName": "ARM-Release",
       "description": "Default build options for Clang",
-      "generator": "Unix Makefiles",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
