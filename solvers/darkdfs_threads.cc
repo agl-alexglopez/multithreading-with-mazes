@@ -41,7 +41,7 @@ struct Solver_monitor
   }
 };
 
-void animate_hunt( Maze::Maze& maze, Solver_monitor& monitor, Thread_light id )
+void animate_hunter( Maze::Maze& maze, Solver_monitor& monitor, Thread_light id )
 {
   const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
   const Sutil::Thread_paint paint = id.bit << Sutil::thread_paint_shift;
@@ -99,7 +99,7 @@ void animate_hunt( Maze::Maze& maze, Solver_monitor& monitor, Thread_light id )
   }
 }
 
-void animate_gather( Maze::Maze& maze, Solver_monitor& monitor, Thread_light id )
+void animate_gatherer( Maze::Maze& maze, Solver_monitor& monitor, Thread_light id )
 {
   const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
   const Sutil::Thread_paint paint = id.bit << Sutil::thread_paint_shift;
@@ -151,7 +151,7 @@ void animate_gather( Maze::Maze& maze, Solver_monitor& monitor, Thread_light id 
 
 export namespace Dark_dfs {
 
-void animate_darkdfs_thread_hunt( Maze::Maze& maze, Speed::Speed speed )
+void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
@@ -167,7 +167,7 @@ void animate_darkdfs_thread_hunt( Maze::Maze& maze, Speed::Speed speed )
   std::array<std::thread, Sutil::num_threads> threads;
   for ( int i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
     const Thread_light this_thread { i_thread, Sutil::thread_bits.at( i_thread ) };
-    threads.at( i_thread ) = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads.at( i_thread ) = std::thread( animate_hunter, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -178,7 +178,7 @@ void animate_darkdfs_thread_hunt( Maze::Maze& maze, Speed::Speed speed )
   std::cout << "\n";
 }
 
-void animate_darkdfs_thread_gather( Maze::Maze& maze, Speed::Speed speed )
+void animate_gather( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
@@ -195,7 +195,7 @@ void animate_darkdfs_thread_gather( Maze::Maze& maze, Speed::Speed speed )
   std::vector<std::thread> threads( Sutil::num_threads );
   for ( int i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
     const Thread_light this_thread { i_thread, Sutil::thread_bits.at( i_thread ) };
-    threads.at( i_thread ) = std::thread( animate_gather, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads.at( i_thread ) = std::thread( animate_gatherer, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -206,7 +206,7 @@ void animate_darkdfs_thread_gather( Maze::Maze& maze, Speed::Speed speed )
   std::cout << "\n";
 }
 
-void animate_darkdfs_thread_corners( Maze::Maze& maze, Speed::Speed speed )
+void animate_corners( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
@@ -230,7 +230,7 @@ void animate_darkdfs_thread_corners( Maze::Maze& maze, Speed::Speed speed )
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
   for ( int i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
     const Thread_light this_thread = { i_thread, Sutil::thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads[i_thread] = std::thread( animate_hunter, std::ref( maze ), std::ref( monitor ), this_thread );
   }
   for ( std::thread& t : threads ) {
     t.join();

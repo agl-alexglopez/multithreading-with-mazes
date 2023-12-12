@@ -42,7 +42,7 @@ struct Solver_monitor
   }
 };
 
-void animate_hunt( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
+void animate_hunter( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
 {
   const Sutil::Thread_paint paint_bit = id.bit << Sutil::thread_paint_shift;
   // This will be how we rebuild the path because queue does not represent the current path.
@@ -98,7 +98,7 @@ void animate_hunt( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id i
   }
 }
 
-void animate_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
+void animate_gatherer( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
 {
   std::unordered_map<Maze::Point, Maze::Point>& seen = monitor.thread_maps[id.index];
   const Sutil::Thread_cache seen_bit = id.bit << Sutil::thread_cache_shift;
@@ -151,7 +151,7 @@ void animate_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id
 
 export namespace Dark_bfs {
 
-void animate_darkbfs_thread_hunt( Maze::Maze& maze, Speed::Speed speed )
+void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
@@ -166,7 +166,7 @@ void animate_darkbfs_thread_hunt( Maze::Maze& maze, Speed::Speed speed )
   std::vector<std::thread> threads( Sutil::num_threads );
   for ( int i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
     const Sutil::Thread_id this_thread { i_thread, Sutil::thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads[i_thread] = std::thread( animate_hunter, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -190,7 +190,7 @@ void animate_darkbfs_thread_hunt( Maze::Maze& maze, Speed::Speed speed )
   std::cout << "\n";
 }
 
-void animate_darkbfs_thread_gather( Maze::Maze& maze, Speed::Speed speed )
+void animate_gather( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
@@ -207,7 +207,7 @@ void animate_darkbfs_thread_gather( Maze::Maze& maze, Speed::Speed speed )
   std::vector<std::thread> threads( Sutil::num_threads );
   for ( int i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
     const Sutil::Thread_id this_thread { i_thread, Sutil::thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( animate_gather, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads[i_thread] = std::thread( animate_gatherer, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -229,7 +229,7 @@ void animate_darkbfs_thread_gather( Maze::Maze& maze, Speed::Speed speed )
   std::cout << "\n";
 }
 
-void animate_darkbfs_thread_corners( Maze::Maze& maze, Speed::Speed speed )
+void animate_corners( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
@@ -253,7 +253,7 @@ void animate_darkbfs_thread_corners( Maze::Maze& maze, Speed::Speed speed )
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
   for ( int i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
     const Sutil::Thread_id this_thread = { i_thread, Sutil::thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads[i_thread] = std::thread( animate_hunter, std::ref( maze ), std::ref( monitor ), this_thread );
   }
   for ( std::thread& t : threads ) {
     t.join();

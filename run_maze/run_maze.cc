@@ -42,7 +42,7 @@ struct Maze_runner
 
   int solver_view { static_image };
   Speed::Speed solver_speed {};
-  Solve_function solver { Dfs::dfs_thread_hunt, Dfs::animate_dfs_thread_hunt };
+  Solve_function solver { Dfs::hunt, Dfs::animate_hunt };
   Maze_runner() : args {} {}
 };
 
@@ -85,30 +85,30 @@ int main( int argc, char** argv )
       { "x", { Mods::add_x, Mods::add_x_animated } },
     },
     {
-      { "dfs-hunt", { Dfs::dfs_thread_hunt, Dfs::animate_dfs_thread_hunt } },
-      { "dfs-gather", { Dfs::dfs_thread_gather, Dfs::animate_dfs_thread_gather } },
-      { "dfs-corners", { Dfs::dfs_thread_corners, Dfs::animate_dfs_thread_corners } },
-      { "floodfs-hunt", { Floodfs::floodfs_thread_hunt, Floodfs::animate_floodfs_thread_hunt } },
-      { "floodfs-gather", { Floodfs::floodfs_thread_gather, Floodfs::animate_floodfs_thread_gather } },
-      { "floodfs-corners", { Floodfs::floodfs_thread_corners, Floodfs::animate_floodfs_thread_corners } },
-      { "rdfs-hunt", { Rdfs::randomized_dfs_thread_hunt, Rdfs::animate_randomized_dfs_thread_hunt } },
-      { "rdfs-gather", { Rdfs::randomized_dfs_thread_gather, Rdfs::animate_randomized_dfs_thread_gather } },
-      { "rdfs-corners", { Rdfs::randomized_dfs_thread_corners, Rdfs::animate_randomized_dfs_thread_corners } },
-      { "bfs-hunt", { Bfs::bfs_thread_hunt, Bfs::animate_bfs_thread_hunt } },
-      { "bfs-gather", { Bfs::bfs_thread_gather, Bfs::animate_bfs_thread_gather } },
-      { "bfs-corners", { Bfs::bfs_thread_corners, Bfs::animate_bfs_thread_corners } },
-      { "darkdfs-hunt", { Dfs::dfs_thread_hunt, Dark_dfs::animate_darkdfs_thread_hunt } },
-      { "darkdfs-gather", { Dfs::dfs_thread_gather, Dark_dfs::animate_darkdfs_thread_gather } },
-      { "darkdfs-corners", { Dfs::dfs_thread_gather, Dark_dfs::animate_darkdfs_thread_corners } },
-      { "darkbfs-hunt", { Bfs::bfs_thread_hunt, Dark_bfs::animate_darkbfs_thread_hunt } },
-      { "darkbfs-gather", { Bfs::bfs_thread_gather, Dark_bfs::animate_darkbfs_thread_gather } },
-      { "darkbfs-corners", { Bfs::bfs_thread_gather, Dark_bfs::animate_darkbfs_thread_corners } },
-      { "darkfloodfs-hunt", { Dfs::dfs_thread_hunt, Dark_floodfs::animate_darkfloodfs_thread_hunt } },
-      { "darkfloodfs-gather", { Dfs::dfs_thread_gather, Dark_floodfs::animate_darkfloodfs_thread_gather } },
-      { "darkfloodfs-corners", { Dfs::dfs_thread_gather, Dark_floodfs::animate_darkfloodfs_thread_corners } },
-      { "darkrdfs-hunt", { Dfs::dfs_thread_hunt, Dark_rdfs::animate_darkrandomized_dfs_thread_hunt } },
-      { "darkrdfs-gather", { Dfs::dfs_thread_gather, Dark_rdfs::animate_darkrandomized_dfs_thread_gather } },
-      { "darkrdfs-corners", { Dfs::dfs_thread_gather, Dark_rdfs::animate_darkrandomized_dfs_thread_corners } },
+      { "dfs-hunt", { Dfs::hunt, Dfs::animate_hunt } },
+      { "dfs-gather", { Dfs::gather, Dfs::animate_gather } },
+      { "dfs-corners", { Dfs::corners, Dfs::animate_corners } },
+      { "floodfs-hunt", { Floodfs::hunt, Floodfs::animate_hunt } },
+      { "floodfs-gather", { Floodfs::gather, Floodfs::animate_gather } },
+      { "floodfs-corners", { Floodfs::corners, Floodfs::animate_corners } },
+      { "rdfs-hunt", { Rdfs::hunt, Rdfs::animate_hunt } },
+      { "rdfs-gather", { Rdfs::gather, Rdfs::animate_gather } },
+      { "rdfs-corners", { Rdfs::corners, Rdfs::animate_corners } },
+      { "bfs-hunt", { Bfs::hunt, Bfs::animate_hunt } },
+      { "bfs-gather", { Bfs::gather, Bfs::animate_gather } },
+      { "bfs-corners", { Bfs::corners, Bfs::animate_corners } },
+      { "darkdfs-hunt", { Dfs::hunt, Dark_dfs::animate_hunt } },
+      { "darkdfs-gather", { Dfs::gather, Dark_dfs::animate_gather } },
+      { "darkdfs-corners", { Dfs::gather, Dark_dfs::animate_corners } },
+      { "darkbfs-hunt", { Bfs::hunt, Dark_bfs::animate_hunt } },
+      { "darkbfs-gather", { Bfs::gather, Dark_bfs::animate_gather } },
+      { "darkbfs-corners", { Bfs::gather, Dark_bfs::animate_corners } },
+      { "darkfloodfs-hunt", { Dfs::hunt, Dark_floodfs::animate_hunt } },
+      { "darkfloodfs-gather", { Dfs::gather, Dark_floodfs::animate_gather } },
+      { "darkfloodfs-corners", { Dfs::gather, Dark_floodfs::animate_corners } },
+      { "darkrdfs-hunt", { Dfs::hunt, Dark_rdfs::animate_hunt } },
+      { "darkrdfs-gather", { Dfs::gather, Dark_rdfs::animate_gather } },
+      { "darkrdfs-corners", { Dfs::gather, Dark_rdfs::animate_corners } },
     },
     {
       { "sharp", Maze::Maze_style::sharp },

@@ -35,7 +35,7 @@ struct Solver_monitor
   }
 };
 
-void complete_hunt( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
+void hunter( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
 {
   /* We have useful bits in a square. Each square can use a unique bit to track seen threads.
    * Each thread could maintain its own hashset, but this is much more space efficient. Use
@@ -91,7 +91,7 @@ void complete_hunt( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id 
   }
 }
 
-void animate_hunt( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
+void animate_hunter( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
 {
   const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
   const Sutil::Thread_paint paint_bit = id.bit << Sutil::thread_paint_shift;
@@ -143,7 +143,7 @@ void animate_hunt( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id i
   }
 }
 
-void complete_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
+void gatherer( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
 {
   const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
   const Sutil::Thread_paint paint_bit = id.bit << Sutil::thread_paint_shift;
@@ -189,7 +189,7 @@ void complete_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_i
   }
 }
 
-void animate_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
+void animate_gatherer( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
 {
   const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
   const Sutil::Thread_paint paint_bit = id.bit << Sutil::thread_paint_shift;
@@ -239,7 +239,7 @@ void animate_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id
 
 export namespace Floodfs {
 
-void floodfs_thread_hunt( Maze::Maze& maze )
+void hunt( Maze::Maze& maze )
 {
   Solver_monitor monitor;
   monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
@@ -249,7 +249,7 @@ void floodfs_thread_hunt( Maze::Maze& maze )
   std::vector<std::thread> threads( Sutil::num_threads );
   for ( int i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
     const Sutil::Thread_id this_thread { i_thread, Sutil::thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( complete_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads[i_thread] = std::thread( hunter, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -270,7 +270,7 @@ void floodfs_thread_hunt( Maze::Maze& maze )
   std::cout << "\n";
 }
 
-void floodfs_thread_gather( Maze::Maze& maze )
+void gather( Maze::Maze& maze )
 {
   Solver_monitor monitor;
   monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
@@ -282,7 +282,7 @@ void floodfs_thread_gather( Maze::Maze& maze )
   std::vector<std::thread> threads( Sutil::num_threads );
   for ( int i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
     const Sutil::Thread_id this_thread { i_thread, Sutil::thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( complete_gather, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads[i_thread] = std::thread( gatherer, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -302,7 +302,7 @@ void floodfs_thread_gather( Maze::Maze& maze )
   std::cout << "\n";
 }
 
-void floodfs_thread_corners( Maze::Maze& maze )
+void corners( Maze::Maze& maze )
 {
   Solver_monitor monitor;
   monitor.starts = Sutil::set_corner_starts( maze );
@@ -322,7 +322,7 @@ void floodfs_thread_corners( Maze::Maze& maze )
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
   for ( int i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
     const Sutil::Thread_id this_thread = { i_thread, Sutil::thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( complete_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads[i_thread] = std::thread( hunter, std::ref( maze ), std::ref( monitor ), this_thread );
   }
   for ( std::thread& t : threads ) {
     t.join();
@@ -341,7 +341,7 @@ void floodfs_thread_corners( Maze::Maze& maze )
   std::cout << "\n";
 }
 
-void animate_floodfs_thread_hunt( Maze::Maze& maze, Speed::Speed speed )
+void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
@@ -357,7 +357,7 @@ void animate_floodfs_thread_hunt( Maze::Maze& maze, Speed::Speed speed )
   std::vector<std::thread> threads( Sutil::num_threads );
   for ( int i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
     const Sutil::Thread_id this_thread { i_thread, Sutil::thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads[i_thread] = std::thread( animate_hunter, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -377,7 +377,7 @@ void animate_floodfs_thread_hunt( Maze::Maze& maze, Speed::Speed speed )
   std::cout << "\n";
 }
 
-void animate_floodfs_thread_gather( Maze::Maze& maze, Speed::Speed speed )
+void animate_gather( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
@@ -395,7 +395,7 @@ void animate_floodfs_thread_gather( Maze::Maze& maze, Speed::Speed speed )
   std::vector<std::thread> threads( Sutil::num_threads );
   for ( int i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
     const Sutil::Thread_id this_thread { i_thread, Sutil::thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( animate_gather, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads[i_thread] = std::thread( animate_gatherer, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -417,7 +417,7 @@ void animate_floodfs_thread_gather( Maze::Maze& maze, Speed::Speed speed )
   std::cout << "\n";
 }
 
-void animate_floodfs_thread_corners( Maze::Maze& maze, Speed::Speed speed )
+void animate_corners( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
@@ -446,7 +446,7 @@ void animate_floodfs_thread_corners( Maze::Maze& maze, Speed::Speed speed )
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
   for ( int i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
     const Sutil::Thread_id this_thread = { i_thread, Sutil::thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+    threads[i_thread] = std::thread( animate_hunter, std::ref( maze ), std::ref( monitor ), this_thread );
   }
   for ( std::thread& t : threads ) {
     t.join();
