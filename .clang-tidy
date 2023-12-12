@@ -16,7 +16,8 @@ Checks: >
    -fuchsia-default-arguments-declarations,
    -fuchsia-overloaded-operator,
    -android-cloexec-accept,
-   -misc-include-cleaner
+   -misc-include-cleaner,
+   -*redundant-declaration
 
 WarningsAsErrors:
    '*'
