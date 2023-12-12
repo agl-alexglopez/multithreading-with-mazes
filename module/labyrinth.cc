@@ -21,6 +21,5 @@ export import :dark_floodfs;
 export import :dark_dfs;
 export import :dark_bfs;
 export import :dark_rdfs;
-export import :rgb;
 export import :distance;
 export import :runs;

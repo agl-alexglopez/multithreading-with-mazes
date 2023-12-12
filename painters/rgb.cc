@@ -6,13 +6,13 @@ module;
 #include <string_view>
 #include <unordered_set>
 #include <vector>
-export module labyrinth:rgb;
+module labyrinth:rgb;
 import :maze;
 import :speed;
 import :my_queue;
 import :printers;
 
-export namespace Rgb {
+namespace Rgb {
 
 using Speed_unit = int32_t;
 using Rgb = std::array<uint16_t, 3>;

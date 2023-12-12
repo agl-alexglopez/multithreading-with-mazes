@@ -17,6 +17,15 @@ import :rgb;
 import :my_queue;
 import :printers;
 
+/////////////////////////////////////   Exported Interface   /////////////////////////////////////
+
+export namespace Runs {
+void paint_runs( Maze::Maze& maze );
+void animate_runs( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Runs
+
+/////////////////////////////////////     Implementation     /////////////////////////////////////
+
 namespace {
 
 struct Run_map
@@ -103,7 +112,7 @@ void painter_animated( Maze::Maze& maze, const Run_map& map, Rgb::Bfs_monitor& m
 
 } // namespace
 
-export namespace Runs {
+namespace Runs {
 
 void paint_runs( Maze::Maze& maze )
 {

@@ -16,6 +16,15 @@ import :rgb;
 import :my_queue;
 import :printers;
 
+/////////////////////////////////////   Exported Interface   /////////////////////////////////////
+
+export namespace Distance {
+void paint_distance_from_center( Maze::Maze& maze );
+void animate_distance_from_center( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Distance
+
+/////////////////////////////////////     Implementation     /////////////////////////////////////
+
 namespace {
 
 struct Distance_map
@@ -104,7 +113,7 @@ void painter_animated( Maze::Maze& maze,
 
 } // namespace
 
-export namespace Distance {
+namespace Distance {
 
 void paint_distance_from_center( Maze::Maze& maze )
 {
