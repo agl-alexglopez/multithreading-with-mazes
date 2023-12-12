@@ -88,6 +88,7 @@ void complete_final_row_animated( Maze::Maze& maze, Sliding_set_window& window, 
 } // namespace
 
 export namespace Eller {
+
 /* There are two fun details about this implementation: the auxillary memory requirement is a constant determined
  * by the width of a row and the randomness is thorough when determining how many squares per set should drop below.
  * The downside is the way I am doing it now is somewhat slow. I want to keep the memory footprint low and a good

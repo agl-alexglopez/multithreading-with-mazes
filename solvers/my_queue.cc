@@ -13,7 +13,7 @@ module;
 #include <vector>
 module labyrinth:my_queue;
 
-export template<class Value_type>
+template<class Value_type>
 class My_queue
 {
 

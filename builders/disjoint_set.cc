@@ -5,7 +5,7 @@ module;
 #include <vector>
 module labyrinth:disjoint_set;
 
-export class Disjoint_set
+class Disjoint_set
 {
 public:
   explicit Disjoint_set( const std::vector<uint64_t>& maze_square_ids );

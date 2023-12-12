@@ -8,7 +8,7 @@ import :maze;
 import :speed;
 import :printers;
 
-export namespace Butil {
+namespace Butil {
 
 enum class Parity_point
 {
