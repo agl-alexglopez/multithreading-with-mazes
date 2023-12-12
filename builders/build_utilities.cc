@@ -3,7 +3,7 @@ module;
 #include <cstdlib>
 #include <iostream>
 #include <thread>
-export module labyrinth:build_utilities;
+module labyrinth:build_utilities;
 import :maze;
 import :speed;
 import :printers;

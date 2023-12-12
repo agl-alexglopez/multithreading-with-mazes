@@ -11,7 +11,7 @@ module;
 #include <cstdlib>
 #include <iostream>
 #include <vector>
-export module labyrinth:my_queue;
+module labyrinth:my_queue;
 
 export template<class Value_type>
 class My_queue

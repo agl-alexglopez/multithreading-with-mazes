@@ -5,7 +5,7 @@ module;
 #include <optional>
 #include <random>
 #include <vector>
-export module labyrinth:solve_utilities;
+module labyrinth:solve_utilities;
 import :maze;
 import :speed;
 import :printers;

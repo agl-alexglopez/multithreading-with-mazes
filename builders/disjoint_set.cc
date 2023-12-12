@@ -3,7 +3,7 @@ module;
 #include <iterator>
 #include <numeric>
 #include <vector>
-export module labyrinth:disjoint_set;
+module labyrinth:disjoint_set;
 
 export class Disjoint_set
 {
