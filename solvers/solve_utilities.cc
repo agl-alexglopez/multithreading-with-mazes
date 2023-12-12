@@ -2,11 +2,14 @@ module;
 #include <array>
 #include <cstdlib>
 #include <iostream>
+#include <mutex>
 #include <optional>
 #include <random>
+#include <unordered_map>
 #include <vector>
 module labyrinth:solve_utilities;
 import :maze;
+import :my_queue;
 import :speed;
 import :printers;
 
@@ -125,6 +128,44 @@ constexpr std::array<Maze::Point, 7> all_dirs
   = { { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 } } };
 constexpr int overlap_key_and_message_height = 9;
 constexpr std::array<Speed::Speed_unit, 8> solver_speeds = { 0, 20000, 10000, 5000, 2000, 1000, 500, 250 };
+
+struct Dfs_monitor
+{
+  std::mutex monitor {};
+  std::optional<Speed::Speed_unit> speed {};
+  std::vector<Maze::Point> starts {};
+  std::optional<int> winning_index {};
+  std::vector<std::vector<Maze::Point>> thread_paths;
+  Dfs_monitor() : thread_paths { num_threads, std::vector<Maze::Point> {} }
+  {
+    for ( std::vector<Maze::Point>& path : thread_paths ) {
+      path.reserve( initial_path_len );
+    }
+  }
+};
+
+struct Bfs_monitor
+{
+  std::mutex monitor {};
+  std::optional<Speed::Speed_unit> speed {};
+  std::vector<std::unordered_map<Maze::Point, Maze::Point>> thread_maps;
+  std::vector<My_queue<Maze::Point>> thread_queues;
+  std::vector<Maze::Point> starts {};
+  std::optional<int> winning_index {};
+  std::vector<std::vector<Maze::Point>> thread_paths;
+  Bfs_monitor()
+    : thread_maps { num_threads }
+    , thread_queues { num_threads }
+    , thread_paths { num_threads, std::vector<Maze::Point> {} }
+  {
+    for ( std::vector<Maze::Point>& path : thread_paths ) {
+      path.reserve( initial_path_len );
+    }
+    for ( My_queue<Maze::Point>& q : thread_queues ) {
+      q.reserve( initial_path_len );
+    }
+  }
+};
 
 bool is_valid_start_or_finish( const Maze::Maze& maze, const Maze::Point& choice )
 {

@@ -20,22 +20,7 @@ import :my_queue;
 
 namespace {
 
-struct Solver_monitor
-{
-  std::mutex monitor {};
-  std::optional<Speed::Speed_unit> speed {};
-  std::vector<Maze::Point> starts {};
-  std::optional<int> winning_index {};
-  std::vector<std::vector<Maze::Point>> thread_paths;
-  Solver_monitor() : thread_paths { Sutil::num_threads, std::vector<Maze::Point> {} }
-  {
-    for ( std::vector<Maze::Point>& path : thread_paths ) {
-      path.reserve( Sutil::initial_path_len );
-    }
-  }
-};
-
-void hunter( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
+void hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thread_id id )
 {
   /* We have useful bits in a square. Each square can use a unique bit to track seen threads.
    * Each thread could maintain its own hashset, but this is much more space efficient. Use
@@ -96,7 +81,7 @@ void hunter( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
   monitor.monitor.unlock();
 }
 
-void animate_hunter( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
+void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thread_id id )
 {
   const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
   const Sutil::Thread_paint paint_bit = id.bit << Sutil::thread_paint_shift;
@@ -153,7 +138,7 @@ void animate_hunter( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id
   }
 }
 
-void gatherer( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
+void gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thread_id id )
 {
   const Sutil::Thread_paint seen = id.bit << Sutil::thread_cache_shift;
   const Sutil::Thread_paint paint_bit = id.bit << Sutil::thread_paint_shift;
@@ -198,7 +183,7 @@ void gatherer( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
   }
 }
 
-void animate_gatherer( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id id )
+void animate_gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thread_id id )
 {
   const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
   const Sutil::Thread_paint paint_bit = id.bit << Sutil::thread_paint_shift;
@@ -253,7 +238,7 @@ export namespace Dfs {
 
 void hunt( Maze::Maze& maze )
 {
-  Solver_monitor monitor;
+  Sutil::Dfs_monitor monitor;
   monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
   const Maze::Point finish = Sutil::pick_random_point( maze );
@@ -275,7 +260,7 @@ void hunt( Maze::Maze& maze )
 
 void gather( Maze::Maze& maze )
 {
-  Solver_monitor monitor;
+  Sutil::Dfs_monitor monitor;
   monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
   for ( int finish_square = 0; finish_square < Sutil::num_gather_finishes; finish_square++ ) {
@@ -299,7 +284,7 @@ void gather( Maze::Maze& maze )
 
 void corners( Maze::Maze& maze )
 {
-  Solver_monitor monitor;
+  Sutil::Dfs_monitor monitor;
   monitor.starts = Sutil::set_corner_starts( maze );
   for ( const Maze::Point& p : monitor.starts ) {
     maze[p.row][p.col] |= Sutil::start_bit;
@@ -332,7 +317,7 @@ void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
-  Solver_monitor monitor;
+  Sutil::Dfs_monitor monitor;
   monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
   monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
@@ -359,7 +344,7 @@ void animate_gather( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
-  Solver_monitor monitor;
+  Sutil::Dfs_monitor monitor;
   monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
   monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
@@ -388,7 +373,7 @@ void animate_corners( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
-  Solver_monitor monitor;
+  Sutil::Dfs_monitor monitor;
   monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
   monitor.starts = Sutil::set_corner_starts( maze );
   for ( const Maze::Point& p : monitor.starts ) {

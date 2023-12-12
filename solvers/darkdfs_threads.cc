@@ -26,22 +26,7 @@ struct Thread_light
   uint16_t bit;
 };
 
-struct Solver_monitor
-{
-  std::mutex monitor {};
-  Speed::Speed_unit speed {};
-  std::vector<Maze::Point> starts {};
-  std::optional<int> winning_index {};
-  std::vector<std::vector<Maze::Point>> thread_paths;
-  Solver_monitor() : thread_paths { Sutil::num_threads, std::vector<Maze::Point> {} }
-  {
-    for ( std::vector<Maze::Point>& path : thread_paths ) {
-      path.reserve( Sutil::initial_path_len );
-    }
-  }
-};
-
-void animate_hunter( Maze::Maze& maze, Solver_monitor& monitor, Thread_light id )
+void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Thread_light id )
 {
   const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
   const Sutil::Thread_paint paint = id.bit << Sutil::thread_paint_shift;
@@ -71,7 +56,7 @@ void animate_hunter( Maze::Maze& maze, Solver_monitor& monitor, Thread_light id 
     maze[cur.row][cur.col] |= seen;
     Sutil::flush_cursor_path_coordinate( maze, cur );
     monitor.monitor.unlock();
-    std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed ) );
+    std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
 
     // Bias each thread's first choice towards orginal dispatch direction. More coverage.
     bool found_branch_to_explore = false;
@@ -93,13 +78,13 @@ void animate_hunter( Maze::Maze& maze, Solver_monitor& monitor, Thread_light id 
       maze[cur.row][cur.col] &= static_cast<Sutil::Thread_paint>( ~paint );
       Sutil::flush_cursor_path_coordinate( maze, cur );
       monitor.monitor.unlock();
-      std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed ) );
+      std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
       dfs.pop_back();
     }
   }
 }
 
-void animate_gatherer( Maze::Maze& maze, Solver_monitor& monitor, Thread_light id )
+void animate_gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Thread_light id )
 {
   const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
   const Sutil::Thread_paint paint = id.bit << Sutil::thread_paint_shift;
@@ -121,7 +106,7 @@ void animate_gatherer( Maze::Maze& maze, Solver_monitor& monitor, Thread_light i
     maze[cur.row][cur.col] |= paint;
     Sutil::flush_cursor_path_coordinate( maze, cur );
     monitor.monitor.unlock();
-    std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed ) );
+    std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
 
     bool found_branch_to_explore = false;
     for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size(); count++, ++i %= Sutil::dirs.size() ) {
@@ -141,7 +126,7 @@ void animate_gatherer( Maze::Maze& maze, Solver_monitor& monitor, Thread_light i
       maze[cur.row][cur.col] &= static_cast<Sutil::Thread_paint>( ~paint );
       Sutil::flush_cursor_path_coordinate( maze, cur );
       monitor.monitor.unlock();
-      std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed ) );
+      std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
       dfs.pop_back();
     }
   }
@@ -157,7 +142,7 @@ void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
   Sutil::print_overlap_key();
   Sutil::deluminate_maze( maze );
   Printer::set_cursor_position( { 0, 0 } );
-  Solver_monitor monitor;
+  Sutil::Dfs_monitor monitor;
   monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
   monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
@@ -183,7 +168,7 @@ void animate_gather( Maze::Maze& maze, Speed::Speed speed )
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
   Sutil::deluminate_maze( maze );
-  Solver_monitor monitor;
+  Sutil::Dfs_monitor monitor;
   monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
   monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
@@ -211,7 +196,7 @@ void animate_corners( Maze::Maze& maze, Speed::Speed speed )
   Printer::set_cursor_position( { maze.row_size(), 0 } );
   Sutil::print_overlap_key();
   Sutil::deluminate_maze( maze );
-  Solver_monitor monitor;
+  Sutil::Dfs_monitor monitor;
   monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
   monitor.starts = Sutil::set_corner_starts( maze );
   for ( const Maze::Point& p : monitor.starts ) {

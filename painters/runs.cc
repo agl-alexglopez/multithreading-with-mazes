@@ -6,12 +6,10 @@ module;
 #include <cstdint>
 #include <functional>
 #include <iostream>
-#include <mutex>
 #include <random>
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
 export module labyrinth:runs;
 import :maze;
 import :speed;
@@ -33,28 +31,6 @@ struct Run_point
   uint32_t len;
   Maze::Point prev;
   Maze::Point cur;
-};
-
-struct Thread_guide
-{
-  uint64_t bias;
-  uint64_t color_i;
-  Speed::Speed_unit animation;
-  Maze::Point p;
-};
-
-struct Bfs_monitor
-{
-  std::mutex monitor {};
-  uint64_t count { 0 };
-  std::vector<My_queue<Maze::Point>> paths;
-  std::vector<std::unordered_set<Maze::Point>> seen;
-  Bfs_monitor() : paths { Rgb::num_painters }, seen { Rgb::num_painters }
-  {
-    for ( My_queue<Maze::Point>& p : paths ) {
-      p.reserve( Rgb::initial_path_len );
-    }
-  }
 };
 
 void painter( Maze::Maze& maze, const Run_map& map )
@@ -81,7 +57,7 @@ void painter( Maze::Maze& maze, const Run_map& map )
   std::cout << "\n";
 }
 
-void painter_animated( Maze::Maze& maze, const Run_map& map, Bfs_monitor& monitor, Thread_guide guide )
+void painter_animated( Maze::Maze& maze, const Run_map& map, Rgb::Bfs_monitor& monitor, Rgb::Thread_guide guide )
 {
   My_queue<Maze::Point>& bfs = monitor.paths[guide.bias];
   std::unordered_set<Maze::Point>& seen = monitor.seen[guide.bias];
@@ -189,9 +165,9 @@ void animate_runs( Maze::Maze& maze, Speed::Speed speed )
   const uint64_t rand_color_choice = uid( rng );
   std::array<std::thread, Rgb::num_painters> handles;
   const Speed::Speed_unit animation = Rgb::animation_speeds.at( static_cast<uint64_t>( speed ) );
-  Bfs_monitor monitor;
+  Rgb::Bfs_monitor monitor;
   for ( uint64_t i = 0; i < handles.size(); i++ ) {
-    Thread_guide this_thread = { i, rand_color_choice, animation, start };
+    Rgb::Thread_guide this_thread = { i, rand_color_choice, animation, start };
     handles.at( i )
       = std::thread( painter_animated, std::ref( maze ), std::ref( map ), std::ref( monitor ), this_thread );
   }
