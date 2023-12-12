@@ -10,7 +10,7 @@ import :maze;
 import :speed;
 import :printers;
 
-export namespace Solver_utilities {
+export namespace Sutil {
 
 /* The maze builder is responsible for zeroing out the direction bits as part of the
  * building process. When solving the maze we adjust how we use the middle bits.
@@ -291,4 +291,4 @@ void print_overlap_key()
             << "└────────────┴────────────┴────────────┴────────────┴────────────┘\n";
 }
 
-} // namespace Solver_utilities
+} // namespace Sutil

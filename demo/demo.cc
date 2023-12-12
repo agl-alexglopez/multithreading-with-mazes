@@ -1,4 +1,5 @@
 import labyrinth;
+
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
@@ -25,7 +26,7 @@ struct Flag_arg
 
 struct Demo_runner
 {
-  Maze::Maze::Maze_args args {};
+  Maze::Maze_args args {};
 
   std::vector<Speed::Speed> builder_speed { Speed::Speed::speed_1,
                                             Speed::Speed::speed_2,
@@ -35,26 +36,26 @@ struct Demo_runner
                                             Speed::Speed::speed_6,
                                             Speed::Speed::speed_7 };
 
-  std::vector<Maze::Maze::Maze_style> wall_style {
-    Maze::Maze::Maze_style::sharp,
-    Maze::Maze::Maze_style::round,
-    Maze::Maze::Maze_style::doubles,
-    Maze::Maze::Maze_style::bold,
-    Maze::Maze::Maze_style::contrast,
-    Maze::Maze::Maze_style::spikes,
+  std::vector<Maze::Maze_style> wall_style {
+    Maze::Maze_style::sharp,
+    Maze::Maze_style::round,
+    Maze::Maze_style::doubles,
+    Maze::Maze_style::bold,
+    Maze::Maze_style::contrast,
+    Maze::Maze_style::spikes,
   };
 
-  std::vector<Build_demo> builders { Builder::animate_recursive_backtracker,
-                                     Builder::animate_recursive_subdivision,
-                                     Builder::animate_wilson_path_carver,
-                                     Builder::animate_wilson_wall_adder,
-                                     Builder::animate_prim,
-                                     Builder::animate_kruskal,
-                                     Builder::animate_eller,
-                                     Builder::animate_grid,
-                                     Builder::animate_arena };
+  std::vector<Build_demo> builders { Recursive_backtracker::animate_recursive_backtracker,
+                                     Recursive_subdivision::animate_recursive_subdivision,
+                                     Wilson_path_carver::animate_wilson_path_carver,
+                                     Wilson_wall_adder::animate_wilson_wall_adder,
+                                     Prim::animate_prim,
+                                     Kruskal::animate_kruskal,
+                                     Eller::animate_eller,
+                                     Grid::animate_grid,
+                                     Arena::animate_arena };
 
-  std::vector<Build_demo> modifications { Builder::add_cross_animated, Builder::add_x_animated };
+  std::vector<Build_demo> modifications { Mods::add_cross_animated, Mods::add_x_animated };
 
   std::vector<Speed::Speed> solver_speed { Speed::Speed::speed_1,
                                            Speed::Speed::speed_2,
@@ -65,32 +66,32 @@ struct Demo_runner
                                            Speed::Speed::speed_7 };
 
   std::vector<Solve_demo> solvers {
-    Solver::animate_dfs_thread_hunt,
-    Solver::animate_dfs_thread_gather,
-    Solver::animate_dfs_thread_corners,
-    Solver::animate_floodfs_thread_hunt,
-    Solver::animate_floodfs_thread_gather,
-    Solver::animate_floodfs_thread_corners,
-    Solver::animate_randomized_dfs_thread_hunt,
-    Solver::animate_randomized_dfs_thread_gather,
-    Solver::animate_randomized_dfs_thread_corners,
-    Solver::animate_bfs_thread_hunt,
-    Solver::animate_bfs_thread_gather,
-    Solver::animate_bfs_thread_corners,
-    Solver::animate_darkdfs_thread_hunt,
-    Solver::animate_darkdfs_thread_gather,
-    Solver::animate_darkdfs_thread_corners,
-    Solver::animate_darkbfs_thread_hunt,
-    Solver::animate_darkbfs_thread_gather,
-    Solver::animate_darkbfs_thread_corners,
-    Solver::animate_darkfloodfs_thread_hunt,
-    Solver::animate_darkfloodfs_thread_gather,
-    Solver::animate_darkfloodfs_thread_corners,
-    Solver::animate_darkrandomized_dfs_thread_hunt,
-    Solver::animate_darkrandomized_dfs_thread_gather,
-    Solver::animate_darkrandomized_dfs_thread_corners,
-    Paint::animate_distance_from_center,
-    Paint::animate_runs,
+    Dfs::animate_dfs_thread_hunt,
+    Dfs::animate_dfs_thread_gather,
+    Dfs::animate_dfs_thread_corners,
+    Floodfs::animate_floodfs_thread_hunt,
+    Floodfs::animate_floodfs_thread_gather,
+    Floodfs::animate_floodfs_thread_corners,
+    Rdfs::animate_randomized_dfs_thread_hunt,
+    Rdfs::animate_randomized_dfs_thread_gather,
+    Rdfs::animate_randomized_dfs_thread_corners,
+    Bfs::animate_bfs_thread_hunt,
+    Bfs::animate_bfs_thread_gather,
+    Bfs::animate_bfs_thread_corners,
+    Dark_dfs::animate_darkdfs_thread_hunt,
+    Dark_dfs::animate_darkdfs_thread_gather,
+    Dark_dfs::animate_darkdfs_thread_corners,
+    Dark_bfs::animate_darkbfs_thread_hunt,
+    Dark_bfs::animate_darkbfs_thread_gather,
+    Dark_bfs::animate_darkbfs_thread_corners,
+    Dark_floodfs::animate_darkfloodfs_thread_hunt,
+    Dark_floodfs::animate_darkfloodfs_thread_gather,
+    Dark_floodfs::animate_darkfloodfs_thread_corners,
+    Dark_rdfs::animate_darkrandomized_dfs_thread_hunt,
+    Dark_rdfs::animate_darkrandomized_dfs_thread_gather,
+    Dark_rdfs::animate_darkrandomized_dfs_thread_corners,
+    Distance::animate_distance_from_center,
+    Runs::animate_runs,
   };
 };
 

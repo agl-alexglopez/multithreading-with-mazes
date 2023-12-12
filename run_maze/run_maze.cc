@@ -31,7 +31,7 @@ struct Flag_arg
 
 struct Maze_runner
 {
-  Maze::Maze::Maze_args args;
+  Maze::Maze_args args;
 
   int builder_view { static_image };
   Speed::Speed builder_speed {};
@@ -53,7 +53,7 @@ struct Lookup_tables
   std::unordered_map<std::string, Build_function> builder_table;
   std::unordered_map<std::string, Build_function> modification_table;
   std::unordered_map<std::string, Solve_function> solver_table;
-  std::unordered_map<std::string, Maze::Maze::Maze_style> style_table;
+  std::unordered_map<std::string, Maze::Maze_style> style_table;
   std::unordered_map<std::string, Speed::Speed> solver_animation_table;
   std::unordered_map<std::string, Speed::Speed> builder_animation_table;
 };
@@ -71,53 +71,59 @@ int main( int argc, char** argv )
   const Lookup_tables tables = {
     { "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-sa", "-ba" },
     {
-      { "rdfs", { Builder::generate_recursive_backtracker, Builder::animate_recursive_backtracker } },
-      { "wilson", { Builder::generate_wilson_path_carver, Builder::animate_wilson_path_carver } },
-      { "wilson-walls", { Builder::generate_wilson_wall_adder, Builder::animate_wilson_wall_adder } },
-      { "fractal", { Builder::generate_recursive_subdivision, Builder::animate_recursive_subdivision } },
-      { "kruskal", { Builder::generate_kruskal, Builder::animate_kruskal } },
-      { "eller", { Builder::generate_eller, Builder::animate_eller } },
-      { "prim", { Builder::generate_prim, Builder::animate_prim } },
-      { "grid", { Builder::generate_grid, Builder::animate_grid } },
-      { "arena", { Builder::generate_arena, Builder::animate_arena } },
+      { "rdfs",
+        { Recursive_backtracker::generate_recursive_backtracker,
+          Recursive_backtracker::animate_recursive_backtracker } },
+      { "wilson",
+        { Wilson_path_carver::generate_wilson_path_carver, Wilson_path_carver::animate_wilson_path_carver } },
+      { "wilson-walls",
+        { Wilson_wall_adder::generate_wilson_wall_adder, Wilson_wall_adder::animate_wilson_wall_adder } },
+      { "fractal",
+        { Recursive_subdivision::generate_recursive_subdivision,
+          Recursive_subdivision::animate_recursive_subdivision } },
+      { "kruskal", { Kruskal::generate_kruskal, Kruskal::animate_kruskal } },
+      { "eller", { Eller::generate_eller, Eller::animate_eller } },
+      { "prim", { Prim::generate_prim, Prim::animate_prim } },
+      { "grid", { Grid::generate_grid, Grid::animate_grid } },
+      { "arena", { Arena::generate_arena, Arena::animate_arena } },
     },
     {
-      { "cross", { Builder::add_cross, Builder::add_cross_animated } },
-      { "x", { Builder::add_x, Builder::add_x_animated } },
+      { "cross", { Mods::add_cross, Mods::add_cross_animated } },
+      { "x", { Mods::add_x, Mods::add_x_animated } },
     },
     {
-      { "dfs-hunt", { Solver::dfs_thread_hunt, Solver::animate_dfs_thread_hunt } },
-      { "dfs-gather", { Solver::dfs_thread_gather, Solver::animate_dfs_thread_gather } },
-      { "dfs-corners", { Solver::dfs_thread_corners, Solver::animate_dfs_thread_corners } },
-      { "floodfs-hunt", { Solver::floodfs_thread_hunt, Solver::animate_floodfs_thread_hunt } },
-      { "floodfs-gather", { Solver::floodfs_thread_gather, Solver::animate_floodfs_thread_gather } },
-      { "floodfs-corners", { Solver::floodfs_thread_corners, Solver::animate_floodfs_thread_corners } },
-      { "rdfs-hunt", { Solver::randomized_dfs_thread_hunt, Solver::animate_randomized_dfs_thread_hunt } },
-      { "rdfs-gather", { Solver::randomized_dfs_thread_gather, Solver::animate_randomized_dfs_thread_gather } },
-      { "rdfs-corners", { Solver::randomized_dfs_thread_corners, Solver::animate_randomized_dfs_thread_corners } },
-      { "bfs-hunt", { Solver::bfs_thread_hunt, Solver::animate_bfs_thread_hunt } },
-      { "bfs-gather", { Solver::bfs_thread_gather, Solver::animate_bfs_thread_gather } },
-      { "bfs-corners", { Solver::bfs_thread_corners, Solver::animate_bfs_thread_corners } },
-      { "darkdfs-hunt", { Solver::dfs_thread_hunt, Solver::animate_darkdfs_thread_hunt } },
-      { "darkdfs-gather", { Solver::dfs_thread_gather, Solver::animate_darkdfs_thread_gather } },
-      { "darkdfs-corners", { Solver::dfs_thread_gather, Solver::animate_darkdfs_thread_corners } },
-      { "darkbfs-hunt", { Solver::bfs_thread_hunt, Solver::animate_darkbfs_thread_hunt } },
-      { "darkbfs-gather", { Solver::bfs_thread_gather, Solver::animate_darkbfs_thread_gather } },
-      { "darkbfs-corners", { Solver::bfs_thread_gather, Solver::animate_darkbfs_thread_corners } },
-      { "darkfloodfs-hunt", { Solver::dfs_thread_hunt, Solver::animate_darkfloodfs_thread_hunt } },
-      { "darkfloodfs-gather", { Solver::dfs_thread_gather, Solver::animate_darkfloodfs_thread_gather } },
-      { "darkfloodfs-corners", { Solver::dfs_thread_gather, Solver::animate_darkfloodfs_thread_corners } },
-      { "darkrdfs-hunt", { Solver::dfs_thread_hunt, Solver::animate_darkrandomized_dfs_thread_hunt } },
-      { "darkrdfs-gather", { Solver::dfs_thread_gather, Solver::animate_darkrandomized_dfs_thread_gather } },
-      { "darkrdfs-corners", { Solver::dfs_thread_gather, Solver::animate_darkrandomized_dfs_thread_corners } },
+      { "dfs-hunt", { Dfs::dfs_thread_hunt, Dfs::animate_dfs_thread_hunt } },
+      { "dfs-gather", { Dfs::dfs_thread_gather, Dfs::animate_dfs_thread_gather } },
+      { "dfs-corners", { Dfs::dfs_thread_corners, Dfs::animate_dfs_thread_corners } },
+      { "floodfs-hunt", { Floodfs::floodfs_thread_hunt, Floodfs::animate_floodfs_thread_hunt } },
+      { "floodfs-gather", { Floodfs::floodfs_thread_gather, Floodfs::animate_floodfs_thread_gather } },
+      { "floodfs-corners", { Floodfs::floodfs_thread_corners, Floodfs::animate_floodfs_thread_corners } },
+      { "rdfs-hunt", { Rdfs::randomized_dfs_thread_hunt, Rdfs::animate_randomized_dfs_thread_hunt } },
+      { "rdfs-gather", { Rdfs::randomized_dfs_thread_gather, Rdfs::animate_randomized_dfs_thread_gather } },
+      { "rdfs-corners", { Rdfs::randomized_dfs_thread_corners, Rdfs::animate_randomized_dfs_thread_corners } },
+      { "bfs-hunt", { Bfs::bfs_thread_hunt, Bfs::animate_bfs_thread_hunt } },
+      { "bfs-gather", { Bfs::bfs_thread_gather, Bfs::animate_bfs_thread_gather } },
+      { "bfs-corners", { Bfs::bfs_thread_corners, Bfs::animate_bfs_thread_corners } },
+      { "darkdfs-hunt", { Dfs::dfs_thread_hunt, Dark_dfs::animate_darkdfs_thread_hunt } },
+      { "darkdfs-gather", { Dfs::dfs_thread_gather, Dark_dfs::animate_darkdfs_thread_gather } },
+      { "darkdfs-corners", { Dfs::dfs_thread_gather, Dark_dfs::animate_darkdfs_thread_corners } },
+      { "darkbfs-hunt", { Bfs::bfs_thread_hunt, Dark_bfs::animate_darkbfs_thread_hunt } },
+      { "darkbfs-gather", { Bfs::bfs_thread_gather, Dark_bfs::animate_darkbfs_thread_gather } },
+      { "darkbfs-corners", { Bfs::bfs_thread_gather, Dark_bfs::animate_darkbfs_thread_corners } },
+      { "darkfloodfs-hunt", { Dfs::dfs_thread_hunt, Dark_floodfs::animate_darkfloodfs_thread_hunt } },
+      { "darkfloodfs-gather", { Dfs::dfs_thread_gather, Dark_floodfs::animate_darkfloodfs_thread_gather } },
+      { "darkfloodfs-corners", { Dfs::dfs_thread_gather, Dark_floodfs::animate_darkfloodfs_thread_corners } },
+      { "darkrdfs-hunt", { Dfs::dfs_thread_hunt, Dark_rdfs::animate_darkrandomized_dfs_thread_hunt } },
+      { "darkrdfs-gather", { Dfs::dfs_thread_gather, Dark_rdfs::animate_darkrandomized_dfs_thread_gather } },
+      { "darkrdfs-corners", { Dfs::dfs_thread_gather, Dark_rdfs::animate_darkrandomized_dfs_thread_corners } },
     },
     {
-      { "sharp", Maze::Maze::Maze_style::sharp },
-      { "round", Maze::Maze::Maze_style::round },
-      { "doubles", Maze::Maze::Maze_style::doubles },
-      { "bold", Maze::Maze::Maze_style::bold },
-      { "contrast", Maze::Maze::Maze_style::contrast },
-      { "spikes", Maze::Maze::Maze_style::spikes },
+      { "sharp", Maze::Maze_style::sharp },
+      { "round", Maze::Maze_style::round },
+      { "doubles", Maze::Maze_style::doubles },
+      { "bold", Maze::Maze_style::bold },
+      { "contrast", Maze::Maze_style::contrast },
+      { "spikes", Maze::Maze_style::spikes },
     },
     {
       { "0", Speed::Speed::instant },

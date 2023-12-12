@@ -14,10 +14,10 @@ module;
 #include <vector>
 export module labyrinth:runs;
 import :maze;
+import :speed;
+import :rgb;
 import :my_queue;
 import :printers;
-
-namespace Bd = Builder;
 
 namespace {
 
@@ -49,15 +49,15 @@ struct Bfs_monitor
   uint64_t count { 0 };
   std::vector<My_queue<Maze::Point>> paths;
   std::vector<std::unordered_set<Maze::Point>> seen;
-  Bfs_monitor() : paths { num_painters }, seen { num_painters }
+  Bfs_monitor() : paths { Rgb::num_painters }, seen { Rgb::num_painters }
   {
     for ( My_queue<Maze::Point>& p : paths ) {
-      p.reserve( initial_path_len );
+      p.reserve( Rgb::initial_path_len );
     }
   }
 };
 
-void painter( Maze& maze, const Run_map& map )
+void painter( Maze::Maze& maze, const Run_map& map )
 {
   std::mt19937 rng( std::random_device {}() );
   std::uniform_int_distribution<int> uid( 0, 2 );
@@ -70,18 +70,18 @@ void painter( Maze& maze, const Run_map& map )
         const auto intensity = static_cast<double>( map.max - path_point->second ) / static_cast<double>( map.max );
         const auto dark = static_cast<uint8_t>( 255.0 * intensity );
         const auto bright = static_cast<uint8_t>( 128 ) + static_cast<uint8_t>( 127.0 * intensity );
-        Rgb color { dark, dark, dark };
+        Rgb::Rgb color { dark, dark, dark };
         color.at( rand_color_choice ) = bright;
-        print_rgb( color, cur );
+        Rgb::print_rgb( color, cur );
       } else {
-        print_wall( maze, cur );
+        Rgb::print_wall( maze, cur );
       }
     }
   }
   std::cout << "\n";
 }
 
-void painter_animated( Maze& maze, const Run_map& map, Bfs_monitor& monitor, Thread_guide guide )
+void painter_animated( Maze::Maze& maze, const Run_map& map, Bfs_monitor& monitor, Thread_guide guide )
 {
   My_queue<Maze::Point>& bfs = monitor.paths[guide.bias];
   std::unordered_set<Maze::Point>& seen = monitor.seen[guide.bias];
@@ -95,15 +95,15 @@ void painter_animated( Maze& maze, const Run_map& map, Bfs_monitor& monitor, Thr
       monitor.monitor.unlock();
       return;
     }
-    if ( !( maze[cur.row][cur.col] & paint ) ) {
+    if ( !( maze[cur.row][cur.col] & Rgb::paint ) ) {
       const uint64_t dist = map.runs.at( cur );
       const auto intensity = static_cast<double>( map.max - dist ) / static_cast<double>( map.max );
       const auto dark = static_cast<uint8_t>( 255.0 * intensity );
       const auto bright = static_cast<uint8_t>( 128 ) + static_cast<uint8_t>( 127.0 * intensity );
-      Rgb color { dark, dark, dark };
+      Rgb::Rgb color { dark, dark, dark };
       color.at( guide.color_i ) = bright;
-      animate_rgb( color, cur );
-      maze[cur.row][cur.col] |= paint;
+      Rgb::animate_rgb( color, cur );
+      maze[cur.row][cur.col] |= Rgb::paint;
     }
     monitor.monitor.unlock();
 
@@ -129,7 +129,7 @@ void painter_animated( Maze& maze, const Run_map& map, Bfs_monitor& monitor, Thr
 
 export namespace Runs {
 
-void paint_runs( Builder::Maze& maze )
+void paint_runs( Maze::Maze& maze )
 {
   const int row_mid = maze.row_size() / 2;
   const int col_mid = maze.col_size() / 2;
@@ -137,19 +137,19 @@ void paint_runs( Builder::Maze& maze )
   Run_map map( start, 0 );
   My_queue<Run_point> bfs;
   bfs.push( { 0, start, start } );
-  maze[start.row][start.col] |= measure;
+  maze[start.row][start.col] |= Rgb::measure;
   while ( !bfs.empty() ) {
     const Run_point cur = bfs.front();
     bfs.pop();
     map.max = std::max( map.max, cur.len );
     for ( const Maze::Point& p : Maze::dirs ) {
       const Maze::Point next = { cur.cur.row + p.row, cur.cur.col + p.col };
-      if ( !( maze[next.row][next.col] & Maze::path_bit ) || ( maze[next.row][next.col] & measure ) ) {
+      if ( !( maze[next.row][next.col] & Maze::path_bit ) || ( maze[next.row][next.col] & Rgb::measure ) ) {
         continue;
       }
       const uint32_t len
         = std::abs( next.row - cur.prev.row ) == std::abs( next.col - cur.prev.col ) ? 1 : cur.len + 1;
-      maze[next.row][next.col] |= measure;
+      maze[next.row][next.col] |= Rgb::measure;
       map.runs.insert( { next, len } );
       bfs.push( { len, cur.cur, next } );
     }
@@ -158,7 +158,7 @@ void paint_runs( Builder::Maze& maze )
   std::cout << "\n";
 }
 
-void animate_runs( Builder::Maze& maze, Speed::Speed speed )
+void animate_runs( Maze::Maze& maze, Speed::Speed speed )
 {
   const int row_mid = maze.row_size() / 2;
   const int col_mid = maze.col_size() / 2;
@@ -166,19 +166,19 @@ void animate_runs( Builder::Maze& maze, Speed::Speed speed )
   Run_map map( start, 0 );
   My_queue<Run_point> bfs;
   bfs.push( { 0, start, start } );
-  maze[start.row][start.col] |= measure;
+  maze[start.row][start.col] |= Rgb::measure;
   while ( !bfs.empty() ) {
     const Run_point cur = bfs.front();
     bfs.pop();
     map.max = std::max( map.max, cur.len );
     for ( const Maze::Point& p : Maze::dirs ) {
       const Maze::Point next = { cur.cur.row + p.row, cur.cur.col + p.col };
-      if ( !( maze[next.row][next.col] & Maze::path_bit ) || ( maze[next.row][next.col] & measure ) ) {
+      if ( !( maze[next.row][next.col] & Maze::path_bit ) || ( maze[next.row][next.col] & Rgb::measure ) ) {
         continue;
       }
       const uint32_t len
         = std::abs( next.row - cur.prev.row ) == std::abs( next.col - cur.prev.col ) ? 1 : cur.len + 1;
-      maze[next.row][next.col] |= measure;
+      maze[next.row][next.col] |= Rgb::measure;
       map.runs.insert( { next, len } );
       bfs.push( { len, cur.cur, next } );
     }
@@ -187,8 +187,8 @@ void animate_runs( Builder::Maze& maze, Speed::Speed speed )
   std::mt19937 rng( std::random_device {}() );
   std::uniform_int_distribution<uint64_t> uid( 0, 2 );
   const uint64_t rand_color_choice = uid( rng );
-  std::array<std::thread, num_painters> handles;
-  const Speed::Speed_unit animation = animation_speeds.at( static_cast<uint64_t>( speed ) );
+  std::array<std::thread, Rgb::num_painters> handles;
+  const Speed::Speed_unit animation = Rgb::animation_speeds.at( static_cast<uint64_t>( speed ) );
   Bfs_monitor monitor;
   for ( uint64_t i = 0; i < handles.size(); i++ ) {
     Thread_guide this_thread = { i, rand_color_choice, animation, start };

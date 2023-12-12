@@ -29,18 +29,19 @@ struct Flag_arg
 
 struct Maze_runner
 {
-  Maze::Maze::Maze_args args;
+  Maze::Maze_args args;
 
   int builder_view { static_image };
   Speed::Speed builder_speed {};
-  Build_function builder { Builder::generate_recursive_backtracker, Builder::animate_recursive_backtracker };
+  Build_function builder { Recursive_backtracker::generate_recursive_backtracker,
+                           Recursive_backtracker::animate_recursive_backtracker };
 
   int modification_getter { static_image };
   std::optional<Build_function> modder {};
 
   int painter_view { static_image };
   Speed::Speed painter_speed {};
-  Paint_function painter { Paint::paint_distance_from_center, Paint::animate_distance_from_center };
+  Paint_function painter { Distance::paint_distance_from_center, Distance::animate_distance_from_center };
   Maze_runner() : args {} {}
 };
 
@@ -50,7 +51,7 @@ struct Lookup_tables
   std::unordered_map<std::string, Build_function> builder_table;
   std::unordered_map<std::string, Build_function> modification_table;
   std::unordered_map<std::string, Paint_function> painter_table;
-  std::unordered_map<std::string, Maze::Maze::Maze_style> style_table;
+  std::unordered_map<std::string, Maze::Maze_style> style_table;
   std::unordered_map<std::string, Speed::Speed> painter_animation_table;
   std::unordered_map<std::string, Speed::Speed> builder_animation_table;
 };
@@ -68,31 +69,37 @@ int main( int argc, char** argv )
   const Lookup_tables tables = {
     { "-r", "-c", "-b", "-p", "-h", "-g", "-d", "-m", "-pa", "-ba" },
     {
-      { "rdfs", { Builder::generate_recursive_backtracker, Builder::animate_recursive_backtracker } },
-      { "wilson", { Builder::generate_wilson_path_carver, Builder::animate_wilson_path_carver } },
-      { "wilson-walls", { Builder::generate_wilson_wall_adder, Builder::animate_wilson_wall_adder } },
-      { "fractal", { Builder::generate_recursive_subdivision, Builder::animate_recursive_subdivision } },
-      { "kruskal", { Builder::generate_kruskal, Builder::animate_kruskal } },
-      { "eller", { Builder::generate_eller, Builder::animate_eller } },
-      { "prim", { Builder::generate_prim, Builder::animate_prim } },
-      { "grid", { Builder::generate_grid, Builder::animate_grid } },
-      { "arena", { Builder::generate_arena, Builder::animate_arena } },
+      { "rdfs",
+        { Recursive_backtracker::generate_recursive_backtracker,
+          Recursive_backtracker::animate_recursive_backtracker } },
+      { "wilson",
+        { Wilson_path_carver::generate_wilson_path_carver, Wilson_path_carver::animate_wilson_path_carver } },
+      { "wilson-walls",
+        { Wilson_wall_adder::generate_wilson_wall_adder, Wilson_wall_adder::animate_wilson_wall_adder } },
+      { "fractal",
+        { Recursive_subdivision::generate_recursive_subdivision,
+          Recursive_subdivision::animate_recursive_subdivision } },
+      { "kruskal", { Kruskal::generate_kruskal, Kruskal::animate_kruskal } },
+      { "eller", { Eller::generate_eller, Eller::animate_eller } },
+      { "prim", { Prim::generate_prim, Prim::animate_prim } },
+      { "grid", { Grid::generate_grid, Grid::animate_grid } },
+      { "arena", { Arena::generate_arena, Arena::animate_arena } },
     },
     {
-      { "cross", { Builder::add_cross, Builder::add_cross_animated } },
-      { "x", { Builder::add_x, Builder::add_x_animated } },
+      { "cross", { Mods::add_cross, Mods::add_cross_animated } },
+      { "x", { Mods::add_x, Mods::add_x_animated } },
     },
     {
-      { "distance", { Paint::paint_distance_from_center, Paint::animate_distance_from_center } },
-      { "runs", { Paint::paint_runs, Paint::animate_runs } },
+      { "distance", { Distance::paint_distance_from_center, Distance::animate_distance_from_center } },
+      { "runs", { Runs::paint_runs, Runs::animate_runs } },
     },
     {
-      { "sharp", Maze::Maze::Maze_style::sharp },
-      { "round", Maze::Maze::Maze_style::round },
-      { "doubles", Maze::Maze::Maze_style::doubles },
-      { "bold", Maze::Maze::Maze_style::bold },
-      { "contrast", Maze::Maze::Maze_style::contrast },
-      { "spikes", Maze::Maze::Maze_style::spikes },
+      { "sharp", Maze::Maze_style::sharp },
+      { "round", Maze::Maze_style::round },
+      { "doubles", Maze::Maze_style::doubles },
+      { "bold", Maze::Maze_style::bold },
+      { "contrast", Maze::Maze_style::contrast },
+      { "spikes", Maze::Maze_style::spikes },
     },
     {
       { "0", Speed::Speed::instant },
