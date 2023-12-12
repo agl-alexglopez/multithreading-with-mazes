@@ -1,10 +1,4 @@
-#include "maze.hh"
-#include "my_queue.hh"
-#include "painters.hh"
-#include "print_utilities.hh"
-#include "rgb.hh"
-#include "speed.hh"
-
+module;
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -17,22 +11,23 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-namespace Paint {
+export module labyrinth:distance;
+import :maze;
+import :my_queue;
+import :printers;
 
 namespace {
-namespace Bd = Builder;
 
 struct Distance_map
 {
   uint64_t max;
-  std::unordered_map<Bd::Maze::Point, uint64_t> distances;
-  Distance_map( Bd::Maze::Point p, const uint64_t dist ) : max( dist ), distances( { { p, dist } } ) {}
+  std::unordered_map<Maze::Point, uint64_t> distances;
+  Distance_map( Maze::Point p, const uint64_t dist ) : max( dist ), distances( { { p, dist } } ) {}
 };
 
 struct Point_dist
 {
-  Bd::Maze::Point p;
+  Maze::Point p;
   uint64_t dist;
 };
 
@@ -40,11 +35,11 @@ struct Bfs_monitor
 {
   std::mutex monitor {};
   uint64_t count { 0 };
-  std::vector<My_queue<Bd::Maze::Point>> paths;
-  std::vector<std::unordered_set<Bd::Maze::Point>> seen;
+  std::vector<My_queue<Maze::Point>> paths;
+  std::vector<std::unordered_set<Maze::Point>> seen;
   Bfs_monitor() : paths { num_painters }, seen { num_painters }
   {
-    for ( My_queue<Bd::Maze::Point>& p : paths ) {
+    for ( My_queue<Maze::Point>& p : paths ) {
       p.reserve( initial_path_len );
     }
   }
@@ -55,17 +50,17 @@ struct Thread_guide
   uint64_t bias;
   uint64_t color_i;
   Speed::Speed_unit animation;
-  Bd::Maze::Point p;
+  Maze::Point p;
 };
 
-void painter( Bd::Maze& maze, const Distance_map& map )
+void painter( Maze& maze, const Distance_map& map )
 {
   std::mt19937 rng( std::random_device {}() );
   std::uniform_int_distribution<int> uid( 0, 2 );
   const int rand_color_choice = uid( rng );
   for ( int row = 0; row < maze.row_size(); row++ ) {
     for ( int col = 0; col < maze.col_size(); col++ ) {
-      const Bd::Maze::Point cur = { row, col };
+      const Maze::Point cur = { row, col };
       const auto path_point = map.distances.find( cur );
       if ( path_point != map.distances.end() ) {
         const auto intensity = static_cast<double>( map.max - path_point->second ) / static_cast<double>( map.max );
@@ -82,13 +77,13 @@ void painter( Bd::Maze& maze, const Distance_map& map )
   std::cout << "\n";
 }
 
-void painter_animated( Bd::Maze& maze, const Distance_map& map, Bfs_monitor& monitor, Thread_guide guide )
+void painter_animated( Maze& maze, const Distance_map& map, Bfs_monitor& monitor, Thread_guide guide )
 {
-  My_queue<Bd::Maze::Point>& bfs = monitor.paths[guide.bias];
-  std::unordered_set<Bd::Maze::Point>& seen = monitor.seen[guide.bias];
+  My_queue<Maze::Point>& bfs = monitor.paths[guide.bias];
+  std::unordered_set<Maze::Point>& seen = monitor.seen[guide.bias];
   bfs.push( guide.p );
   while ( !bfs.empty() ) {
-    const Bd::Maze::Point cur = bfs.front();
+    const Maze::Point cur = bfs.front();
     bfs.pop();
 
     monitor.monitor.lock();
@@ -110,13 +105,12 @@ void painter_animated( Bd::Maze& maze, const Distance_map& map, Bfs_monitor& mon
 
     std::this_thread::sleep_for( std::chrono::microseconds( guide.animation ) );
 
-    for ( uint64_t count = 0, i = guide.bias; count < Bd::Maze::dirs.size();
-          count++, ++i %= Bd::Maze::dirs.size() ) {
-      const Bd::Maze::Point& p = Bd::Maze::dirs.at( i );
-      const Bd::Maze::Point next = { cur.row + p.row, cur.col + p.col };
+    for ( uint64_t count = 0, i = guide.bias; count < Maze::dirs.size(); count++, ++i %= Maze::dirs.size() ) {
+      const Maze::Point& p = Maze::dirs.at( i );
+      const Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
       monitor.monitor.lock();
-      const bool is_path = maze[next.row][next.col] & Bd::Maze::path_bit;
+      const bool is_path = maze[next.row][next.col] & Maze::path_bit;
       monitor.monitor.unlock();
 
       if ( is_path && !seen.contains( next ) ) {
@@ -129,11 +123,13 @@ void painter_animated( Bd::Maze& maze, const Distance_map& map, Bfs_monitor& mon
 
 } // namespace
 
-void paint_distance_from_center( Bd::Maze& maze )
+export namespace Distance {
+
+void paint_distance_from_center( Maze& maze )
 {
   const int row_mid = maze.row_size() / 2;
   const int col_mid = maze.col_size() / 2;
-  const Bd::Maze::Point start = { row_mid + 1 - ( row_mid % 2 ), col_mid + 1 - ( col_mid % 2 ) };
+  const Maze::Point start = { row_mid + 1 - ( row_mid % 2 ), col_mid + 1 - ( col_mid % 2 ) };
   Distance_map map( start, 0 );
   My_queue<Point_dist> bfs;
   bfs.push( { start, 0 } );
@@ -142,9 +138,9 @@ void paint_distance_from_center( Bd::Maze& maze )
     const Point_dist cur = bfs.front();
     bfs.pop();
     map.max = std::max( map.max, cur.dist );
-    for ( const Bd::Maze::Point& p : Bd::Maze::dirs ) {
-      const Bd::Maze::Point next = { cur.p.row + p.row, cur.p.col + p.col };
-      if ( !( maze[next.row][next.col] & Bd::Maze::path_bit ) || ( maze[next.row][next.col] & measure ) ) {
+    for ( const Maze::Point& p : Maze::dirs ) {
+      const Maze::Point next = { cur.p.row + p.row, cur.p.col + p.col };
+      if ( !( maze[next.row][next.col] & Maze::path_bit ) || ( maze[next.row][next.col] & measure ) ) {
         continue;
       }
       maze[next.row][next.col] |= measure;
@@ -156,11 +152,11 @@ void paint_distance_from_center( Bd::Maze& maze )
   std::cout << "\n";
 }
 
-void animate_distance_from_center( Bd::Maze& maze, Speed::Speed speed )
+void animate_distance_from_center( Maze& maze, Speed::Speed speed )
 {
   const int row_mid = maze.row_size() / 2;
   const int col_mid = maze.col_size() / 2;
-  const Bd::Maze::Point start = { row_mid + 1 - ( row_mid % 2 ), col_mid + 1 - ( col_mid % 2 ) };
+  const Maze::Point start = { row_mid + 1 - ( row_mid % 2 ), col_mid + 1 - ( col_mid % 2 ) };
   Distance_map map( start, 0 );
   My_queue<Point_dist> bfs;
   bfs.push( { start, 0 } );
@@ -169,9 +165,9 @@ void animate_distance_from_center( Bd::Maze& maze, Speed::Speed speed )
     const Point_dist cur = bfs.front();
     bfs.pop();
     map.max = std::max( map.max, cur.dist );
-    for ( const Bd::Maze::Point& p : Bd::Maze::dirs ) {
-      const Bd::Maze::Point next = { cur.p.row + p.row, cur.p.col + p.col };
-      if ( !( maze[next.row][next.col] & Bd::Maze::path_bit ) || ( maze[next.row][next.col] & measure ) ) {
+    for ( const Maze::Point& p : Maze::dirs ) {
+      const Maze::Point next = { cur.p.row + p.row, cur.p.col + p.col };
+      if ( !( maze[next.row][next.col] & Maze::path_bit ) || ( maze[next.row][next.col] & measure ) ) {
         continue;
       }
       maze[next.row][next.col] |= measure;
@@ -199,4 +195,4 @@ void animate_distance_from_center( Bd::Maze& maze, Speed::Speed speed )
   std::cout << "\n";
 }
 
-} // namespace Paint
+} // namespace Distance

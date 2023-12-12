@@ -1,10 +1,4 @@
-#include "maze.hh"
-#include "maze_algorithms.hh"
-#include "maze_solvers.hh"
-#include "painters.hh"
-#include "print_utilities.hh"
-#include "speed.hh"
-
+import labyrinth;
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
@@ -20,8 +14,8 @@
 
 namespace {
 
-using Build_demo = std::function<void( Builder::Maze&, Speed::Speed )>;
-using Solve_demo = std::function<void( Builder::Maze&, Speed::Speed )>;
+using Build_demo = std::function<void( Maze::Maze&, Speed::Speed )>;
+using Solve_demo = std::function<void( Maze::Maze&, Speed::Speed )>;
 
 struct Flag_arg
 {
@@ -31,7 +25,7 @@ struct Flag_arg
 
 struct Demo_runner
 {
-  Builder::Maze::Maze_args args {};
+  Maze::Maze::Maze_args args {};
 
   std::vector<Speed::Speed> builder_speed { Speed::Speed::speed_1,
                                             Speed::Speed::speed_2,
@@ -41,13 +35,13 @@ struct Demo_runner
                                             Speed::Speed::speed_6,
                                             Speed::Speed::speed_7 };
 
-  std::vector<Builder::Maze::Maze_style> wall_style {
-    Builder::Maze::Maze_style::sharp,
-    Builder::Maze::Maze_style::round,
-    Builder::Maze::Maze_style::doubles,
-    Builder::Maze::Maze_style::bold,
-    Builder::Maze::Maze_style::contrast,
-    Builder::Maze::Maze_style::spikes,
+  std::vector<Maze::Maze::Maze_style> wall_style {
+    Maze::Maze::Maze_style::sharp,
+    Maze::Maze::Maze_style::round,
+    Maze::Maze::Maze_style::doubles,
+    Maze::Maze::Maze_style::bold,
+    Maze::Maze::Maze_style::contrast,
+    Maze::Maze::Maze_style::spikes,
   };
 
   std::vector<Build_demo> builders { Builder::animate_recursive_backtracker,
@@ -143,7 +137,7 @@ int main( int argc, char** argv )
   std::uniform_int_distribution<uint64_t> solver_chooser( 0, demo.solvers.size() - 1 );
   for ( ;; ) {
     demo.args.style = demo.wall_style[wall_chooser( gen )];
-    Builder::Maze maze( demo.args );
+    Maze::Maze maze( demo.args );
     demo.builders[builder_chooser( gen )]( maze, demo.builder_speed[speed_chooser( gen )] );
 
     if ( optional_modification( gen ) == 0 ) {

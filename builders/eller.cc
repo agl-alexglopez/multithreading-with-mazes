@@ -1,8 +1,4 @@
-#include "maze.hh"
-#include "maze_algorithms.hh"
-#include "maze_utilities.hh"
-#include "speed.hh"
-
+module;
 #include <cstdint>
 #include <iterator>
 #include <numeric>
@@ -10,8 +6,10 @@
 #include <span>
 #include <unordered_map>
 #include <vector>
-
-namespace Builder {
+export module labyrinth:eller;
+import :maze;
+import :speed;
+import :maze_utilities;
 
 namespace {
 
@@ -26,7 +24,8 @@ struct Sliding_set_window
   uint64_t width { 0 };
   // This is a flat 2xmaze.col_size() vector of setids that we will overwrite with std::spans as we slide.
   std::vector<Set_id> sets;
-  explicit Sliding_set_window( const Maze& maze ) : width( maze.col_size() ), sets( window_height * width, { 0 } )
+  explicit Sliding_set_window( const Maze::Maze& maze )
+    : width( maze.col_size() ), sets( window_height * width, { 0 } )
   {}
 };
 
@@ -50,14 +49,14 @@ void merge_sets( Sliding_set_window& sets, const Id_merge_request& merge, int co
   }
 }
 
-void complete_final_row( Maze& maze, Sliding_set_window& window )
+void complete_final_row( Maze::Maze& maze, Sliding_set_window& window )
 {
   const int final_row = maze.row_size() - 2;
   for ( int col = 1; col < maze.col_size() - 2; col += 2 ) {
     const Maze::Point next = { final_row, col + 2 };
     const Set_id this_square_id = window.sets[window.curr_row * window.width + col];
     if ( this_square_id != window.sets[window.curr_row * window.width + col + 2] ) {
-      join_squares( maze, { final_row, col }, next );
+      Maze_utilities::join_squares( maze, { final_row, col }, next );
       const Set_id other_set_id = window.sets[window.curr_row * window.width + next.col];
       for ( int set_elem = next.col; set_elem < maze.col_size() - 1; set_elem += 2 ) {
         if ( window.sets[window.curr_row * window.width + set_elem] == other_set_id ) {
@@ -68,14 +67,14 @@ void complete_final_row( Maze& maze, Sliding_set_window& window )
   }
 }
 
-void complete_final_row_animated( Maze& maze, Sliding_set_window& window, Speed::Speed_unit animation )
+void complete_final_row_animated( Maze::Maze& maze, Sliding_set_window& window, Speed::Speed_unit animation )
 {
   const int final_row = maze.row_size() - 2;
   for ( int col = 1; col < maze.col_size() - 2; col += 2 ) {
     const Maze::Point next = { final_row, col + 2 };
     const Set_id this_square_id = window.sets[window.curr_row * window.width + col];
     if ( this_square_id != window.sets[window.curr_row * window.width + col + 2] ) {
-      join_squares_animated( maze, { final_row, col }, next, animation );
+      Maze_utilities::join_squares_animated( maze, { final_row, col }, next, animation );
       const Set_id other_set_id = window.sets[window.curr_row * window.width + next.col];
       for ( int set_elem = next.col; set_elem < maze.col_size() - 1; set_elem += 2 ) {
         if ( window.sets[window.curr_row * window.width + set_elem] == other_set_id ) {
@@ -88,15 +87,16 @@ void complete_final_row_animated( Maze& maze, Sliding_set_window& window, Speed:
 
 } // namespace
 
+export namespace Eller {
 /* There are two fun details about this implementation: the auxillary memory requirement is a constant determined
  * by the width of a row and the randomness is thorough when determining how many squares per set should drop below.
  * The downside is the way I am doing it now is somewhat slow. I want to keep the memory footprint low and a good
  * randomized technique to choose dropping squares. Find a better strategy.
  */
 
-void generate_eller( Maze& maze )
+void generate_eller( Maze::Maze& maze )
 {
-  fill_maze_with_walls( maze );
+  Maze_utilities::fill_maze_with_walls( maze );
   std::mt19937 gen( std::random_device {}() );
   std::uniform_int_distribution<int> coin( 0, horizontal_bias );
 
@@ -114,9 +114,9 @@ void generate_eller( Maze& maze )
     for ( int col = 1; col < maze.col_size() - 1; col += 2 ) {
       const Maze::Point next = { row, col + 2 };
       const Set_id this_square_id = window.sets[window.curr_row * window.width + col];
-      if ( is_square_within_perimeter_walls( maze, next )
+      if ( Maze_utilities::is_square_within_perimeter_walls( maze, next )
            && this_square_id != window.sets[window.curr_row * window.width + next.col] && coin( gen ) ) {
-        join_squares( maze, { row, col }, next );
+        Maze_utilities::join_squares( maze, { row, col }, next );
         merge_sets( window, { this_square_id, window.sets[window.curr_row * window.width + next.col] }, col );
       }
     }
@@ -135,7 +135,7 @@ void generate_eller( Maze& maze )
         // We already linked this up and rondomness dropped us here again. More important for animated version.
         if ( !( maze[chosen.row + 2][chosen.col] & Maze::builder_bit ) ) {
           window.sets[next_row * window.width + chosen.col] = s.first;
-          join_squares( maze, chosen, { chosen.row + 2, chosen.col } );
+          Maze_utilities::join_squares( maze, chosen, { chosen.row + 2, chosen.col } );
         }
       }
     }
@@ -143,14 +143,14 @@ void generate_eller( Maze& maze )
     sets_in_this_row.clear();
   }
   complete_final_row( maze, window );
-  clear_and_flush_grid( maze );
+  Maze_utilities::clear_and_flush_grid( maze );
 }
 
-void animate_eller( Maze& maze, Speed::Speed speed )
+void animate_eller( Maze::Maze& maze, Speed::Speed speed )
 {
-  fill_maze_with_walls_animated( maze );
-  clear_and_flush_grid( maze );
-  const Speed::Speed_unit animation = builder_speeds.at( static_cast<int>( speed ) );
+  Maze_utilities::fill_maze_with_walls_animated( maze );
+  Maze_utilities::clear_and_flush_grid( maze );
+  const Speed::Speed_unit animation = Maze_utilities::builder_speeds.at( static_cast<int>( speed ) );
   std::mt19937 gen( std::random_device {}() );
   std::uniform_int_distribution<int> coin( 0, horizontal_bias );
 
@@ -168,9 +168,9 @@ void animate_eller( Maze& maze, Speed::Speed speed )
     for ( int col = 1; col < maze.col_size() - 1; col += 2 ) {
       const Maze::Point next = { row, col + 2 };
       const Set_id this_square_id = window.sets[window.curr_row * window.width + col];
-      if ( is_square_within_perimeter_walls( maze, next )
+      if ( Maze_utilities::is_square_within_perimeter_walls( maze, next )
            && this_square_id != window.sets[window.curr_row * window.width + next.col] && coin( gen ) ) {
-        join_squares_animated( maze, { row, col }, next, animation );
+        Maze_utilities::join_squares_animated( maze, { row, col }, next, animation );
         merge_sets( window, { this_square_id, window.sets[window.curr_row * window.width + next.col] }, col );
       }
     }
@@ -189,7 +189,7 @@ void animate_eller( Maze& maze, Speed::Speed speed )
         // We already linked this up and rondomness dropped us here again. Save pointless cursor movements.
         if ( !( maze[chosen.row + 2][chosen.col] & Maze::builder_bit ) ) {
           window.sets[next_row * window.width + chosen.col] = s.first;
-          join_squares_animated( maze, chosen, { chosen.row + 2, chosen.col }, animation );
+          Maze_utilities::join_squares_animated( maze, chosen, { chosen.row + 2, chosen.col }, animation );
         }
       }
     }
@@ -199,4 +199,4 @@ void animate_eller( Maze& maze, Speed::Speed speed )
   complete_final_row_animated( maze, window, animation );
 }
 
-} // namespace Builder
+} // namespace Eller

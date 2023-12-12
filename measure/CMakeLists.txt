@@ -1,6 +1,3 @@
 add_executable(measure measure.cc)
-target_link_libraries(measure PUBLIC
-                      speed
-                      maze
-                      maze_algorithms
-                      painters)
+target_link_libraries(measure labyrinth)
+

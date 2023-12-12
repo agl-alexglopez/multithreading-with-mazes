@@ -1,31 +1,31 @@
-#include "maze.hh"
-#include "maze_algorithms.hh"
-#include "maze_utilities.hh"
-#include "speed.hh"
+export module labyrinth:arena;
+import :maze;
+import :speed;
+import :maze_utilities;
 
-namespace Builder {
+export namespace Arena {
 
-void generate_arena( Maze& maze )
+void generate_arena( Maze::Maze& maze )
 {
-  fill_maze_with_walls( maze );
+  Maze_utilities::fill_maze_with_walls( maze );
   for ( int row = 1; row < maze.row_size() - 1; row++ ) {
     for ( int col = 1; col < maze.col_size() - 1; col++ ) {
-      build_path( maze, { row, col } );
+      Maze_utilities::build_path( maze, { row, col } );
     }
   }
-  clear_and_flush_grid( maze );
+  Maze_utilities::clear_and_flush_grid( maze );
 }
 
-void animate_arena( Maze& maze, Speed::Speed speed )
+void animate_arena( Maze::Maze& maze, Speed::Speed speed )
 {
-  fill_maze_with_walls( maze );
-  clear_and_flush_grid( maze );
-  const Speed::Speed_unit animation = builder_speeds.at( static_cast<int>( speed ) );
+  Maze_utilities::fill_maze_with_walls( maze );
+  Maze_utilities::clear_and_flush_grid( maze );
+  const Speed::Speed_unit animation = Maze_utilities::builder_speeds.at( static_cast<int>( speed ) );
   for ( int row = 1; row < maze.row_size() - 1; row++ ) {
     for ( int col = 1; col < maze.col_size() - 1; col++ ) {
-      carve_path_walls_animated( maze, { row, col }, animation );
+      Maze_utilities::carve_path_walls_animated( maze, { row, col }, animation );
     }
   }
 }
 
-} // namespace Builder
+} // namespace Arena

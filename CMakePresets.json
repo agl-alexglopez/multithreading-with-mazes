@@ -41,10 +41,11 @@
       "name": "clang-debug",
       "displayName": "Clang",
       "description": "Default build options for Clang",
-      "generator": "Unix Makefiles",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_CXX_SCAN_FOR_MODULES": "ON",
         "CMAKE_CXX_STANDARD": "20",
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "Debug",

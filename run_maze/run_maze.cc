@@ -1,8 +1,4 @@
-#include "maze.hh"
-#include "maze_algorithms.hh"
-#include "maze_solvers.hh"
-#include "print_utilities.hh"
-#include "speed.hh"
+import labyrinth;
 
 #include <cstdint>
 #include <cstdlib>
@@ -19,10 +15,10 @@
 namespace {
 
 using Build_function
-  = std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Speed::Speed )>>;
+  = std::tuple<std::function<void( Maze::Maze& )>, std::function<void( Maze::Maze&, Speed::Speed )>>;
 
 using Solve_function
-  = std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Speed::Speed )>>;
+  = std::tuple<std::function<void( Maze::Maze& )>, std::function<void( Maze::Maze&, Speed::Speed )>>;
 
 constexpr int static_image = 0;
 constexpr int animated_playback = 1;
@@ -35,18 +31,19 @@ struct Flag_arg
 
 struct Maze_runner
 {
-  Builder::Maze::Maze_args args;
+  Maze::Maze::Maze_args args;
 
   int builder_view { static_image };
   Speed::Speed builder_speed {};
-  Build_function builder { Builder::generate_recursive_backtracker, Builder::animate_recursive_backtracker };
+  Build_function builder { Recursive_backtracker::generate_recursive_backtracker,
+                           Recursive_backtracker::animate_recursive_backtracker };
 
   int modification_getter { static_image };
   std::optional<Build_function> modder {};
 
   int solver_view { static_image };
   Speed::Speed solver_speed {};
-  Solve_function solver { Solver::dfs_thread_hunt, Solver::animate_dfs_thread_hunt };
+  Solve_function solver { Dfs::dfs_thread_hunt, Dfs::animate_dfs_thread_hunt };
   Maze_runner() : args {} {}
 };
 
@@ -56,7 +53,7 @@ struct Lookup_tables
   std::unordered_map<std::string, Build_function> builder_table;
   std::unordered_map<std::string, Build_function> modification_table;
   std::unordered_map<std::string, Solve_function> solver_table;
-  std::unordered_map<std::string, Builder::Maze::Maze_style> style_table;
+  std::unordered_map<std::string, Maze::Maze::Maze_style> style_table;
   std::unordered_map<std::string, Speed::Speed> solver_animation_table;
   std::unordered_map<std::string, Speed::Speed> builder_animation_table;
 };
@@ -115,12 +112,12 @@ int main( int argc, char** argv )
       { "darkrdfs-corners", { Solver::dfs_thread_gather, Solver::animate_darkrandomized_dfs_thread_corners } },
     },
     {
-      { "sharp", Builder::Maze::Maze_style::sharp },
-      { "round", Builder::Maze::Maze_style::round },
-      { "doubles", Builder::Maze::Maze_style::doubles },
-      { "bold", Builder::Maze::Maze_style::bold },
-      { "contrast", Builder::Maze::Maze_style::contrast },
-      { "spikes", Builder::Maze::Maze_style::spikes },
+      { "sharp", Maze::Maze::Maze_style::sharp },
+      { "round", Maze::Maze::Maze_style::round },
+      { "doubles", Maze::Maze::Maze_style::doubles },
+      { "bold", Maze::Maze::Maze_style::bold },
+      { "contrast", Maze::Maze::Maze_style::contrast },
+      { "spikes", Maze::Maze::Maze_style::spikes },
     },
     {
       { "0", Speed::Speed::instant },
@@ -170,7 +167,7 @@ int main( int argc, char** argv )
     }
   }
 
-  Builder::Maze maze( runner.args );
+  Maze::Maze maze( runner.args );
 
   // Functions are stored in tuples so use tuple get syntax and then call them immidiately.
 

@@ -1,8 +1,4 @@
-#include "maze.hh"
-#include "maze_algorithms.hh"
-#include "maze_utilities.hh"
-#include "speed.hh"
-
+module;
 #include <algorithm>
 #include <chrono>
 #include <iterator>
@@ -11,8 +7,10 @@
 #include <stack>
 #include <thread>
 #include <vector>
-
-namespace Builder {
+export module labyrinth:grid;
+import :maze;
+import :speed;
+import :maze_utilities;
 
 namespace {
 
@@ -24,14 +22,14 @@ struct Run_start
   Maze::Point direction;
 };
 
-void complete_run( Maze& maze, std::stack<Maze::Point>& dfs, Run_start run )
+void complete_run( Maze::Maze& maze, std::stack<Maze::Point>& dfs, Run_start run )
 {
   // This allows us to run over previous paths which is what makes this algorithm unique.
   Maze::Point next = { run.cur.row + run.direction.row, run.cur.col + run.direction.col };
   // Create the "grid" by running in one direction until wall or limit.
   int cur_run = 0;
-  while ( is_square_within_perimeter_walls( maze, next ) && cur_run < run_limit ) {
-    join_squares( maze, run.cur, next );
+  while ( Maze_utilities::is_square_within_perimeter_walls( maze, next ) && cur_run < run_limit ) {
+    Maze_utilities::join_squares( maze, run.cur, next );
     run.cur = next;
     dfs.push( next );
     next.row += run.direction.row;
@@ -40,12 +38,12 @@ void complete_run( Maze& maze, std::stack<Maze::Point>& dfs, Run_start run )
   }
 }
 
-void animate_run( Maze& maze, std::stack<Maze::Point>& dfs, Run_start run, Speed::Speed_unit speed )
+void animate_run( Maze::Maze& maze, std::stack<Maze::Point>& dfs, Run_start run, Speed::Speed_unit speed )
 {
   Maze::Point next = { run.cur.row + run.direction.row, run.cur.col + run.direction.col };
   int cur_run = 0;
-  while ( is_square_within_perimeter_walls( maze, next ) && cur_run < run_limit ) {
-    join_squares_animated( maze, run.cur, next, speed );
+  while ( Maze_utilities::is_square_within_perimeter_walls( maze, next ) && cur_run < run_limit ) {
+    Maze_utilities::join_squares_animated( maze, run.cur, next, speed );
     run.cur = next;
     dfs.push( next );
     next.row += run.direction.row;
@@ -56,9 +54,10 @@ void animate_run( Maze& maze, std::stack<Maze::Point>& dfs, Run_start run, Speed
 
 } // namespace
 
-void generate_grid( Maze& maze )
+export namespace Grid {
+void generate_grid( Maze::Maze& maze )
 {
-  fill_maze_with_walls( maze );
+  Maze_utilities::fill_maze_with_walls( maze );
   std::mt19937 generator( std::random_device {}() );
   std::uniform_int_distribution row_random( 1, maze.row_size() - 2 );
   std::uniform_int_distribution col_random( 1, maze.col_size() - 2 );
@@ -73,7 +72,7 @@ void generate_grid( Maze& maze )
     for ( const int& i : random_direction_indices ) {
       const Maze::Point& direction = Maze::build_dirs.at( i );
       const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
-      if ( can_build_new_square( maze, next ) ) {
+      if ( Maze_utilities::can_build_new_square( maze, next ) ) {
         complete_run( maze, dfs, { cur, direction } );
         branches_remain = true;
         break;
@@ -83,14 +82,14 @@ void generate_grid( Maze& maze )
       dfs.pop();
     }
   }
-  clear_and_flush_grid( maze );
+  Maze_utilities::clear_and_flush_grid( maze );
 }
 
-void animate_grid( Maze& maze, Speed::Speed speed )
+void animate_grid( Maze::Maze& maze, Speed::Speed speed )
 {
-  const Speed::Speed_unit animation = builder_speeds.at( static_cast<int>( speed ) );
-  fill_maze_with_walls_animated( maze );
-  clear_and_flush_grid( maze );
+  const Speed::Speed_unit animation = Maze_utilities::builder_speeds.at( static_cast<int>( speed ) );
+  Maze_utilities::fill_maze_with_walls_animated( maze );
+  Maze_utilities::clear_and_flush_grid( maze );
   std::mt19937 generator( std::random_device {}() );
   std::uniform_int_distribution row_random( 1, maze.row_size() - 2 );
   std::uniform_int_distribution col_random( 1, maze.col_size() - 2 );
@@ -105,18 +104,18 @@ void animate_grid( Maze& maze, Speed::Speed speed )
     for ( const int& i : random_direction_indices ) {
       const Maze::Point& direction = Maze::build_dirs.at( i );
       const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
-      if ( can_build_new_square( maze, next ) ) {
+      if ( Maze_utilities::can_build_new_square( maze, next ) ) {
         animate_run( maze, dfs, { cur, direction }, animation );
         branches_remain = true;
         break;
       }
     }
     if ( !branches_remain ) {
-      flush_cursor_maze_coordinate( maze, cur );
+      Maze_utilities::flush_cursor_maze_coordinate( maze, cur );
       std::this_thread::sleep_for( std::chrono::microseconds( animation ) );
       dfs.pop();
     }
   }
 }
 
-} // namespace Builder
+} // namespace Grid

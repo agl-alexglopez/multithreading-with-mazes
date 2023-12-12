@@ -7,14 +7,13 @@
  * The std  queue is non-contiguous and therefore I cannot know how many heap requests may be
  * taking place behind the scenes, slowing parallelism.
  */
-#pragma once
+module;
 #include <cstdlib>
 #include <iostream>
-#ifndef MY_QUEUE_HH
-#define MY_QUEUE_HH
 #include <vector>
+export module labyrinth:my_queue;
 
-template<class Value_type>
+export template<class Value_type>
 class My_queue
 {
 
@@ -98,5 +97,3 @@ private:
     elems_ = std::move( new_elems );
   }
 };
-
-#endif // My_QUEUE_HH
