@@ -1,4 +1,4 @@
-.PHONY: default gcc-release gcc-debug arm-release arm-debug clang-release clang-debug build format tidy clean
+.PHONY: default gcc-release gcc-debug arm-release arm-debug clang-rel clang-deb build format tidy clean
 
 MAKE := $(MAKE)
 # Adjust parallel build jobs based on your available cores. 
@@ -9,36 +9,36 @@ default: build
 
 gcc-release:
 	cmake --preset=gcc-release
-	$(MAKE) --no-print-directory -C build/ $(JOBS)
+	cmake --build build/ $(JOBS)
 
 gcc-debug:
 	cmake --preset=gcc-debug
-	$(MAKE) --no-print-directory -C build/ $(JOBS)
+	cmake --build build/ $(JOBS)
 
 arm-release:
 	cmake --preset=arm-release
-	$(MAKE) --no-print-directory -C build/ $(JOBS)
+	cmake --build build/ $(JOBS)
 
 arm-debug:
 	cmake --preset=arm-debug
-	$(MAKE) --no-print-directory -C build/ $(JOBS)
+	cmake --build build/ $(JOBS)
 
-clang-release:
-	cmake --preset=clang-release
-	$(MAKE) --no-print-directory -C build/ $(JOBS)
+clang-rel:
+	cmake --preset=clang-rel
+	cmake --build build/ $(JOBS)
 
-clang-debug:
-	cmake --preset=clang-debug
-	$(MAKE) --no-print-directory -C build/ $(JOBS)
+clang-deb:
+	cmake --preset=clang-deb
+	cmake --build build/ $(JOBS)
 
 build:
-	$(MAKE) --no-print-directory -C build/ $(JOBS)
+	cmake --build build/ $(JOBS)
 
 format:
-	$(MAKE) --no-print-directory -C build/ format
+	cmake --build build/ --target format
 
 tidy:
-	$(MAKE) --no-print-directory -C build/ tidy $(JOBS)
+	cmake --build build/ --target tidy $(JOBS)
 
 clean:
 	rm -rf build/
