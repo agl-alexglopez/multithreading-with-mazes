@@ -13,6 +13,15 @@ import :maze;
 import :speed;
 import :build_utilities;
 
+///////////////////////////////////   Exported Interface  ///////////////////////////////////////////
+
+export namespace Wilson_path_carver {
+void generate_maze( Maze::Maze& maze );
+void animate_maze( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Wilson_path_carver
+
+//////////////////////////////////   Implementation   /////////////////////////////////////////////////
+
 namespace {
 
 struct Loop
@@ -231,7 +240,7 @@ bool animate_random_walks( Maze::Maze& maze, Random_walk& cur, Speed::Speed_unit
 
 /* * * * * * * * * * * * * * * * *   Wilson's Path Carving Algorithm  * * * * * * * * * * * * * * */
 
-export namespace Wilson_path_carver {
+namespace Wilson_path_carver {
 
 void generate_maze( Maze::Maze& maze )
 {

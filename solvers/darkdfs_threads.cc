@@ -18,6 +18,16 @@ import :printers;
 import :solve_utilities;
 import :my_queue;
 
+//////////////////////////////////   Exported Interface   /////////////////////////////////////
+
+export namespace Dark_dfs {
+void animate_hunt( Maze::Maze& maze, Speed::Speed speed );
+void animate_gather( Maze::Maze& maze, Speed::Speed speed );
+void animate_corners( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Dark_dfs
+
+//////////////////////////////////   Implementation     ////////////////////////////////////
+
 namespace {
 
 struct Thread_light
@@ -134,7 +144,7 @@ void animate_gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Thread_lig
 
 } // namespace
 
-export namespace Dark_dfs {
+namespace Dark_dfs {
 
 void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
 {

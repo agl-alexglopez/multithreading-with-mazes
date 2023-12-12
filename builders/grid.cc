@@ -12,6 +12,15 @@ import :maze;
 import :speed;
 import :build_utilities;
 
+///////////////////////////////////   Exported Interface  ///////////////////////////////////////////
+
+export namespace Grid {
+void generate_maze( Maze::Maze& maze );
+void animate_maze( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Grid
+
+//////////////////////////////////   Implementation   /////////////////////////////////////////////////
+
 namespace {
 
 constexpr int run_limit = 4;
@@ -54,7 +63,7 @@ void animate_run( Maze::Maze& maze, std::stack<Maze::Point>& dfs, Run_start run,
 
 } // namespace
 
-export namespace Grid {
+namespace Grid {
 
 void generate_maze( Maze::Maze& maze )
 {

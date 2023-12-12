@@ -16,7 +16,18 @@ import :printers;
 import :solve_utilities;
 import :my_queue;
 
-/* * * * * * * * * * * *   Flood First Search Solving Algorithms and Helper Types    * * * * * * * * * * * * * * */
+//////////////////////////////////   Exported Interface   /////////////////////////////////////
+
+export namespace Floodfs {
+void hunt( Maze::Maze& maze );
+void animate_hunt( Maze::Maze& maze, Speed::Speed speed );
+void gather( Maze::Maze& maze );
+void animate_gather( Maze::Maze& maze, Speed::Speed speed );
+void corners( Maze::Maze& maze );
+void animate_corners( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Floodfs
+
+//////////////////////////////////   Implementation     ////////////////////////////////////
 
 namespace {
 
@@ -222,7 +233,7 @@ void animate_gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thr
 
 /* * * * * * * * * * * *  Multithreaded Dispatcher Functions from Header Interface   * * * * * * * * * * * * * * */
 
-export namespace Floodfs {
+namespace Floodfs {
 
 void hunt( Maze::Maze& maze )
 {

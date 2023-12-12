@@ -9,6 +9,15 @@ import :maze;
 import :speed;
 import :build_utilities;
 
+///////////////////////////////////   Exported Interface  ///////////////////////////////////////////
+
+export namespace Kruskal {
+void generate_maze( Maze::Maze& maze );
+void animate_maze( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Kruskal
+
+//////////////////////////////////   Implementation   /////////////////////////////////////////////////
+
 namespace {
 
 std::vector<Maze::Point> load_shuffled_walls( Maze::Maze& maze )
@@ -47,7 +56,7 @@ std::unordered_map<Maze::Point, int> tag_cells( Maze::Maze& maze )
 
 } // namespace
 
-export namespace Kruskal {
+namespace Kruskal {
 
 void generate_maze( Maze::Maze& maze )
 {

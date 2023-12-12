@@ -11,6 +11,15 @@ import :maze;
 import :speed;
 import :build_utilities;
 
+///////////////////////////////////   Exported Interface  ///////////////////////////////////////////
+
+export namespace Eller {
+void generate_maze( Maze::Maze& maze );
+void animate_maze( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Eller
+
+//////////////////////////////////   Implementation   /////////////////////////////////////////////////
+
 namespace {
 
 constexpr uint8_t window_height = 2;
@@ -87,7 +96,7 @@ void complete_final_row_animated( Maze::Maze& maze, Sliding_set_window& window, 
 
 } // namespace
 
-export namespace Eller {
+namespace Eller {
 
 /* There are two fun details about this implementation: the auxillary memory requirement is a constant determined
  * by the width of a row and the randomness is thorough when determining how many squares per set should drop below.

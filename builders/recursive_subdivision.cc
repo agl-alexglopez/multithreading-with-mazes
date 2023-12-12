@@ -7,6 +7,15 @@ import :maze;
 import :speed;
 import :build_utilities;
 
+///////////////////////////////////   Exported Interface  ///////////////////////////////////////////
+
+export namespace Recursive_subdivision {
+void generate_maze( Maze::Maze& maze );
+void animate_maze( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Recursive_subdivision
+
+//////////////////////////////////   Implementation   /////////////////////////////////////////////////
+
 namespace {
 
 using Height = int;
@@ -26,7 +35,7 @@ int random_odd_passage( std::mt19937& generator, int axis_limit )
 
 } // namespace
 
-export namespace Recursive_subdivision {
+namespace Recursive_subdivision {
 
 void generate_maze( Maze::Maze& maze )
 {

@@ -17,6 +17,16 @@ import :printers;
 import :solve_utilities;
 import :my_queue;
 
+//////////////////////////////////   Exported Interface   /////////////////////////////////////
+
+export namespace Dark_bfs {
+void animate_hunt( Maze::Maze& maze, Speed::Speed speed );
+void animate_gather( Maze::Maze& maze, Speed::Speed speed );
+void animate_corners( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Dark_bfs
+
+//////////////////////////////////   Implementation     ////////////////////////////////////
+
 namespace {
 
 void animate_hunter( Maze::Maze& maze, Sutil::Bfs_monitor& monitor, Sutil::Thread_id id )
@@ -126,7 +136,7 @@ void animate_gatherer( Maze::Maze& maze, Sutil::Bfs_monitor& monitor, Sutil::Thr
 
 /* * * * * * * * * * * *  Multithreaded Dispatcher Functions from Header Interface   * * * * * * * * * * * * * * */
 
-export namespace Dark_bfs {
+namespace Dark_bfs {
 
 void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
 {

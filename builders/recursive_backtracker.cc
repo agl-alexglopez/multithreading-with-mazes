@@ -11,7 +11,16 @@ import :maze;
 import :speed;
 import :build_utilities;
 
+///////////////////////////////////   Exported Interface  ///////////////////////////////////////////
+
 export namespace Recursive_backtracker {
+void generate_maze( Maze::Maze& maze );
+void animate_maze( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Recursive_backtracker
+
+//////////////////////////////////   Implementation   /////////////////////////////////////////////////
+
+namespace Recursive_backtracker {
 
 constexpr Speed::Speed_unit backtrack_delay = 8;
 

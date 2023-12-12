@@ -3,7 +3,18 @@ import :maze;
 import :speed;
 import :build_utilities;
 
+///////////////////////////////////   Exported Interface  ///////////////////////////////////////////
+
 export namespace Mods {
+void add_x( Maze::Maze& maze );
+void add_x_animated( Maze::Maze& maze, Speed::Speed speed );
+void add_cross( Maze::Maze& maze );
+void add_cross_animated( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Mods
+
+//////////////////////////////////   Implementation   /////////////////////////////////////////////////
+
+namespace Mods {
 
 void add_x( Maze::Maze& maze )
 {

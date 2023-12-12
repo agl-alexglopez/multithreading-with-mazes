@@ -17,6 +17,19 @@ import :printers;
 import :solve_utilities;
 import :my_queue;
 
+//////////////////////////////////   Exported Interface   /////////////////////////////////////
+
+export namespace Bfs {
+void hunt( Maze::Maze& maze );
+void animate_hunt( Maze::Maze& maze, Speed::Speed speed );
+void gather( Maze::Maze& maze );
+void animate_gather( Maze::Maze& maze, Speed::Speed speed );
+void corners( Maze::Maze& maze );
+void animate_corners( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Bfs
+
+//////////////////////////////////   Implementation     ////////////////////////////////////
+
 namespace {
 
 void hunter( Maze::Maze& maze, Sutil::Bfs_monitor& monitor, Sutil::Thread_id id )
@@ -221,7 +234,7 @@ void animate_gatherer( Maze::Maze& maze, Sutil::Bfs_monitor& monitor, Sutil::Thr
 
 /* * * * * * * * * * * *  Multithreaded Dispatcher Functions from Header Interface   * * * * * * * * * * * * * * */
 
-export namespace Bfs {
+namespace Bfs {
 
 void hunt( Maze::Maze& maze )
 {

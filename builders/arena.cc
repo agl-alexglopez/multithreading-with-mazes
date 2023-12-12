@@ -3,7 +3,16 @@ import :maze;
 import :speed;
 import :build_utilities;
 
+///////////////////////////////////   Exported Interface  ///////////////////////////////////////////
+
 export namespace Arena {
+void generate_maze( Maze::Maze& maze );
+void animate_maze( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Arena
+
+//////////////////////////////////   Implementation   /////////////////////////////////////////////////
+
+namespace Arena {
 
 void generate_maze( Maze::Maze& maze )
 {

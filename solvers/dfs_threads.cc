@@ -16,7 +16,18 @@ import :speed;
 import :solve_utilities;
 import :my_queue;
 
-/* * * * * * * * * * * *   Depth First Search Solving Algorithms and Helper Types    * * * * * * * * * * * * * * */
+//////////////////////////////////   Exported Interface   /////////////////////////////////////
+
+export namespace Dfs {
+void hunt( Maze::Maze& maze );
+void animate_hunt( Maze::Maze& maze, Speed::Speed speed );
+void gather( Maze::Maze& maze );
+void animate_gather( Maze::Maze& maze, Speed::Speed speed );
+void corners( Maze::Maze& maze );
+void animate_corners( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Dfs
+
+//////////////////////////////////   Implementation     ////////////////////////////////////
 
 namespace {
 
@@ -234,7 +245,7 @@ void animate_gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thr
 
 /* * * * * * * * * * * *  Multithreaded Dispatcher Functions from Header Interface   * * * * * * * * * * * * * * */
 
-export namespace Dfs {
+namespace Dfs {
 
 void hunt( Maze::Maze& maze )
 {

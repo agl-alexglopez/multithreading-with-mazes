@@ -11,6 +11,15 @@ import :maze;
 import :speed;
 import :build_utilities;
 
+///////////////////////////////////   Exported Interface  ///////////////////////////////////////////
+
+export namespace Prim {
+void generate_maze( Maze::Maze& maze );
+void animate_maze( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Prim
+
+//////////////////////////////////   Implementation   /////////////////////////////////////////////////
+
 namespace {
 
 struct Priority_cell
@@ -38,7 +47,7 @@ Maze::Point pick_random_odd_point( Maze::Maze& maze )
 
 } // namespace
 
-export namespace Prim {
+namespace Prim {
 
 void generate_maze( Maze::Maze& maze )
 {

@@ -13,6 +13,15 @@ import :maze;
 import :speed;
 import :build_utilities;
 
+///////////////////////////////////   Exported Interface  ///////////////////////////////////////////
+
+export namespace Wilson_wall_adder {
+void generate_maze( Maze::Maze& maze );
+void animate_maze( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Wilson_wall_adder
+
+//////////////////////////////////   Implementation   /////////////////////////////////////////////////
+
 namespace {
 
 struct Loop
@@ -234,7 +243,7 @@ bool animate_random_walks( Maze::Maze& maze, Random_walk& cur, Speed::Speed_unit
 
 /* * * * * * * * * * * * * * * *   Wilson Wall Adder Algorithm   * * * * * * * * * * * * * * * * */
 
-export namespace Wilson_wall_adder {
+namespace Wilson_wall_adder {
 
 void generate_maze( Maze::Maze& maze )
 {

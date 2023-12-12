@@ -16,6 +16,16 @@ import :printers;
 import :solve_utilities;
 import :my_queue;
 
+//////////////////////////////////   Exported Interface   /////////////////////////////////////
+
+export namespace Dark_rdfs {
+void animate_hunt( Maze::Maze& maze, Speed::Speed speed );
+void animate_gather( Maze::Maze& maze, Speed::Speed speed );
+void animate_corners( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Dark_rdfs
+
+//////////////////////////////////   Implementation     ////////////////////////////////////
+
 namespace {
 
 void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thread_id id )
@@ -141,7 +151,7 @@ void animate_gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thr
 
 /* * * * * * * * * * * *  Multithreaded Dispatcher Functions from Header Interface   * * * * * * * * * * * * * * */
 
-export namespace Dark_rdfs {
+namespace Dark_rdfs {
 
 void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
 {
