@@ -33,8 +33,7 @@ struct Maze_runner
 
   int builder_view { static_image };
   Speed::Speed builder_speed {};
-  Build_function builder { Recursive_backtracker::generate_maze,
-                           Recursive_backtracker::animate_maze };
+  Build_function builder { Recursive_backtracker::generate_maze, Recursive_backtracker::animate_maze };
 
   int modification_getter { static_image };
   std::optional<Build_function> modder {};
@@ -69,16 +68,10 @@ int main( int argc, char** argv )
   const Lookup_tables tables = {
     { "-r", "-c", "-b", "-p", "-h", "-g", "-d", "-m", "-pa", "-ba" },
     {
-      { "rdfs",
-        { Recursive_backtracker::generate_maze,
-          Recursive_backtracker::animate_maze } },
-      { "wilson",
-        { Wilson_path_carver::generate_maze, Wilson_path_carver::animate_maze } },
-      { "wilson-walls",
-        { Wilson_wall_adder::generate_maze, Wilson_wall_adder::animate_maze } },
-      { "fractal",
-        { Recursive_subdivision::generate_maze,
-          Recursive_subdivision::animate_maze } },
+      { "rdfs", { Recursive_backtracker::generate_maze, Recursive_backtracker::animate_maze } },
+      { "wilson", { Wilson_path_carver::generate_maze, Wilson_path_carver::animate_maze } },
+      { "wilson-walls", { Wilson_wall_adder::generate_maze, Wilson_wall_adder::animate_maze } },
+      { "fractal", { Recursive_subdivision::generate_maze, Recursive_subdivision::animate_maze } },
       { "kruskal", { Kruskal::generate_maze, Kruskal::animate_maze } },
       { "eller", { Eller::generate_maze, Eller::animate_maze } },
       { "prim", { Prim::generate_maze, Prim::animate_maze } },

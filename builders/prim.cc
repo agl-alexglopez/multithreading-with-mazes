@@ -9,7 +9,7 @@ module;
 export module labyrinth:prim;
 import :maze;
 import :speed;
-import :maze_utilities;
+import :build_utilities;
 
 namespace {
 
@@ -42,7 +42,7 @@ export namespace Prim {
 
 void generate_maze( Maze::Maze& maze )
 {
-  Maze_utilities::fill_maze_with_walls( maze );
+  Butil::fill_maze_with_walls( maze );
   std::unordered_map<Maze::Point, int> cell_cost {};
   std::uniform_int_distribution<int> random_cost( 0, 100 );
   std::mt19937 generator( std::random_device {}() );
@@ -56,7 +56,7 @@ void generate_maze( Maze::Maze& maze )
     int min_weight = INT_MAX;
     for ( const Maze::Point& p : Maze::build_dirs ) {
       const Maze::Point next = { cur.row + p.row, cur.col + p.col };
-      if ( !Maze_utilities::can_build_new_square( maze, next ) ) {
+      if ( !Butil::can_build_new_square( maze, next ) ) {
         continue;
       }
       // We can generate random costs as we go efficiently thanks to try_emplace not constructing if present.
@@ -68,20 +68,20 @@ void generate_maze( Maze::Maze& maze )
       }
     }
     if ( min_neighbor ) {
-      Maze_utilities::join_squares( maze, cur, min_neighbor.value() );
+      Butil::join_squares( maze, cur, min_neighbor.value() );
       cells.push( { min_neighbor.value(), min_weight } );
     } else {
       cells.pop();
     }
   }
-  Maze_utilities::clear_and_flush_grid( maze );
+  Butil::clear_and_flush_grid( maze );
 }
 
 void animate_maze( Maze::Maze& maze, Speed::Speed speed )
 {
-  const Speed::Speed_unit animation_speed = Maze_utilities::builder_speeds.at( static_cast<int>( speed ) );
-  Maze_utilities::fill_maze_with_walls_animated( maze );
-  Maze_utilities::clear_and_flush_grid( maze );
+  const Speed::Speed_unit animation_speed = Butil::builder_speeds.at( static_cast<int>( speed ) );
+  Butil::fill_maze_with_walls_animated( maze );
+  Butil::clear_and_flush_grid( maze );
   std::unordered_map<Maze::Point, int> cell_cost {};
   std::uniform_int_distribution<int> random_cost( 0, 100 );
   std::mt19937 generator( std::random_device {}() );
@@ -95,7 +95,7 @@ void animate_maze( Maze::Maze& maze, Speed::Speed speed )
     int min_weight = INT_MAX;
     for ( const Maze::Point& p : Maze::build_dirs ) {
       const Maze::Point next = { cur.row + p.row, cur.col + p.col };
-      if ( !Maze_utilities::can_build_new_square( maze, next ) ) {
+      if ( !Butil::can_build_new_square( maze, next ) ) {
         continue;
       }
       const auto cost = cell_cost.try_emplace( next, random_cost( generator ) );
@@ -106,7 +106,7 @@ void animate_maze( Maze::Maze& maze, Speed::Speed speed )
       }
     }
     if ( min_neighbor ) {
-      Maze_utilities::join_squares_animated( maze, cur, min_neighbor.value(), animation_speed );
+      Butil::join_squares_animated( maze, cur, min_neighbor.value(), animation_speed );
       cells.push( { min_neighbor.value(), min_weight } );
     } else {
       cells.pop();

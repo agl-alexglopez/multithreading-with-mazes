@@ -14,7 +14,7 @@ export module labyrinth:bfs;
 import :maze;
 import :speed;
 import :printers;
-import :solver_utilities;
+import :solve_utilities;
 import :my_queue;
 
 namespace {

@@ -9,7 +9,7 @@ module;
 export module labyrinth:recursive_backtracker;
 import :maze;
 import :speed;
-import :maze_utilities;
+import :build_utilities;
 
 export namespace Recursive_backtracker {
 
@@ -17,7 +17,7 @@ constexpr Speed::Speed_unit backtrack_delay = 8;
 
 void generate_maze( Maze::Maze& maze )
 {
-  Maze_utilities::fill_maze_with_walls( maze );
+  Butil::fill_maze_with_walls( maze );
   // Note that backtracking occurs by encoding directions into path bits. No stack needed.
   std::mt19937 generator( std::random_device {}() );
   std::uniform_int_distribution<int> row_random( 1, maze.row_size() - 2 );
@@ -35,9 +35,9 @@ void generate_maze( Maze::Maze& maze )
     for ( const int& i : random_direction_indices ) {
       const Maze::Point& direction = Maze::build_dirs.at( i );
       const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
-      if ( Maze_utilities::can_build_new_square( maze, next ) ) {
+      if ( Butil::can_build_new_square( maze, next ) ) {
         branches_remain = true;
-        Maze_utilities::carve_path_markings( maze, cur, next );
+        Butil::carve_path_markings( maze, cur, next );
         cur = next;
         break;
       }
@@ -54,14 +54,14 @@ void generate_maze( Maze::Maze& maze )
       branches_remain = true;
     }
   }
-  Maze_utilities::clear_and_flush_grid( maze );
+  Butil::clear_and_flush_grid( maze );
 }
 
 void animate_maze( Maze::Maze& maze, Speed::Speed speed )
 {
-  const Speed::Speed_unit animation = Maze_utilities::builder_speeds.at( static_cast<int>( speed ) );
-  Maze_utilities::fill_maze_with_walls_animated( maze );
-  Maze_utilities::clear_and_flush_grid( maze );
+  const Speed::Speed_unit animation = Butil::builder_speeds.at( static_cast<int>( speed ) );
+  Butil::fill_maze_with_walls_animated( maze );
+  Butil::clear_and_flush_grid( maze );
   std::mt19937 generator( std::random_device {}() );
   std::uniform_int_distribution<int> row_random( 1, maze.row_size() - 2 );
   std::uniform_int_distribution<int> col_random( 1, maze.col_size() - 2 );
@@ -76,8 +76,8 @@ void animate_maze( Maze::Maze& maze, Speed::Speed speed )
     for ( const int& i : random_direction_indices ) {
       const Maze::Point& direction = Maze::build_dirs.at( i );
       const Maze::Point next = { cur.row + direction.row, cur.col + direction.col };
-      if ( Maze_utilities::can_build_new_square( maze, next ) ) {
-        Maze_utilities::carve_path_markings_animated( maze, cur, next, animation );
+      if ( Butil::can_build_new_square( maze, next ) ) {
+        Butil::carve_path_markings_animated( maze, cur, next, animation );
         branches_remain = true;
         cur = next;
         break;
@@ -94,9 +94,9 @@ void animate_maze( Maze::Maze& maze, Speed::Speed speed )
       // We are using fields the threads will use later. Clear bits as we backtrack.
       maze[half.row][half.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask );
       maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask );
-      Maze_utilities::flush_cursor_maze_coordinate( maze, half );
+      Butil::flush_cursor_maze_coordinate( maze, half );
       std::this_thread::sleep_for( std::chrono::microseconds( animation * backtrack_delay ) );
-      Maze_utilities::flush_cursor_maze_coordinate( maze, cur );
+      Butil::flush_cursor_maze_coordinate( maze, cur );
       std::this_thread::sleep_for( std::chrono::microseconds( animation * backtrack_delay ) );
       cur = next;
       branches_remain = true;

@@ -2,6 +2,7 @@ file (GLOB_RECURSE MAZE_CC_FILES
   ${CMAKE_SOURCE_DIR}/demo/*.cc
   ${CMAKE_SOURCE_DIR}/run_maze/*.cc
   ${CMAKE_SOURCE_DIR}/measure/*.cc
+  ${CMAKE_SOURCE_DIR}/module/*.cc
   ${CMAKE_SOURCE_DIR}/speed/*.cc
   ${CMAKE_SOURCE_DIR}/maze/*.cc
   ${CMAKE_SOURCE_DIR}/painters/*.cc

@@ -13,7 +13,7 @@ export module labyrinth:floodfs;
 import :maze;
 import :speed;
 import :printers;
-import :solver_utilities;
+import :solve_utilities;
 import :my_queue;
 
 /* * * * * * * * * * * *   Flood First Search Solving Algorithms and Helper Types    * * * * * * * * * * * * * * */
@@ -71,8 +71,7 @@ void complete_hunt( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id 
 
     // Bias each thread's first choice towards orginal dispatch direction. More coverage.
     bool found_branch_to_explore = false;
-    for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size();
-          count++, ++i %= Sutil::dirs.size() ) {
+    for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size(); count++, ++i %= Sutil::dirs.size() ) {
       const Maze::Point& p = Sutil::dirs.at( i );
       const Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
@@ -125,8 +124,7 @@ void animate_hunt( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id i
 
     // Bias each thread's first choice towards orginal dispatch direction. More coverage.
     bool found_branch_to_explore = false;
-    for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size();
-          count++, ++i %= Sutil::dirs.size() ) {
+    for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size(); count++, ++i %= Sutil::dirs.size() ) {
       const Maze::Point& p = Sutil::dirs.at( i );
       const Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
@@ -157,8 +155,7 @@ void complete_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_i
 
     monitor.monitor.lock();
     // We are the first thread to this finish! Claim it!
-    if ( maze[cur.row][cur.col] & Sutil::finish_bit
-         && !( maze[cur.row][cur.col] & Sutil::cache_mask ) ) {
+    if ( maze[cur.row][cur.col] & Sutil::finish_bit && !( maze[cur.row][cur.col] & Sutil::cache_mask ) ) {
       maze[cur.row][cur.col] |= seen;
       dfs.pop_back();
       for ( const Maze::Point& p : dfs ) {
@@ -173,8 +170,7 @@ void complete_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_i
 
     // Bias each thread's first choice towards orginal dispatch direction. More coverage.
     bool found_branch_to_explore = false;
-    for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size();
-          count++, ++i %= Sutil::dirs.size() ) {
+    for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size(); count++, ++i %= Sutil::dirs.size() ) {
       const Maze::Point& p = Sutil::dirs.at( i );
       const Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
@@ -204,8 +200,7 @@ void animate_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id
     cur = dfs.back();
 
     monitor.monitor.lock();
-    if ( maze[cur.row][cur.col] & Sutil::finish_bit
-         && !( maze[cur.row][cur.col] & Sutil::cache_mask ) ) {
+    if ( maze[cur.row][cur.col] & Sutil::finish_bit && !( maze[cur.row][cur.col] & Sutil::cache_mask ) ) {
       maze[cur.row][cur.col] |= seen;
       monitor.monitor.unlock();
       dfs.pop_back();
@@ -219,8 +214,7 @@ void animate_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
 
     bool found_branch_to_explore = false;
-    for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size();
-          count++, ++i %= Sutil::dirs.size() ) {
+    for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size(); count++, ++i %= Sutil::dirs.size() ) {
       const Maze::Point& p = Sutil::dirs.at( i );
       const Maze::Point next = { cur.row + p.row, cur.col + p.col };
       monitor.monitor.lock();
@@ -248,8 +242,7 @@ export namespace Floodfs {
 void floodfs_thread_hunt( Maze::Maze& maze )
 {
   Solver_monitor monitor;
-  monitor.starts
-    = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
   const Maze::Point finish = Sutil::pick_random_point( maze );
   maze[finish.row][finish.col] |= Sutil::finish_bit;
@@ -265,8 +258,7 @@ void floodfs_thread_hunt( Maze::Maze& maze )
 
   if ( monitor.winning_index ) {
     const Sutil::Thread_paint winner_color
-      = ( Sutil::thread_bits.at( monitor.winning_index.value() )
-          << Sutil::thread_paint_shift );
+      = ( Sutil::thread_bits.at( monitor.winning_index.value() ) << Sutil::thread_paint_shift );
     monitor.thread_paths.at( monitor.winning_index.value() ).pop_back();
     const Maze::Point& before_finish = monitor.thread_paths.at( monitor.winning_index.value() ).back();
     maze[before_finish.row][before_finish.col] |= winner_color;
@@ -281,8 +273,7 @@ void floodfs_thread_hunt( Maze::Maze& maze )
 void floodfs_thread_gather( Maze::Maze& maze )
 {
   Solver_monitor monitor;
-  monitor.starts
-    = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
   for ( int finish_square = 0; finish_square < Sutil::num_gather_finishes; finish_square++ ) {
     const Maze::Point finish = Sutil::pick_random_point( maze );
@@ -299,8 +290,7 @@ void floodfs_thread_gather( Maze::Maze& maze )
   }
   int i_thread = 0;
   for ( const std::vector<Maze::Point>& path : monitor.thread_paths ) {
-    const Sutil::Thread_paint color
-      = ( Sutil::thread_bits.at( i_thread ) << Sutil::thread_paint_shift );
+    const Sutil::Thread_paint color = ( Sutil::thread_bits.at( i_thread ) << Sutil::thread_paint_shift );
     const Maze::Point& p = path.back();
     maze[p.row][p.col] &= static_cast<Sutil::Thread_paint>( ~Sutil::thread_paint_mask );
     maze[p.row][p.col] |= color;
@@ -340,8 +330,7 @@ void floodfs_thread_corners( Maze::Maze& maze )
 
   if ( monitor.winning_index ) {
     const Sutil::Thread_paint winner_color
-      = ( Sutil::thread_bits.at( monitor.winning_index.value() )
-          << Sutil::thread_paint_shift );
+      = ( Sutil::thread_bits.at( monitor.winning_index.value() ) << Sutil::thread_paint_shift );
     const Maze::Point& before_finish = monitor.thread_paths.at( monitor.winning_index.value() ).back();
     maze[before_finish.row][before_finish.col] |= winner_color;
   }
@@ -358,8 +347,7 @@ void animate_floodfs_thread_hunt( Maze::Maze& maze, Speed::Speed speed )
   Sutil::print_overlap_key();
   Solver_monitor monitor;
   monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
-  monitor.starts
-    = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
   const Maze::Point finish = Sutil::pick_random_point( maze );
   maze[finish.row][finish.col] |= Sutil::finish_bit;
@@ -378,8 +366,7 @@ void animate_floodfs_thread_hunt( Maze::Maze& maze, Speed::Speed speed )
 
   if ( monitor.winning_index ) {
     const Sutil::Thread_paint winner_color
-      = ( Sutil::thread_bits.at( monitor.winning_index.value() )
-          << Sutil::thread_paint_shift );
+      = ( Sutil::thread_bits.at( monitor.winning_index.value() ) << Sutil::thread_paint_shift );
     const Maze::Point& before_finish = monitor.thread_paths.at( monitor.winning_index.value() ).back();
     maze[before_finish.row][before_finish.col] |= winner_color;
     Sutil::flush_cursor_path_coordinate( maze, before_finish );
@@ -396,8 +383,7 @@ void animate_floodfs_thread_gather( Maze::Maze& maze, Speed::Speed speed )
   Sutil::print_overlap_key();
   Solver_monitor monitor;
   monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
-  monitor.starts
-    = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
   for ( int finish_square = 0; finish_square < Sutil::num_gather_finishes; finish_square++ ) {
     const Maze::Point finish = Sutil::pick_random_point( maze );
@@ -418,8 +404,7 @@ void animate_floodfs_thread_gather( Maze::Maze& maze, Speed::Speed speed )
 
   int i_thread = 0;
   for ( const std::vector<Maze::Point>& path : monitor.thread_paths ) {
-    const Sutil::Thread_paint color
-      = ( Sutil::thread_bits.at( i_thread ) << Sutil::thread_paint_shift );
+    const Sutil::Thread_paint color = ( Sutil::thread_bits.at( i_thread ) << Sutil::thread_paint_shift );
     const Maze::Point& p = path.back();
     maze[p.row][p.col] &= static_cast<Sutil::Thread_paint>( ~Sutil::thread_paint_mask );
     maze[p.row][p.col] |= color;
@@ -469,8 +454,7 @@ void animate_floodfs_thread_corners( Maze::Maze& maze, Speed::Speed speed )
 
   if ( monitor.winning_index ) {
     const Sutil::Thread_paint winner_color
-      = ( Sutil::thread_bits.at( monitor.winning_index.value() )
-          << Sutil::thread_paint_shift );
+      = ( Sutil::thread_bits.at( monitor.winning_index.value() ) << Sutil::thread_paint_shift );
     const Maze::Point& before_finish = monitor.thread_paths.at( monitor.winning_index.value() ).back();
     maze[before_finish.row][before_finish.col] |= winner_color;
     Sutil::flush_cursor_path_coordinate( maze, before_finish );

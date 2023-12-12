@@ -5,7 +5,7 @@ module;
 export module labyrinth:recursive_subdivision;
 import :maze;
 import :speed;
-import :maze_utilities;
+import :build_utilities;
 
 namespace {
 
@@ -30,7 +30,7 @@ export namespace Recursive_subdivision {
 
 void generate_maze( Maze::Maze& maze )
 {
-  Maze_utilities::build_wall_outline( maze );
+  Butil::build_wall_outline( maze );
   std::mt19937 generator( std::random_device {}() );
   std::stack<std::tuple<Maze::Point, Height, Width>> chamber_stack(
     { { { 0, 0 }, maze.row_size(), maze.col_size() } } );
@@ -46,7 +46,7 @@ void generate_maze( Maze::Maze& maze )
         if ( col != passage ) {
           maze[chamber_offset.row + divide][chamber_offset.col + col]
             &= static_cast<Maze::Square>( ~Maze::path_bit );
-          Maze_utilities::build_wall_line( maze, { chamber_offset.row + divide, chamber_offset.col + col } );
+          Butil::build_wall_line( maze, { chamber_offset.row + divide, chamber_offset.col + col } );
         }
       }
       // Remember to shrink height of this branch before we continue down next branch.
@@ -60,7 +60,7 @@ void generate_maze( Maze::Maze& maze )
         if ( row != passage ) {
           maze[chamber_offset.row + row][chamber_offset.col + divide]
             &= static_cast<Maze::Square>( ~Maze::path_bit );
-          Maze_utilities::build_wall_line( maze, { chamber_offset.row + row, chamber_offset.col + divide } );
+          Butil::build_wall_line( maze, { chamber_offset.row + row, chamber_offset.col + divide } );
         }
       }
       // In this case, we are shrinking the width.
@@ -71,14 +71,14 @@ void generate_maze( Maze::Maze& maze )
       chamber_stack.pop();
     }
   }
-  Maze_utilities::clear_and_flush_grid( maze );
+  Butil::clear_and_flush_grid( maze );
 }
 
 void animate_maze( Maze::Maze& maze, Speed::Speed speed )
 {
-  const Speed::Speed_unit animation = Maze_utilities::builder_speeds.at( static_cast<int>( speed ) );
-  Maze_utilities::build_wall_outline( maze );
-  Maze_utilities::clear_and_flush_grid( maze );
+  const Speed::Speed_unit animation = Butil::builder_speeds.at( static_cast<int>( speed ) );
+  Butil::build_wall_outline( maze );
+  Butil::clear_and_flush_grid( maze );
   std::mt19937 generator( std::random_device {}() );
   std::stack<std::tuple<Maze::Point, Height, Width>> chamber_stack(
     { { { 0, 0 }, maze.row_size(), maze.col_size() } } );
@@ -94,7 +94,7 @@ void animate_maze( Maze::Maze& maze, Speed::Speed speed )
         if ( col != passage ) {
           maze[chamber_offset.row + divide][chamber_offset.col + col]
             &= static_cast<Maze::Square>( ~Maze::path_bit );
-          Maze_utilities::build_wall_line_animated(
+          Butil::build_wall_line_animated(
             maze, { chamber_offset.row + divide, chamber_offset.col + col }, animation );
         }
       }
@@ -108,7 +108,7 @@ void animate_maze( Maze::Maze& maze, Speed::Speed speed )
         if ( row != passage ) {
           maze[chamber_offset.row + row][chamber_offset.col + divide]
             &= static_cast<Maze::Square>( ~Maze::path_bit );
-          Maze_utilities::build_wall_line_animated(
+          Butil::build_wall_line_animated(
             maze, { chamber_offset.row + row, chamber_offset.col + divide }, animation );
         }
       }

@@ -13,7 +13,7 @@ export module labyrinth:dark_rdfs;
 import :maze;
 import :speed;
 import :printers;
-import :solver_utilities;
+import :solve_utilities;
 import :my_queue;
 
 namespace {
@@ -111,8 +111,7 @@ void animate_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id
     cur = dfs.back();
 
     monitor.monitor.lock();
-    if ( maze[cur.row][cur.col] & Sutil::finish_bit
-         && !( maze[cur.row][cur.col] & Sutil::cache_mask ) ) {
+    if ( maze[cur.row][cur.col] & Sutil::finish_bit && !( maze[cur.row][cur.col] & Sutil::cache_mask ) ) {
       maze[cur.row][cur.col] |= seen;
       Sutil::flush_cursor_path_coordinate( maze, cur );
       monitor.monitor.unlock();
@@ -166,8 +165,7 @@ void animate_darkrandomized_dfs_thread_hunt( Maze::Maze& maze, Speed::Speed spee
   Sutil::deluminate_maze( maze );
   Solver_monitor monitor;
   monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
-  monitor.starts
-    = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
   const Maze::Point finish = Sutil::pick_random_point( maze );
   maze[finish.row][finish.col] |= Sutil::finish_bit;
@@ -193,8 +191,7 @@ void animate_darkrandomized_dfs_thread_gather( Maze::Maze& maze, Speed::Speed sp
   Sutil::deluminate_maze( maze );
   Solver_monitor monitor;
   monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
-  monitor.starts
-    = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
   for ( int finish_square = 0; finish_square < Sutil::num_gather_finishes; finish_square++ ) {
     const Maze::Point finish = Sutil::pick_random_point( maze );

@@ -7,7 +7,7 @@ export module labyrinth:kruskal;
 import :disjoint_set;
 import :maze;
 import :speed;
-import :maze_utilities;
+import :build_utilities;
 
 namespace {
 
@@ -51,7 +51,7 @@ export namespace Kruskal {
 
 void generate_maze( Maze::Maze& maze )
 {
-  Maze_utilities::fill_maze_with_walls( maze );
+  Butil::fill_maze_with_walls( maze );
   const std::vector<Maze::Point> walls = load_shuffled_walls( maze );
   const std::unordered_map<Maze::Point, int> set_ids = tag_cells( maze );
   Disjoint_set sets( set_ids.size() );
@@ -60,24 +60,24 @@ void generate_maze( Maze::Maze& maze )
       const Maze::Point above_cell = { p.row - 1, p.col };
       const Maze::Point below_cell = { p.row + 1, p.col };
       if ( sets.made_union( set_ids.at( above_cell ), set_ids.at( below_cell ) ) ) {
-        Maze_utilities::join_squares( maze, above_cell, below_cell );
+        Butil::join_squares( maze, above_cell, below_cell );
       }
     } else {
       const Maze::Point left_cell = { p.row, p.col - 1 };
       const Maze::Point right_cell = { p.row, p.col + 1 };
       if ( sets.made_union( set_ids.at( left_cell ), set_ids.at( right_cell ) ) ) {
-        Maze_utilities::join_squares( maze, left_cell, right_cell );
+        Butil::join_squares( maze, left_cell, right_cell );
       }
     }
   }
-  Maze_utilities::clear_and_flush_grid( maze );
+  Butil::clear_and_flush_grid( maze );
 }
 
 void animate_maze( Maze::Maze& maze, Speed::Speed speed )
 {
-  const Speed::Speed_unit animation = Maze_utilities::builder_speeds.at( static_cast<int>( speed ) );
-  Maze_utilities::fill_maze_with_walls_animated( maze );
-  Maze_utilities::clear_and_flush_grid( maze );
+  const Speed::Speed_unit animation = Butil::builder_speeds.at( static_cast<int>( speed ) );
+  Butil::fill_maze_with_walls_animated( maze );
+  Butil::clear_and_flush_grid( maze );
   const std::vector<Maze::Point> walls = load_shuffled_walls( maze );
   const std::unordered_map<Maze::Point, int> set_ids = tag_cells( maze );
   Disjoint_set sets( set_ids.size() );
@@ -87,13 +87,13 @@ void animate_maze( Maze::Maze& maze, Speed::Speed speed )
       const Maze::Point above_cell = { p.row - 1, p.col };
       const Maze::Point below_cell = { p.row + 1, p.col };
       if ( sets.made_union( set_ids.at( above_cell ), set_ids.at( below_cell ) ) ) {
-        Maze_utilities::join_squares_animated( maze, above_cell, below_cell, animation );
+        Butil::join_squares_animated( maze, above_cell, below_cell, animation );
       }
     } else {
       const Maze::Point left_cell = { p.row, p.col - 1 };
       const Maze::Point right_cell = { p.row, p.col + 1 };
       if ( sets.made_union( set_ids.at( left_cell ), set_ids.at( right_cell ) ) ) {
-        Maze_utilities::join_squares_animated( maze, left_cell, right_cell, animation );
+        Butil::join_squares_animated( maze, left_cell, right_cell, animation );
       }
     }
   }

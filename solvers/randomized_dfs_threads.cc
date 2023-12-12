@@ -13,7 +13,7 @@ export module labyrinth:rdfs;
 import :maze;
 import :speed;
 import :printers;
-import :solver_utilities;
+import :solve_utilities;
 import :my_queue;
 
 namespace {
@@ -176,8 +176,7 @@ void complete_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_i
 
     monitor.monitor.lock();
     // We are the first thread to this finish! Claim it!
-    if ( maze[cur.row][cur.col] & Sutil::finish_bit
-         && !( maze[cur.row][cur.col] & Sutil::cache_mask ) ) {
+    if ( maze[cur.row][cur.col] & Sutil::finish_bit && !( maze[cur.row][cur.col] & Sutil::cache_mask ) ) {
       maze[cur.row][cur.col] |= seen;
       dfs.pop_back();
       for ( const Maze::Point& p : dfs ) {
@@ -227,8 +226,7 @@ void animate_gather( Maze::Maze& maze, Solver_monitor& monitor, Sutil::Thread_id
     cur = dfs.back();
 
     monitor.monitor.lock();
-    if ( maze[cur.row][cur.col] & Sutil::finish_bit
-         && !( maze[cur.row][cur.col] & Sutil::cache_mask ) ) {
+    if ( maze[cur.row][cur.col] & Sutil::finish_bit && !( maze[cur.row][cur.col] & Sutil::cache_mask ) ) {
       maze[cur.row][cur.col] |= seen;
       monitor.monitor.unlock();
       dfs.pop_back();
@@ -277,8 +275,7 @@ export namespace Rdfs {
 void randomized_dfs_thread_hunt( Maze::Maze& maze )
 {
   Solver_monitor monitor;
-  monitor.starts
-    = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
   const Maze::Point finish = Sutil::pick_random_point( maze );
   maze[finish.row][finish.col] |= Sutil::finish_bit;
@@ -300,8 +297,7 @@ void randomized_dfs_thread_hunt( Maze::Maze& maze )
 void randomized_dfs_thread_gather( Maze::Maze& maze )
 {
   Solver_monitor monitor;
-  monitor.starts
-    = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
   for ( int finish_square = 0; finish_square < Sutil::num_gather_finishes; finish_square++ ) {
     const Maze::Point finish = Sutil::pick_random_point( maze );
@@ -359,8 +355,7 @@ void animate_randomized_dfs_thread_hunt( Maze::Maze& maze, Speed::Speed speed )
   Sutil::print_overlap_key();
   Solver_monitor monitor;
   monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
-  monitor.starts
-    = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
   const Maze::Point finish = Sutil::pick_random_point( maze );
   maze[finish.row][finish.col] |= Sutil::finish_bit;
@@ -387,8 +382,7 @@ void animate_randomized_dfs_thread_gather( Maze::Maze& maze, Speed::Speed speed 
   Sutil::print_overlap_key();
   Solver_monitor monitor;
   monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
-  monitor.starts
-    = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
   maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
   for ( int finish_square = 0; finish_square < Sutil::num_gather_finishes; finish_square++ ) {
     const Maze::Point finish = Sutil::pick_random_point( maze );

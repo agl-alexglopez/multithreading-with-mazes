@@ -3,12 +3,12 @@ module;
 #include <cstdlib>
 #include <iostream>
 #include <thread>
-export module labyrinth:maze_utilities;
+export module labyrinth:build_utilities;
 import :maze;
 import :speed;
 import :printers;
 
-export namespace Maze_utilities {
+export namespace Butil {
 
 enum class Parity_point
 {
@@ -590,4 +590,4 @@ Maze::Point choose_arbitrary_point( const Maze::Maze& maze, Parity_point parity 
   return { 0, 0 };
 }
 
-} // namespace Maze_utilities
+} // namespace Butil

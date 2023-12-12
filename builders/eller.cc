@@ -9,7 +9,7 @@ module;
 export module labyrinth:eller;
 import :maze;
 import :speed;
-import :maze_utilities;
+import :build_utilities;
 
 namespace {
 
@@ -56,7 +56,7 @@ void complete_final_row( Maze::Maze& maze, Sliding_set_window& window )
     const Maze::Point next = { final_row, col + 2 };
     const Set_id this_square_id = window.sets[window.curr_row * window.width + col];
     if ( this_square_id != window.sets[window.curr_row * window.width + col + 2] ) {
-      Maze_utilities::join_squares( maze, { final_row, col }, next );
+      Butil::join_squares( maze, { final_row, col }, next );
       const Set_id other_set_id = window.sets[window.curr_row * window.width + next.col];
       for ( int set_elem = next.col; set_elem < maze.col_size() - 1; set_elem += 2 ) {
         if ( window.sets[window.curr_row * window.width + set_elem] == other_set_id ) {
@@ -74,7 +74,7 @@ void complete_final_row_animated( Maze::Maze& maze, Sliding_set_window& window, 
     const Maze::Point next = { final_row, col + 2 };
     const Set_id this_square_id = window.sets[window.curr_row * window.width + col];
     if ( this_square_id != window.sets[window.curr_row * window.width + col + 2] ) {
-      Maze_utilities::join_squares_animated( maze, { final_row, col }, next, animation );
+      Butil::join_squares_animated( maze, { final_row, col }, next, animation );
       const Set_id other_set_id = window.sets[window.curr_row * window.width + next.col];
       for ( int set_elem = next.col; set_elem < maze.col_size() - 1; set_elem += 2 ) {
         if ( window.sets[window.curr_row * window.width + set_elem] == other_set_id ) {
@@ -96,7 +96,7 @@ export namespace Eller {
 
 void generate_maze( Maze::Maze& maze )
 {
-  Maze_utilities::fill_maze_with_walls( maze );
+  Butil::fill_maze_with_walls( maze );
   std::mt19937 gen( std::random_device {}() );
   std::uniform_int_distribution<int> coin( 0, horizontal_bias );
 
@@ -114,9 +114,9 @@ void generate_maze( Maze::Maze& maze )
     for ( int col = 1; col < maze.col_size() - 1; col += 2 ) {
       const Maze::Point next = { row, col + 2 };
       const Set_id this_square_id = window.sets[window.curr_row * window.width + col];
-      if ( Maze_utilities::is_square_within_perimeter_walls( maze, next )
+      if ( Butil::is_square_within_perimeter_walls( maze, next )
            && this_square_id != window.sets[window.curr_row * window.width + next.col] && coin( gen ) ) {
-        Maze_utilities::join_squares( maze, { row, col }, next );
+        Butil::join_squares( maze, { row, col }, next );
         merge_sets( window, { this_square_id, window.sets[window.curr_row * window.width + next.col] }, col );
       }
     }
@@ -135,7 +135,7 @@ void generate_maze( Maze::Maze& maze )
         // We already linked this up and rondomness dropped us here again. More important for animated version.
         if ( !( maze[chosen.row + 2][chosen.col] & Maze::builder_bit ) ) {
           window.sets[next_row * window.width + chosen.col] = s.first;
-          Maze_utilities::join_squares( maze, chosen, { chosen.row + 2, chosen.col } );
+          Butil::join_squares( maze, chosen, { chosen.row + 2, chosen.col } );
         }
       }
     }
@@ -143,14 +143,14 @@ void generate_maze( Maze::Maze& maze )
     sets_in_this_row.clear();
   }
   complete_final_row( maze, window );
-  Maze_utilities::clear_and_flush_grid( maze );
+  Butil::clear_and_flush_grid( maze );
 }
 
 void animate_maze( Maze::Maze& maze, Speed::Speed speed )
 {
-  Maze_utilities::fill_maze_with_walls_animated( maze );
-  Maze_utilities::clear_and_flush_grid( maze );
-  const Speed::Speed_unit animation = Maze_utilities::builder_speeds.at( static_cast<int>( speed ) );
+  Butil::fill_maze_with_walls_animated( maze );
+  Butil::clear_and_flush_grid( maze );
+  const Speed::Speed_unit animation = Butil::builder_speeds.at( static_cast<int>( speed ) );
   std::mt19937 gen( std::random_device {}() );
   std::uniform_int_distribution<int> coin( 0, horizontal_bias );
 
@@ -168,9 +168,9 @@ void animate_maze( Maze::Maze& maze, Speed::Speed speed )
     for ( int col = 1; col < maze.col_size() - 1; col += 2 ) {
       const Maze::Point next = { row, col + 2 };
       const Set_id this_square_id = window.sets[window.curr_row * window.width + col];
-      if ( Maze_utilities::is_square_within_perimeter_walls( maze, next )
+      if ( Butil::is_square_within_perimeter_walls( maze, next )
            && this_square_id != window.sets[window.curr_row * window.width + next.col] && coin( gen ) ) {
-        Maze_utilities::join_squares_animated( maze, { row, col }, next, animation );
+        Butil::join_squares_animated( maze, { row, col }, next, animation );
         merge_sets( window, { this_square_id, window.sets[window.curr_row * window.width + next.col] }, col );
       }
     }
@@ -189,7 +189,7 @@ void animate_maze( Maze::Maze& maze, Speed::Speed speed )
         // We already linked this up and rondomness dropped us here again. Save pointless cursor movements.
         if ( !( maze[chosen.row + 2][chosen.col] & Maze::builder_bit ) ) {
           window.sets[next_row * window.width + chosen.col] = s.first;
-          Maze_utilities::join_squares_animated( maze, chosen, { chosen.row + 2, chosen.col }, animation );
+          Butil::join_squares_animated( maze, chosen, { chosen.row + 2, chosen.col }, animation );
         }
       }
     }

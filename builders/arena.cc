@@ -1,29 +1,29 @@
 export module labyrinth:arena;
 import :maze;
 import :speed;
-import :maze_utilities;
+import :build_utilities;
 
 export namespace Arena {
 
 void generate_maze( Maze::Maze& maze )
 {
-  Maze_utilities::fill_maze_with_walls( maze );
+  Butil::fill_maze_with_walls( maze );
   for ( int row = 1; row < maze.row_size() - 1; row++ ) {
     for ( int col = 1; col < maze.col_size() - 1; col++ ) {
-      Maze_utilities::build_path( maze, { row, col } );
+      Butil::build_path( maze, { row, col } );
     }
   }
-  Maze_utilities::clear_and_flush_grid( maze );
+  Butil::clear_and_flush_grid( maze );
 }
 
 void animate_maze( Maze::Maze& maze, Speed::Speed speed )
 {
-  Maze_utilities::fill_maze_with_walls( maze );
-  Maze_utilities::clear_and_flush_grid( maze );
-  const Speed::Speed_unit animation = Maze_utilities::builder_speeds.at( static_cast<int>( speed ) );
+  Butil::fill_maze_with_walls( maze );
+  Butil::clear_and_flush_grid( maze );
+  const Speed::Speed_unit animation = Butil::builder_speeds.at( static_cast<int>( speed ) );
   for ( int row = 1; row < maze.row_size() - 1; row++ ) {
     for ( int col = 1; col < maze.col_size() - 1; col++ ) {
-      Maze_utilities::carve_path_walls_animated( maze, { row, col }, animation );
+      Butil::carve_path_walls_animated( maze, { row, col }, animation );
     }
   }
 }

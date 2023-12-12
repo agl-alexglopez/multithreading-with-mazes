@@ -15,7 +15,7 @@ target_sources(labyrinth
       ${PROJECT_SOURCE_DIR}/maze/maze.cc
       ${PROJECT_SOURCE_DIR}/speed/speed.cc
       ${PROJECT_SOURCE_DIR}/printers/printers.cc
-      ${PROJECT_SOURCE_DIR}/builders/maze_utilities.cc
+      ${PROJECT_SOURCE_DIR}/builders/build_utilities.cc
       ${PROJECT_SOURCE_DIR}/builders/disjoint_set.cc
       ${PROJECT_SOURCE_DIR}/builders/arena.cc
       ${PROJECT_SOURCE_DIR}/builders/grid.cc
@@ -28,7 +28,7 @@ target_sources(labyrinth
       ${PROJECT_SOURCE_DIR}/builders/wilson_wall_adder.cc
       ${PROJECT_SOURCE_DIR}/builders/mods.cc
       ${PROJECT_SOURCE_DIR}/solvers/my_queue.cc
-      ${PROJECT_SOURCE_DIR}/solvers/solver_utilities.cc
+      ${PROJECT_SOURCE_DIR}/solvers/solve_utilities.cc
       ${PROJECT_SOURCE_DIR}/solvers/dfs_threads.cc
       ${PROJECT_SOURCE_DIR}/solvers/darkdfs_threads.cc
       ${PROJECT_SOURCE_DIR}/solvers/bfs_threads.cc
