@@ -94,7 +94,7 @@ export namespace Eller {
  * randomized technique to choose dropping squares. Find a better strategy.
  */
 
-void generate_eller( Maze::Maze& maze )
+void generate_maze( Maze::Maze& maze )
 {
   Maze_utilities::fill_maze_with_walls( maze );
   std::mt19937 gen( std::random_device {}() );
@@ -146,7 +146,7 @@ void generate_eller( Maze::Maze& maze )
   Maze_utilities::clear_and_flush_grid( maze );
 }
 
-void animate_eller( Maze::Maze& maze, Speed::Speed speed )
+void animate_maze( Maze::Maze& maze, Speed::Speed speed )
 {
   Maze_utilities::fill_maze_with_walls_animated( maze );
   Maze_utilities::clear_and_flush_grid( maze );

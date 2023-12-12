@@ -233,7 +233,7 @@ bool animate_random_walks( Maze::Maze& maze, Random_walk& cur, Speed::Speed_unit
 
 export namespace Wilson_path_carver {
 
-void generate_wilson_path_carver( Maze::Maze& maze )
+void generate_maze( Maze::Maze& maze )
 {
   Maze_utilities::fill_maze_with_walls( maze );
   /* Important to remember that this maze builds by jumping two squares at a time. Therefore for
@@ -272,7 +272,7 @@ void generate_wilson_path_carver( Maze::Maze& maze )
   }
 }
 
-void animate_wilson_path_carver( Maze::Maze& maze, Speed::Speed speed )
+void animate_maze( Maze::Maze& maze, Speed::Speed speed )
 {
   const Speed::Speed_unit animation = Maze_utilities::builder_speeds.at( static_cast<int>( speed ) );
   Maze_utilities::fill_maze_with_walls_animated( maze );

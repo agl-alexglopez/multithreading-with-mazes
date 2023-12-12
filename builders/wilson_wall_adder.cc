@@ -236,7 +236,7 @@ bool animate_random_walks( Maze::Maze& maze, Random_walk& cur, Speed::Speed_unit
 
 export namespace Wilson_wall_adder {
 
-void generate_wilson_wall_adder( Maze::Maze& maze )
+void generate_maze( Maze::Maze& maze )
 {
   Maze_utilities::build_wall_outline( maze );
   // Walls must start and connect between even squares.
@@ -265,7 +265,7 @@ void generate_wilson_wall_adder( Maze::Maze& maze )
   }
 }
 
-void animate_wilson_wall_adder( Maze::Maze& maze, Speed::Speed speed )
+void animate_maze( Maze::Maze& maze, Speed::Speed speed )
 {
   const Speed::Speed_unit animation = Maze_utilities::builder_speeds.at( static_cast<int>( speed ) );
   Maze_utilities::build_wall_outline( maze );

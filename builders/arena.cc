@@ -5,7 +5,7 @@ import :maze_utilities;
 
 export namespace Arena {
 
-void generate_arena( Maze::Maze& maze )
+void generate_maze( Maze::Maze& maze )
 {
   Maze_utilities::fill_maze_with_walls( maze );
   for ( int row = 1; row < maze.row_size() - 1; row++ ) {
@@ -16,7 +16,7 @@ void generate_arena( Maze::Maze& maze )
   Maze_utilities::clear_and_flush_grid( maze );
 }
 
-void animate_arena( Maze::Maze& maze, Speed::Speed speed )
+void animate_maze( Maze::Maze& maze, Speed::Speed speed )
 {
   Maze_utilities::fill_maze_with_walls( maze );
   Maze_utilities::clear_and_flush_grid( maze );

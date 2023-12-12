@@ -28,7 +28,7 @@ int random_odd_passage( std::mt19937& generator, int axis_limit )
 
 export namespace Recursive_subdivision {
 
-void generate_recursive_subdivision( Maze::Maze& maze )
+void generate_maze( Maze::Maze& maze )
 {
   Maze_utilities::build_wall_outline( maze );
   std::mt19937 generator( std::random_device {}() );
@@ -74,7 +74,7 @@ void generate_recursive_subdivision( Maze::Maze& maze )
   Maze_utilities::clear_and_flush_grid( maze );
 }
 
-void animate_recursive_subdivision( Maze::Maze& maze, Speed::Speed speed )
+void animate_maze( Maze::Maze& maze, Speed::Speed speed )
 {
   const Speed::Speed_unit animation = Maze_utilities::builder_speeds.at( static_cast<int>( speed ) );
   Maze_utilities::build_wall_outline( maze );

@@ -45,15 +45,15 @@ struct Demo_runner
     Maze::Maze_style::spikes,
   };
 
-  std::vector<Build_demo> builders { Recursive_backtracker::animate_recursive_backtracker,
-                                     Recursive_subdivision::animate_recursive_subdivision,
-                                     Wilson_path_carver::animate_wilson_path_carver,
-                                     Wilson_wall_adder::animate_wilson_wall_adder,
-                                     Prim::animate_prim,
-                                     Kruskal::animate_kruskal,
-                                     Eller::animate_eller,
-                                     Grid::animate_grid,
-                                     Arena::animate_arena };
+  std::vector<Build_demo> builders { Recursive_backtracker::animate_maze,
+                                     Recursive_subdivision::animate_maze,
+                                     Wilson_path_carver::animate_maze,
+                                     Wilson_wall_adder::animate_maze,
+                                     Prim::animate_maze,
+                                     Kruskal::animate_maze,
+                                     Eller::animate_maze,
+                                     Grid::animate_maze,
+                                     Arena::animate_maze };
 
   std::vector<Build_demo> modifications { Mods::add_cross_animated, Mods::add_x_animated };
 

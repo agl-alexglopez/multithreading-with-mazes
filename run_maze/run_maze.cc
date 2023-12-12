@@ -35,8 +35,8 @@ struct Maze_runner
 
   int builder_view { static_image };
   Speed::Speed builder_speed {};
-  Build_function builder { Recursive_backtracker::generate_recursive_backtracker,
-                           Recursive_backtracker::animate_recursive_backtracker };
+  Build_function builder { Recursive_backtracker::generate_maze,
+                           Recursive_backtracker::animate_maze };
 
   int modification_getter { static_image };
   std::optional<Build_function> modder {};
@@ -72,20 +72,20 @@ int main( int argc, char** argv )
     { "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-sa", "-ba" },
     {
       { "rdfs",
-        { Recursive_backtracker::generate_recursive_backtracker,
-          Recursive_backtracker::animate_recursive_backtracker } },
+        { Recursive_backtracker::generate_maze,
+          Recursive_backtracker::animate_maze } },
       { "wilson",
-        { Wilson_path_carver::generate_wilson_path_carver, Wilson_path_carver::animate_wilson_path_carver } },
+        { Wilson_path_carver::generate_maze, Wilson_path_carver::animate_maze } },
       { "wilson-walls",
-        { Wilson_wall_adder::generate_wilson_wall_adder, Wilson_wall_adder::animate_wilson_wall_adder } },
+        { Wilson_wall_adder::generate_maze, Wilson_wall_adder::animate_maze } },
       { "fractal",
-        { Recursive_subdivision::generate_recursive_subdivision,
-          Recursive_subdivision::animate_recursive_subdivision } },
-      { "kruskal", { Kruskal::generate_kruskal, Kruskal::animate_kruskal } },
-      { "eller", { Eller::generate_eller, Eller::animate_eller } },
-      { "prim", { Prim::generate_prim, Prim::animate_prim } },
-      { "grid", { Grid::generate_grid, Grid::animate_grid } },
-      { "arena", { Arena::generate_arena, Arena::animate_arena } },
+        { Recursive_subdivision::generate_maze,
+          Recursive_subdivision::animate_maze } },
+      { "kruskal", { Kruskal::generate_maze, Kruskal::animate_maze } },
+      { "eller", { Eller::generate_maze, Eller::animate_maze } },
+      { "prim", { Prim::generate_maze, Prim::animate_maze } },
+      { "grid", { Grid::generate_maze, Grid::animate_maze } },
+      { "arena", { Arena::generate_maze, Arena::animate_maze } },
     },
     {
       { "cross", { Mods::add_cross, Mods::add_cross_animated } },
