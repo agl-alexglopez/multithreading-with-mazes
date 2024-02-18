@@ -99,7 +99,7 @@ void painter_animated( Maze::Maze& maze, const Run_map& map, Rgb::Bfs_monitor& m
       const Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
       monitor.monitor.lock();
-      const bool is_path = maze[next.row][next.col] & Maze::path_bit;
+      const bool is_path = ( maze[next.row][next.col] & Maze::path_bit ).load();
       monitor.monitor.unlock();
 
       if ( is_path && !seen.contains( next ) ) {

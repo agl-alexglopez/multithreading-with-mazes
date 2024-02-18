@@ -1,5 +1,6 @@
 module;
 #include <array>
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <mutex>
@@ -36,13 +37,13 @@ namespace Sutil {
  * maze goals bit-------|||| |||| |||| ||||
  *                    0b0000 0000 0000 0000
  */
-using Thread_bit = uint16_t;
-using Thread_paint = uint16_t;
-using Thread_cache = uint16_t;
+using Thread_bit = Maze::Square;
+using Thread_paint = Maze::Square;
+using Thread_cache = Maze::Square;
 
 struct Thread_id
 {
-  int index;
+  uint16_t index;
   Thread_bit bit;
 };
 
@@ -56,26 +57,28 @@ enum class Maze_game
 /* * * * * * * * * * * * *     Helpful Read-Only Data Available to All Solvers   * * * * * * * * * * * * * * * * */
 
 constexpr int num_threads = 4;
-constexpr Thread_bit start_bit = 0b0100'0000'0000'0000;
-constexpr Thread_bit finish_bit = 0b1000'0000'0000'0000;
-constexpr Thread_bit zero_bit = 0b0001;
-constexpr Thread_bit one_bit = 0b0010;
-constexpr Thread_bit two_bit = 0b0100;
-constexpr Thread_bit three_bit = 0b1000;
-constexpr std::array<Thread_bit, 4> thread_bits = { zero_bit, one_bit, two_bit, three_bit };
+constexpr Thread_bit no_winner { UINT16_MAX };
+constexpr Thread_bit start_bit { 0b0100'0000'0000'0000 };
+constexpr Thread_bit finish_bit { 0b1000'0000'0000'0000 };
+constexpr Thread_bit zero_bit { 0b0001 };
+constexpr Thread_bit one_bit { 0b0010 };
+constexpr Thread_bit two_bit { 0b0100 };
+constexpr Thread_bit three_bit { 0b1000 };
+constexpr std::array<Thread_bit, 4> thread_bits
+  = { Thread_bit { 0b0001 }, Thread_bit { 0b0010 }, Thread_bit { 0b0100 }, Thread_bit { 0b1000 } };
 constexpr int initial_path_len = 1024;
 
-constexpr Thread_paint thread_paint_shift = 4;
-constexpr Thread_paint thread_paint_mask = 0b1111'0000;
-constexpr int num_gather_finishes = 4;
+constexpr uint16_t thread_paint_shift { 4 };
+constexpr Thread_paint thread_paint_mask { 0b1111'0000 };
+constexpr int num_gather_finishes { 4 };
 
-constexpr Thread_cache clear_cache = 0b0001'1111'1111'0000;
-constexpr Thread_cache cache_mask = 0b1111'0000'0000;
-constexpr Thread_cache zero_seen = 0b0001'0000'0000;
-constexpr Thread_cache one_seen = 0b0010'0000'0000;
-constexpr Thread_cache two_seen = 0b0100'0000'0000;
-constexpr Thread_cache three_seen = 0b1000'0000'0000;
-constexpr Thread_paint thread_cache_shift = 8;
+constexpr Thread_cache clear_cache { 0b0001'1111'1111'0000 };
+constexpr Thread_cache cache_mask { 0b1111'0000'0000 };
+constexpr Thread_cache zero_seen { 0b0001'0000'0000 };
+constexpr Thread_cache one_seen { 0b0010'0000'0000 };
+constexpr Thread_cache two_seen { 0b0100'0000'0000 };
+constexpr Thread_cache three_seen { 0b1000'0000'0000 };
+constexpr uint16_t thread_cache_shift { 8 };
 
 constexpr std::string_view ansi_red = "\033[38;5;1m█\033[0m";
 constexpr std::string_view ansi_grn = "\033[38;5;2m█\033[0m";
@@ -98,7 +101,7 @@ constexpr std::string_view ansi_nil = "\033[0m";
 constexpr std::string_view ansi_no_solution = "\033[38;5;15m\033[48;255;0;0m╳ no thread won..\033[0m";
 constexpr std::string_view ansi_finish = "\033[1m\033[38;5;87mF\033[0m";
 constexpr std::string_view ansi_start = "\033[1m\033[38;5;87mS\033[0m";
-constexpr Thread_paint all_threads_failed_index = 0;
+constexpr Thread_paint all_threads_failed_index { 0 };
 constexpr std::array<std::string_view, 16> thread_colors = {
   ansi_no_solution,
   // Threads Overlaps. The zero thread is the zero index bit with a value of 1.
@@ -134,7 +137,7 @@ struct Dfs_monitor
   std::mutex monitor {};
   std::optional<Speed::Speed_unit> speed {};
   std::vector<Maze::Point> starts {};
-  std::optional<int> winning_index {};
+  Maze::Square winning_index { no_winner };
   std::vector<std::vector<Maze::Point>> thread_paths;
   Dfs_monitor() : thread_paths { num_threads, std::vector<Maze::Point> {} }
   {
@@ -151,7 +154,7 @@ struct Bfs_monitor
   std::vector<std::unordered_map<Maze::Point, Maze::Point>> thread_maps;
   std::vector<My_queue<Maze::Point>> thread_queues;
   std::vector<Maze::Point> starts {};
-  std::optional<int> winning_index {};
+  Maze::Square winning_index { no_winner };
   std::vector<std::vector<Maze::Point>> thread_paths;
   Bfs_monitor()
     : thread_maps { num_threads }
@@ -186,12 +189,12 @@ void print_point( const Maze::Maze& maze, const Maze::Point& point )
     return;
   }
   if ( square & thread_paint_mask ) {
-    const Thread_paint thread_color = static_cast<Thread_paint>( square & thread_paint_mask ) >> thread_paint_shift;
-    std::cout << thread_colors.at( thread_color );
+    const Thread_paint thread_color = ( square & thread_paint_mask ) >> thread_paint_shift;
+    std::cout << thread_colors.at( thread_color.load() );
     return;
   }
   if ( !( square & Maze::path_bit ) ) {
-    std::cout << maze.wall_style()[square & Maze::wall_mask];
+    std::cout << maze.wall_style()[( square & Maze::wall_mask ).load()];
     return;
   }
   if ( square & Maze::path_bit ) {
@@ -284,19 +287,19 @@ Maze::Point pick_random_point( const Maze::Maze& maze )
   return choice;
 }
 
-void print_hunt_solution_message( std::optional<int> winning_index )
+void print_hunt_solution_message( const Maze::Square& winning_index )
 {
   if ( !winning_index ) {
-    std::cout << thread_colors.at( all_threads_failed_index );
+    std::cout << thread_colors.at( all_threads_failed_index.load() );
     return;
   }
-  std::cout << ( thread_colors.at( thread_bits.at( winning_index.value() ) ) ) << " thread won!\n";
+  std::cout << ( thread_colors.at( thread_bits.at( winning_index.load() ).load() ) ) << " thread won!\n";
 }
 
 void print_gather_solution_message()
 {
   for ( const Thread_paint& mask : thread_bits ) {
-    std::cout << thread_colors.at( mask );
+    std::cout << thread_colors.at( mask.load() );
   }
   std::cout << " All threads found their finish squares!\n";
 }

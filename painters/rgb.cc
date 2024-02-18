@@ -17,8 +17,8 @@ namespace Rgb {
 using Speed_unit = int32_t;
 using Rgb = std::array<uint16_t, 3>;
 constexpr uint64_t num_painters = 4;
-constexpr Maze::Square paint = 0b1'0000'0000;
-constexpr Maze::Square measure = 0b10'0000'0000;
+constexpr Maze::Square paint { 0b1'0000'0000 };
+constexpr Maze::Square measure { 0b10'0000'0000 };
 constexpr uint64_t initial_path_len = 1024;
 constexpr std::array<Speed_unit, 8> animation_speeds = { 0, 10000, 5000, 2000, 1000, 500, 250, 50 };
 constexpr uint64_t r = 0;
@@ -65,7 +65,7 @@ void print_wall( Maze::Maze& maze, Maze::Point p )
 {
   Printer::set_cursor_position( p );
   const Maze::Square& square = maze[p.row][p.col];
-  std::cout << maze.wall_style()[square & Maze::wall_mask];
+  std::cout << maze.wall_style()[( square & Maze::wall_mask ).load()];
 }
 
 } // namespace Rgb

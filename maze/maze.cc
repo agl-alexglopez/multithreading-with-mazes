@@ -1,5 +1,6 @@
 module;
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <span>
 #include <string_view>
@@ -7,6 +8,65 @@ module;
 export module labyrinth:maze;
 
 export namespace Maze {
+
+class Square
+{
+public:
+  constexpr explicit Square( uint16_t a ) : u16( a ) {}
+  constexpr Square() = default;
+  ~Square() = default;
+  constexpr Square( const Square& other ) : u16( other.u16.load() ) {}
+  constexpr Square( Square&& other ) noexcept : u16( other.u16.load() ) {}
+  constexpr Square& operator=( const Square& other ) noexcept
+  {
+    if ( &other != this ) {
+      u16.store( other.u16.load() );
+    }
+    return *this;
+  }
+  constexpr Square& operator=( Square&& other ) noexcept
+  {
+    if ( &other != this ) {
+      u16.store( other.u16.load() );
+    }
+    return *this;
+  }
+
+  constexpr bool operator==( const Square& other ) const noexcept { return u16.load() == other.u16.load(); }
+  constexpr bool operator!=( const Square& other ) const noexcept { return u16.load() != other.u16.load(); }
+  constexpr Square operator&( const Square& other ) const noexcept { return Square( u16 & other.u16 ); }
+  constexpr Square operator|( const Square& other ) const noexcept { return Square( u16 | other.u16 ); }
+  constexpr Square operator^( const Square& other ) const noexcept { return Square( u16 ^ other.u16 ); }
+  constexpr Square operator~() const noexcept { return Square( ~u16 ); }
+  constexpr Square operator>>( const uint16_t n ) const noexcept { return Square( u16.load() >> n ); }
+  constexpr Square operator<<( const uint16_t n ) const noexcept { return Square( u16.load() << n ); }
+
+  constexpr Square operator&=( const Square& other ) noexcept
+  {
+    u16 &= other.u16;
+    return *this;
+  }
+
+  constexpr Square& operator|=( const Square& other ) noexcept
+  {
+    u16 |= other.u16;
+    return *this;
+  }
+
+  constexpr Square& operator^=( const Square& other ) noexcept
+  {
+    u16 ^= other.u16;
+    return *this;
+  }
+
+  constexpr explicit operator bool() const noexcept { return u16.load() != 0; }
+
+  constexpr uint16_t load() const noexcept { return u16.load(); }
+  constexpr void store( uint16_t other ) noexcept { u16.store( other ); }
+
+private:
+  std::atomic_uint16_t u16;
+};
 
 /* Here is the scheme we will use to store tons of data in a square.
  *
@@ -51,9 +111,8 @@ export namespace Maze {
  * maze goals bit-------|||| |||| |||| ||||
  *                    0b0000 0000 0000 0000
  */
-using Square = uint16_t;
-using Wall_line = uint16_t;
-using Backtrack_marker = uint16_t;
+using Wall_line = Square;
+using Backtrack_marker = Square;
 
 enum class Maze_modification
 {
@@ -86,17 +145,17 @@ struct Maze_args
 };
 
 constexpr uint64_t wall_row = 16;
-constexpr Square path_bit = 0b0010'0000'0000'0000;
-constexpr Square clear_available_bits = 0b0001'1111'1111'0000;
-constexpr Square start_bit = 0b0100'0000'0000'0000;
-constexpr Square builder_bit = 0b0001'0000'0000'0000;
-constexpr uint8_t marker_shift = 4;
-constexpr Backtrack_marker markers_mask = 0b1111'0000;
-constexpr Backtrack_marker is_origin = 0b0000'0000;
-constexpr Backtrack_marker from_north = 0b0001'0000;
-constexpr Backtrack_marker from_east = 0b0010'0000;
-constexpr Backtrack_marker from_south = 0b0011'0000;
-constexpr Backtrack_marker from_west = 0b0100'0000;
+constexpr Square path_bit { 0b0010'0000'0000'0000 };
+constexpr Square clear_available_bits { 0b0001'1111'1111'0000 };
+constexpr Square start_bit { 0b0100'0000'0000'0000 };
+constexpr Square builder_bit { 0b0001'0000'0000'0000 };
+constexpr Square marker_shift { 4 };
+constexpr Backtrack_marker markers_mask { 0b1111'0000 };
+constexpr Backtrack_marker is_origin { 0b0000'0000 };
+constexpr Backtrack_marker from_north { 0b0001'0000 };
+constexpr Backtrack_marker from_east { 0b0010'0000 };
+constexpr Backtrack_marker from_south { 0b0011'0000 };
+constexpr Backtrack_marker from_west { 0b0100'0000 };
 constexpr std::string_view from_north_mark = "\033[38;5;15m\033[48;5;1m↑\033[0m";
 constexpr std::string_view from_east_mark = "\033[38;5;15m\033[48;5;2m→\033[0m";
 constexpr std::string_view from_south_mark = "\033[38;5;15m\033[48;5;3m↓\033[0m";
@@ -107,12 +166,12 @@ constexpr std::array<std::string_view, 5> backtracking_symbols
 constexpr std::array<Point, 5> backtracking_marks = { { { 0, 0 }, { -2, 0 }, { 0, 2 }, { 2, 0 }, { 0, -2 } } };
 constexpr std::array<Point, 5> backtracking_half_marks = { { { 0, 0 }, { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } } };
 
-constexpr Wall_line wall_mask = 0b1111;
-constexpr Wall_line floating_wall = 0b0000;
-constexpr Wall_line north_wall = 0b0001;
-constexpr Wall_line east_wall = 0b0010;
-constexpr Wall_line south_wall = 0b0100;
-constexpr Wall_line west_wall = 0b1000;
+constexpr Wall_line wall_mask { 0b1111 };
+constexpr Wall_line floating_wall { 0b0000 };
+constexpr Wall_line north_wall { 0b0001 };
+constexpr Wall_line east_wall { 0b0010 };
+constexpr Wall_line south_wall { 0b0100 };
+constexpr Wall_line west_wall { 0b1000 };
 
 /* Walls are constructed in terms of other walls they need to connect to. For example, read
  * 0b0011 as, "this is a wall square that must connect to other walls to the East and North."
@@ -158,7 +217,7 @@ private:
 Maze::Maze( const Maze_args& args )
   : maze_row_size_( static_cast<int>( args.odd_rows ) )
   , maze_col_size_( static_cast<int>( args.odd_cols ) )
-  , maze_( args.odd_rows * args.odd_cols, 0 )
+  , maze_( args.odd_rows * args.odd_cols, Square { 0 } )
   , wall_style_index_( static_cast<int>( args.style ) )
 {}
 
