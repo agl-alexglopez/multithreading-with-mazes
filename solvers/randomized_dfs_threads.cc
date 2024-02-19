@@ -48,7 +48,7 @@ void hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thread_id id 
   std::mt19937 generator( std::random_device {}() );
   while ( !dfs.empty() ) {
     // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
-    if ( monitor.winning_index != Sutil::no_winner ) {
+    if ( monitor.winning_index.load() != Sutil::no_winner ) {
       break;
     }
 
@@ -56,7 +56,7 @@ void hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thread_id id 
     cur = dfs.back();
 
     if ( maze[cur.row][cur.col] & Sutil::finish_bit ) {
-      static_cast<void>( monitor.winning_index.ces( Sutil::no_winner.load(), id.index ) );
+      static_cast<void>( monitor.winning_index.ces( Sutil::no_winner, id.index ) );
       dfs.pop_back();
       break;
     }
@@ -101,7 +101,7 @@ void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Threa
   std::mt19937 generator( std::random_device {}() );
   while ( !dfs.empty() ) {
     // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
-    if ( monitor.winning_index != Sutil::no_winner ) {
+    if ( monitor.winning_index.load() != Sutil::no_winner ) {
       return;
     }
 
@@ -109,7 +109,7 @@ void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Threa
     cur = dfs.back();
 
     if ( maze[cur.row][cur.col] & Sutil::finish_bit ) {
-      static_cast<void>( monitor.winning_index.ces( Sutil::no_winner.load(), id.index ) );
+      static_cast<void>( monitor.winning_index.ces( Sutil::no_winner, id.index ) );
       dfs.pop_back();
       return;
     }
@@ -266,7 +266,7 @@ void hunt( Maze::Maze& maze )
   }
   Sutil::print_maze( maze );
   Sutil::print_overlap_key();
-  Sutil::print_hunt_solution_message( monitor.winning_index );
+  Sutil::print_hunt_solution_message( monitor.winning_index.load() );
   std::cout << "\n";
 }
 
@@ -321,7 +321,7 @@ void corners( Maze::Maze& maze )
   }
   Sutil::print_maze( maze );
   Sutil::print_overlap_key();
-  Sutil::print_hunt_solution_message( monitor.winning_index );
+  Sutil::print_hunt_solution_message( monitor.winning_index.load() );
   std::cout << "\n";
 }
 
@@ -348,7 +348,7 @@ void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
     t.join();
   }
   Printer::set_cursor_position( { maze.row_size() + Sutil::overlap_key_and_message_height, 0 } );
-  Sutil::print_hunt_solution_message( monitor.winning_index );
+  Sutil::print_hunt_solution_message( monitor.winning_index.load() );
   std::cout << "\n";
 }
 
@@ -416,7 +416,7 @@ void animate_corners( Maze::Maze& maze, Speed::Speed speed )
     t.join();
   }
   Printer::set_cursor_position( { maze.row_size() + Sutil::overlap_key_and_message_height, 0 } );
-  Sutil::print_hunt_solution_message( monitor.winning_index );
+  Sutil::print_hunt_solution_message( monitor.winning_index.load() );
   std::cout << "\n";
 }
 

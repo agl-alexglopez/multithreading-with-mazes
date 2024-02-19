@@ -37,7 +37,7 @@ void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Threa
   Maze::Point cur = monitor.starts.at( id.index );
   while ( !dfs.empty() ) {
     // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
-    if ( monitor.winning_index != Sutil::no_winner ) {
+    if ( monitor.winning_index.load() != Sutil::no_winner ) {
       return;
     }
 
@@ -45,7 +45,7 @@ void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Threa
     cur = dfs.back();
 
     if ( maze[cur.row][cur.col] & Sutil::finish_bit ) {
-      if ( monitor.winning_index.ces( Sutil::no_winner.load(), id.index ) ) {
+      if ( monitor.winning_index.ces( Sutil::no_winner, id.index ) ) {
         monitor.monitor.lock();
         Sutil::flush_cursor_path_coordinate( maze, cur );
         monitor.monitor.unlock();
@@ -148,7 +148,7 @@ void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
     t.join();
   }
 
-  if ( monitor.winning_index != Sutil::no_winner ) {
+  if ( monitor.winning_index.load() != Sutil::no_winner ) {
     const Sutil::Thread_paint winner_color( Sutil::thread_bits.at( monitor.winning_index.load() )
                                             << Sutil::thread_paint_shift );
     const Maze::Point& before_finish = monitor.thread_paths.at( monitor.winning_index.load() ).back();
@@ -157,7 +157,7 @@ void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
   Printer::set_cursor_position( { maze.row_size() + Sutil::overlap_key_and_message_height, 0 } );
-  Sutil::print_hunt_solution_message( monitor.winning_index );
+  Sutil::print_hunt_solution_message( monitor.winning_index.load() );
   std::cout << "\n";
 }
 
@@ -230,7 +230,7 @@ void animate_corners( Maze::Maze& maze, Speed::Speed speed )
     t.join();
   }
 
-  if ( monitor.winning_index != Sutil::no_winner ) {
+  if ( monitor.winning_index.load() != Sutil::no_winner ) {
     const Sutil::Thread_paint winner_color( Sutil::thread_bits.at( monitor.winning_index.load() )
                                             << Sutil::thread_paint_shift );
     const Maze::Point& before_finish = monitor.thread_paths.at( monitor.winning_index.load() ).back();
@@ -240,7 +240,7 @@ void animate_corners( Maze::Maze& maze, Speed::Speed speed )
   }
 
   Printer::set_cursor_position( { maze.row_size() + Sutil::overlap_key_and_message_height, 0 } );
-  Sutil::print_hunt_solution_message( monitor.winning_index );
+  Sutil::print_hunt_solution_message( monitor.winning_index.load() );
   std::cout << "\n";
 }
 

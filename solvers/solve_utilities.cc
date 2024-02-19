@@ -57,7 +57,7 @@ enum class Maze_game
 /* * * * * * * * * * * * *     Helpful Read-Only Data Available to All Solvers   * * * * * * * * * * * * * * * * */
 
 constexpr int num_threads = 4;
-constexpr Thread_bit no_winner { UINT16_MAX };
+constexpr uint16_t no_winner { UINT16_MAX };
 constexpr Thread_bit start_bit { 0b0100'0000'0000'0000 };
 constexpr Thread_bit finish_bit { 0b1000'0000'0000'0000 };
 constexpr Thread_bit zero_bit { 0b0001 };
@@ -286,13 +286,13 @@ Maze::Point pick_random_point( const Maze::Maze& maze )
   return choice;
 }
 
-void print_hunt_solution_message( const Maze::Square& winning_index )
+void print_hunt_solution_message( uint16_t winning_index )
 {
   if ( winning_index == Sutil::no_winner ) {
     std::cout << thread_colors.at( all_threads_failed_index.load() );
     return;
   }
-  std::cout << ( thread_colors.at( thread_bits.at( winning_index.load() ) ) ) << " thread won!\n";
+  std::cout << ( thread_colors.at( thread_bits.at( winning_index ) ) ) << " thread won!\n";
 }
 
 void print_gather_solution_message()
