@@ -44,7 +44,7 @@ using Thread_cache = Maze::Square;
 struct Thread_id
 {
   uint16_t index;
-  Thread_bit bit;
+  uint16_t bit;
 };
 
 enum class Maze_game
@@ -64,8 +64,7 @@ constexpr Thread_bit zero_bit { 0b0001 };
 constexpr Thread_bit one_bit { 0b0010 };
 constexpr Thread_bit two_bit { 0b0100 };
 constexpr Thread_bit three_bit { 0b1000 };
-constexpr std::array<Thread_bit, 4> thread_bits
-  = { Thread_bit { 0b0001 }, Thread_bit { 0b0010 }, Thread_bit { 0b0100 }, Thread_bit { 0b1000 } };
+constexpr std::array<uint16_t, 4> thread_bits = { 0b0001, 0b0010, 0b0100, 0b1000 };
 constexpr int initial_path_len = 1024;
 
 constexpr uint16_t thread_paint_shift { 4 };
@@ -293,13 +292,13 @@ void print_hunt_solution_message( const Maze::Square& winning_index )
     std::cout << thread_colors.at( all_threads_failed_index.load() );
     return;
   }
-  std::cout << ( thread_colors.at( thread_bits.at( winning_index.load() ).load() ) ) << " thread won!\n";
+  std::cout << ( thread_colors.at( thread_bits.at( winning_index.load() ) ) ) << " thread won!\n";
 }
 
 void print_gather_solution_message()
 {
-  for ( const Thread_paint& mask : thread_bits ) {
-    std::cout << thread_colors.at( mask.load() );
+  for ( const uint16_t& mask : thread_bits ) {
+    std::cout << thread_colors.at( mask );
   }
   std::cout << " All threads found their finish squares!\n";
 }

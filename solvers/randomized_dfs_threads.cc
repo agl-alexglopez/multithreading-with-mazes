@@ -37,8 +37,8 @@ void hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Sutil::Thread_
    * Each thread could maintain its own hashset, but this is much more space efficient. Use
    * the space the maze already occupies and provides.
    */
-  const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
-  const Sutil::Thread_paint paint_bit = id.bit << Sutil::thread_paint_shift;
+  const Sutil::Thread_cache seen( id.bit << Sutil::thread_cache_shift );
+  const Sutil::Thread_paint paint_bit( id.bit << Sutil::thread_paint_shift );
   // Each thread only needs enough space for an O(current path length) stack.
   std::vector<Maze::Point>& dfs = monitor.thread_paths[id.index];
   dfs.push_back( monitor.starts.at( id.index ) );
@@ -91,8 +91,8 @@ void hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Sutil::Thread_
 
 void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Sutil::Thread_id& id )
 {
-  const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
-  const Sutil::Thread_paint paint_bit = id.bit << Sutil::thread_paint_shift;
+  const Sutil::Thread_cache seen( id.bit << Sutil::thread_cache_shift );
+  const Sutil::Thread_paint paint_bit( id.bit << Sutil::thread_paint_shift );
   std::vector<Maze::Point>& dfs = monitor.thread_paths.at( id.index );
   dfs.push_back( monitor.starts.at( id.index ) );
   Maze::Point cur = monitor.starts.at( id.index );
@@ -149,8 +149,8 @@ void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Sutil:
 
 void gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Sutil::Thread_id& id )
 {
-  const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
-  const Sutil::Thread_paint paint_bit = id.bit << Sutil::thread_paint_shift;
+  const Sutil::Thread_cache seen( id.bit << Sutil::thread_cache_shift );
+  const Sutil::Thread_paint paint_bit( id.bit << Sutil::thread_paint_shift );
   std::vector<Maze::Point>& dfs = monitor.thread_paths[id.index];
   dfs.push_back( monitor.starts.at( id.index ) );
   Maze::Point cur = monitor.starts.at( id.index );
@@ -194,8 +194,8 @@ void gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Sutil::Threa
 
 void animate_gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Sutil::Thread_id& id )
 {
-  const Sutil::Thread_cache seen = id.bit << Sutil::thread_cache_shift;
-  const Sutil::Thread_paint paint_bit = id.bit << Sutil::thread_paint_shift;
+  const Sutil::Thread_cache seen( id.bit << Sutil::thread_cache_shift );
+  const Sutil::Thread_paint paint_bit( id.bit << Sutil::thread_paint_shift );
   std::vector<Maze::Point>& dfs = monitor.thread_paths.at( id.index );
   dfs.push_back( monitor.starts.at( 0 ) );
   Maze::Point cur = monitor.starts.at( 0 );

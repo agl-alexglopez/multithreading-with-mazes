@@ -76,32 +76,34 @@ void painter_animated( Maze::Maze& maze,
     const Maze::Point cur = bfs.front();
     bfs.pop();
 
-    monitor.monitor.lock();
-    if ( monitor.count == map.distances.size() ) {
-      monitor.monitor.unlock();
+    if ( monitor.count.load() >= map.distances.size() ) {
       return;
     }
-    if ( !( maze[cur.row][cur.col] & Rgb::paint ) ) {
+
+    const uint16_t square = maze[cur.row][cur.col].load();
+    const uint16_t painted = ( square | Rgb::paint );
+    const uint16_t not_painted = square & static_cast<uint16_t>( ~Rgb::paint );
+    if ( maze[cur.row][cur.col].ces( not_painted, painted ) ) {
       const uint64_t dist = map.distances.at( cur );
       const auto intensity = static_cast<double>( map.max - dist ) / static_cast<double>( map.max );
       const auto dark = static_cast<uint8_t>( 255.0 * intensity );
       const auto bright = static_cast<uint8_t>( 128 ) + static_cast<uint8_t>( 127.0 * intensity );
       Rgb::Rgb color { dark, dark, dark };
       color.at( guide.color_i ) = bright;
-      Rgb::animate_rgb( color, cur );
-      maze[cur.row][cur.col] |= Rgb::paint;
-    }
-    monitor.monitor.unlock();
 
-    std::this_thread::sleep_for( std::chrono::microseconds( guide.animation ) );
+      monitor.monitor.lock();
+      Rgb::animate_rgb( color, cur );
+      monitor.monitor.unlock();
+
+      ++monitor.count;
+      std::this_thread::sleep_for( std::chrono::microseconds( guide.animation ) );
+    }
 
     for ( uint64_t count = 0, i = guide.bias; count < Maze::dirs.size(); count++, ++i %= Maze::dirs.size() ) {
       const Maze::Point& p = Maze::dirs.at( i );
       const Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
-      monitor.monitor.lock();
       const bool is_path = ( maze[next.row][next.col] & Maze::path_bit ).load();
-      monitor.monitor.unlock();
 
       if ( is_path && !seen.contains( next ) ) {
         bfs.push( next );
@@ -173,7 +175,7 @@ void animate_distance_from_center( Maze::Maze& maze, Speed::Speed speed )
   const Speed::Speed_unit animation = Rgb::animation_speeds.at( static_cast<uint64_t>( speed ) );
   Rgb::Bfs_monitor monitor;
   for ( uint64_t i = 0; i < handles.size(); i++ ) {
-    Rgb::Thread_guide this_thread = { i, rand_color_choice, animation, start };
+    const Rgb::Thread_guide this_thread = { i, rand_color_choice, animation, start };
     handles.at( i )
       = std::thread( painter_animated, std::ref( maze ), std::ref( map ), std::ref( monitor ), this_thread );
   }

@@ -33,13 +33,13 @@ namespace {
 struct Thread_light
 {
   uint16_t index;
-  Sutil::Thread_bit bit;
+  uint16_t bit;
 };
 
-void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Thread_light& id )
+void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Thread_light id )
 {
-  const Sutil::Thread_cache seen { static_cast<uint16_t>( id.bit.load() << Sutil::thread_cache_shift ) };
-  const Sutil::Thread_paint paint { static_cast<uint16_t>( id.bit.load() << Sutil::thread_paint_shift ) };
+  const Sutil::Thread_cache seen( id.bit << Sutil::thread_cache_shift );
+  const Sutil::Thread_paint paint( id.bit << Sutil::thread_paint_shift );
   std::vector<Maze::Point>& dfs = monitor.thread_paths.at( id.index );
   dfs.push_back( monitor.starts.at( id.index ) );
   Maze::Point cur = monitor.starts.at( id.index );
@@ -92,10 +92,10 @@ void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Thread
   }
 }
 
-void animate_gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Thread_light& id )
+void animate_gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Thread_light id )
 {
-  const Sutil::Thread_cache seen { static_cast<uint16_t>( id.bit.load() << Sutil::thread_cache_shift ) };
-  const Sutil::Thread_paint paint { static_cast<uint16_t>( id.bit.load() << Sutil::thread_paint_shift ) };
+  const Sutil::Thread_cache seen( id.bit << Sutil::thread_cache_shift );
+  const Sutil::Thread_paint paint( id.bit << Sutil::thread_paint_shift );
   std::vector<Maze::Point>& dfs = monitor.thread_paths.at( id.index );
   dfs.push_back( monitor.starts.at( id.index ) );
   Maze::Point cur = monitor.starts.at( id.index );

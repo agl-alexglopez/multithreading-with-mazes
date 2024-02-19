@@ -62,7 +62,7 @@ public:
   }
 
   constexpr explicit operator bool() const noexcept { return u16.load() != 0; }
-  constexpr uint16_t load() const noexcept { return u16.load(); }
+  constexpr uint16_t load() const noexcept { return u16.load( std::memory_order_relaxed ); }
   constexpr void store( uint16_t other ) noexcept { u16.store( other ); }
 
   constexpr bool ces( uint16_t expected, uint16_t desired ) noexcept

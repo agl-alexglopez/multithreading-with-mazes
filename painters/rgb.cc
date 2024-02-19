@@ -1,5 +1,6 @@
 module;
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <iostream>
 #include <mutex>
@@ -17,7 +18,7 @@ namespace Rgb {
 using Speed_unit = int32_t;
 using Rgb = std::array<uint16_t, 3>;
 constexpr uint64_t num_painters = 4;
-constexpr Maze::Square paint { 0b1'0000'0000 };
+constexpr uint16_t paint { 0b1'0000'0000 };
 constexpr Maze::Square measure { 0b10'0000'0000 };
 constexpr uint64_t initial_path_len = 1024;
 constexpr std::array<Speed_unit, 8> animation_speeds = { 0, 10000, 5000, 2000, 1000, 500, 250, 50 };
@@ -30,7 +31,7 @@ constexpr std::string_view brush = "m█\033[0m";
 struct Bfs_monitor
 {
   std::mutex monitor {};
-  uint64_t count { 0 };
+  std::atomic_uint64_t count { 0 };
   std::vector<My_queue<Maze::Point>> paths;
   std::vector<std::unordered_set<Maze::Point>> seen;
   Bfs_monitor() : paths { num_painters }, seen { num_painters }
