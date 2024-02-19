@@ -28,7 +28,7 @@ void animate_corners( Maze::Maze& maze, Speed::Speed speed );
 
 namespace {
 
-void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Sutil::Thread_id& id )
+void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thread_id id )
 {
   const Sutil::Thread_cache seen( id.bit << Sutil::thread_cache_shift );
   const Sutil::Thread_paint paint_bit( id.bit << Sutil::thread_paint_shift );
@@ -89,7 +89,7 @@ void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Sutil:
   }
 }
 
-void animate_gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Sutil::Thread_id& id )
+void animate_gatherer( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thread_id id )
 {
   const Sutil::Thread_cache seen( id.bit << Sutil::thread_cache_shift );
   const Sutil::Thread_paint paint_bit( id.bit << Sutil::thread_paint_shift );
