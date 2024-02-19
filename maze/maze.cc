@@ -17,6 +17,7 @@ public:
   ~Square() = default;
   constexpr Square( const Square& other ) : u16( other.u16.load() ) {}
   constexpr Square( Square&& other ) noexcept : u16( other.u16.load() ) {}
+
   constexpr Square& operator=( const Square& other ) noexcept
   {
     if ( &other != this ) {
@@ -24,6 +25,7 @@ public:
     }
     return *this;
   }
+
   constexpr Square& operator=( Square&& other ) noexcept
   {
     if ( &other != this ) {
@@ -60,9 +62,13 @@ public:
   }
 
   constexpr explicit operator bool() const noexcept { return u16.load() != 0; }
-
   constexpr uint16_t load() const noexcept { return u16.load(); }
   constexpr void store( uint16_t other ) noexcept { u16.store( other ); }
+
+  constexpr bool ces( uint16_t expected, uint16_t desired ) noexcept
+  {
+    return u16.compare_exchange_strong( expected, desired, std::memory_order_relaxed );
+  }
 
 private:
   std::atomic_uint16_t u16;
@@ -149,7 +155,7 @@ constexpr Square path_bit { 0b0010'0000'0000'0000 };
 constexpr Square clear_available_bits { 0b0001'1111'1111'0000 };
 constexpr Square start_bit { 0b0100'0000'0000'0000 };
 constexpr Square builder_bit { 0b0001'0000'0000'0000 };
-constexpr Square marker_shift { 4 };
+constexpr uint16_t marker_shift { 4 };
 constexpr Backtrack_marker markers_mask { 0b1111'0000 };
 constexpr Backtrack_marker is_origin { 0b0000'0000 };
 constexpr Backtrack_marker from_north { 0b0001'0000 };

@@ -53,8 +53,7 @@ void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Thread
     cur = dfs.back();
 
     if ( maze[cur.row][cur.col] & Sutil::finish_bit ) {
-      if ( !monitor.winning_index ) {
-        monitor.winning_index.store( id.index );
+      if ( monitor.winning_index.ces( Sutil::no_winner.load(), id.index ) ) {
         monitor.monitor.lock();
         Sutil::flush_cursor_path_coordinate( maze, cur );
         monitor.monitor.unlock();

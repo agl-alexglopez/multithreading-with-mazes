@@ -52,13 +52,12 @@ void generate_maze( Maze::Maze& maze )
       }
     }
     if ( !branches_remain && cur != start ) {
-      const Maze::Backtrack_marker dir
-        = static_cast<Maze::Backtrack_marker>( maze[cur.row][cur.col] & Maze::markers_mask )
-          >> static_cast<Maze::Backtrack_marker>( Maze::marker_shift );
-      const Maze::Point& backtracking = Maze::backtracking_marks.at( dir );
+      const Maze::Backtrack_marker dir {
+        static_cast<uint16_t>( ( maze[cur.row][cur.col] & Maze::markers_mask ).load() >> Maze::marker_shift ) };
+      const Maze::Point& backtracking = Maze::backtracking_marks.at( dir.load() );
       const Maze::Point next = { cur.row + backtracking.row, cur.col + backtracking.col };
       // We are using fields the threads will use later. Clear bits as we backtrack.
-      maze[cur.row][cur.col] &= static_cast<Maze::Backtrack_marker>( ~Maze::markers_mask );
+      maze[cur.row][cur.col] &= ~Maze::markers_mask;
       cur = next;
       branches_remain = true;
     }
@@ -93,11 +92,10 @@ void animate_maze( Maze::Maze& maze, Speed::Speed speed )
       }
     }
     if ( !branches_remain && cur != start ) {
-      const Maze::Backtrack_marker dir
-        = static_cast<Maze::Backtrack_marker>( maze[cur.row][cur.col] & Maze::markers_mask )
-          >> static_cast<Maze::Backtrack_marker>( Maze::marker_shift );
-      const Maze::Point& backtracking = Maze::backtracking_marks.at( dir );
-      const Maze::Point& backtracking_half = Maze::backtracking_half_marks.at( dir );
+      const Maze::Backtrack_marker dir {
+        static_cast<uint16_t>( ( maze[cur.row][cur.col] & Maze::markers_mask ).load() >> Maze::marker_shift ) };
+      const Maze::Point& backtracking = Maze::backtracking_marks.at( dir.load() );
+      const Maze::Point& backtracking_half = Maze::backtracking_half_marks.at( dir.load() );
       const Maze::Point half = { cur.row + backtracking_half.row, cur.col + backtracking_half.col };
       const Maze::Point next = { cur.row + backtracking.row, cur.col + backtracking.col };
       // We are using fields the threads will use later. Clear bits as we backtrack.

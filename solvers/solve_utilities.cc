@@ -289,7 +289,7 @@ Maze::Point pick_random_point( const Maze::Maze& maze )
 
 void print_hunt_solution_message( const Maze::Square& winning_index )
 {
-  if ( !winning_index ) {
+  if ( winning_index == Sutil::no_winner ) {
     std::cout << thread_colors.at( all_threads_failed_index.load() );
     return;
   }

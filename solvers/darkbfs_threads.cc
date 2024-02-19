@@ -48,11 +48,10 @@ void animate_hunter( Maze::Maze& maze, Sutil::Bfs_monitor& monitor, const Sutil:
     bfs.pop();
 
     if ( maze[cur.row][cur.col] & Sutil::finish_bit ) {
-      if ( !monitor.winning_index ) {
+      if ( monitor.winning_index.ces( Sutil::no_winner.load(), id.index ) ) {
         monitor.monitor.lock();
         Sutil::flush_cursor_path_coordinate( maze, cur );
         monitor.monitor.unlock();
-        monitor.winning_index.store( id.index );
       }
       break;
     }

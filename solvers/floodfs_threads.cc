@@ -53,9 +53,7 @@ void hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Sutil::Thread_
     cur = dfs.back();
 
     if ( maze[cur.row][cur.col] & Sutil::finish_bit ) {
-      if ( !monitor.winning_index ) {
-        monitor.winning_index.store( id.index );
-      }
+      static_cast<void>( monitor.winning_index.ces( Sutil::no_winner.load(), id.index ) );
       dfs.pop_back();
       break;
     }
@@ -98,9 +96,7 @@ void animate_hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, const Sutil:
     cur = dfs.back();
 
     if ( maze[cur.row][cur.col] & Sutil::finish_bit ) {
-      if ( !monitor.winning_index ) {
-        monitor.winning_index.store( id.index );
-      }
+      static_cast<void>( monitor.winning_index.ces( Sutil::no_winner.load(), id.index ) );
       dfs.pop_back();
       return;
     }

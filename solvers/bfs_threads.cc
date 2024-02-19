@@ -51,9 +51,7 @@ void hunter( Maze::Maze& maze, Sutil::Bfs_monitor& monitor, const Sutil::Thread_
     bfs.pop();
 
     if ( maze[cur.row][cur.col] & Sutil::finish_bit ) {
-      if ( monitor.winning_index != Sutil::no_winner ) {
-        monitor.winning_index.store( id.index );
-      }
+      static_cast<void>( monitor.winning_index.ces( Sutil::no_winner.load(), id.index ) );
       break;
     }
     // This creates a nice fanning out of mixed color for each searching thread.
@@ -99,9 +97,7 @@ void animate_hunter( Maze::Maze& maze, Sutil::Bfs_monitor& monitor, const Sutil:
     bfs.pop();
 
     if ( maze[cur.row][cur.col] & Sutil::finish_bit ) {
-      if ( !monitor.winning_index ) {
-        monitor.winning_index.store( id.index );
-      }
+      static_cast<void>( monitor.winning_index.ces( Sutil::no_winner.load(), id.index ) );
       break;
     }
     // This creates a nice fanning out of mixed color for each searching thread.
@@ -233,7 +229,7 @@ void hunt( Maze::Maze& maze )
     t.join();
   }
 
-  if ( monitor.winning_index ) {
+  if ( monitor.winning_index != Sutil::no_winner ) {
     // It is cool to see the shortest path that the winning thread took to victory
     const Sutil::Thread_paint winner_color
       = ( Sutil::thread_bits.at( monitor.winning_index.load() ) << Sutil::thread_paint_shift );
@@ -272,7 +268,7 @@ void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
     t.join();
   }
 
-  if ( monitor.winning_index ) {
+  if ( monitor.winning_index != Sutil::no_winner ) {
     // It is cool to see the shortest path that the winning thread took to victory
     const Sutil::Thread_paint winner_color
       = ( Sutil::thread_bits.at( monitor.winning_index.load() ) << Sutil::thread_paint_shift );
@@ -427,7 +423,7 @@ void animate_corners( Maze::Maze& maze, Speed::Speed speed )
     t.join();
   }
 
-  if ( monitor.winning_index ) {
+  if ( monitor.winning_index != Sutil::no_winner ) {
     // It is cool to see the shortest path that the winning thread took to victory
     const Sutil::Thread_paint winner_color
       = ( Sutil::thread_bits.at( monitor.winning_index.load() ) << Sutil::thread_paint_shift );

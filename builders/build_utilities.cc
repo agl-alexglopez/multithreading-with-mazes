@@ -24,7 +24,8 @@ void print_square( const Maze::Maze& maze, const Maze::Point& p )
 {
   const Maze::Square& square = maze[p.row][p.col];
   if ( square & Maze::markers_mask ) {
-    const Maze::Backtrack_marker mark = ( square & Maze::markers_mask ) >> Maze::marker_shift;
+    const Maze::Backtrack_marker mark {
+      static_cast<uint16_t>( ( square & Maze::markers_mask ).load() >> Maze::marker_shift ) };
     std::cout << Maze::backtracking_symbols.at( mark.load() );
   } else if ( !( square & Maze::path_bit ) ) {
     std::cout << maze.wall_style()[( square & Maze::wall_mask ).load()];
