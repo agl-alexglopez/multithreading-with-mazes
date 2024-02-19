@@ -1,9 +1,4 @@
-#include "maze.hh"
-#include "maze_algorithms.hh"
-#include "maze_solvers.hh"
-#include "painters.hh"
-#include "print_utilities.hh"
-#include "speed.hh"
+import labyrinth;
 
 #include <chrono>
 #include <cstdint>
@@ -20,8 +15,8 @@
 
 namespace {
 
-using Build_demo = std::function<void( Builder::Maze&, Speed::Speed )>;
-using Solve_demo = std::function<void( Builder::Maze&, Speed::Speed )>;
+using Build_demo = std::function<void( Maze::Maze&, Speed::Speed )>;
+using Solve_demo = std::function<void( Maze::Maze&, Speed::Speed )>;
 
 struct Flag_arg
 {
@@ -31,7 +26,7 @@ struct Flag_arg
 
 struct Demo_runner
 {
-  Builder::Maze::Maze_args args {};
+  Maze::Maze_args args {};
 
   std::vector<Speed::Speed> builder_speed { Speed::Speed::speed_1,
                                             Speed::Speed::speed_2,
@@ -41,26 +36,26 @@ struct Demo_runner
                                             Speed::Speed::speed_6,
                                             Speed::Speed::speed_7 };
 
-  std::vector<Builder::Maze::Maze_style> wall_style {
-    Builder::Maze::Maze_style::sharp,
-    Builder::Maze::Maze_style::round,
-    Builder::Maze::Maze_style::doubles,
-    Builder::Maze::Maze_style::bold,
-    Builder::Maze::Maze_style::contrast,
-    Builder::Maze::Maze_style::spikes,
+  std::vector<Maze::Maze_style> wall_style {
+    Maze::Maze_style::sharp,
+    Maze::Maze_style::round,
+    Maze::Maze_style::doubles,
+    Maze::Maze_style::bold,
+    Maze::Maze_style::contrast,
+    Maze::Maze_style::spikes,
   };
 
-  std::vector<Build_demo> builders { Builder::animate_recursive_backtracker,
-                                     Builder::animate_recursive_subdivision,
-                                     Builder::animate_wilson_path_carver,
-                                     Builder::animate_wilson_wall_adder,
-                                     Builder::animate_prim,
-                                     Builder::animate_kruskal,
-                                     Builder::animate_eller,
-                                     Builder::animate_grid,
-                                     Builder::animate_arena };
+  std::vector<Build_demo> builders { Recursive_backtracker::animate_maze,
+                                     Recursive_subdivision::animate_maze,
+                                     Wilson_path_carver::animate_maze,
+                                     Wilson_wall_adder::animate_maze,
+                                     Prim::animate_maze,
+                                     Kruskal::animate_maze,
+                                     Eller::animate_maze,
+                                     Grid::animate_maze,
+                                     Arena::animate_maze };
 
-  std::vector<Build_demo> modifications { Builder::add_cross_animated, Builder::add_x_animated };
+  std::vector<Build_demo> modifications { Mods::add_cross_animated, Mods::add_x_animated };
 
   std::vector<Speed::Speed> solver_speed { Speed::Speed::speed_1,
                                            Speed::Speed::speed_2,
@@ -71,32 +66,32 @@ struct Demo_runner
                                            Speed::Speed::speed_7 };
 
   std::vector<Solve_demo> solvers {
-    Solver::animate_dfs_thread_hunt,
-    Solver::animate_dfs_thread_gather,
-    Solver::animate_dfs_thread_corners,
-    Solver::animate_floodfs_thread_hunt,
-    Solver::animate_floodfs_thread_gather,
-    Solver::animate_floodfs_thread_corners,
-    Solver::animate_randomized_dfs_thread_hunt,
-    Solver::animate_randomized_dfs_thread_gather,
-    Solver::animate_randomized_dfs_thread_corners,
-    Solver::animate_bfs_thread_hunt,
-    Solver::animate_bfs_thread_gather,
-    Solver::animate_bfs_thread_corners,
-    Solver::animate_darkdfs_thread_hunt,
-    Solver::animate_darkdfs_thread_gather,
-    Solver::animate_darkdfs_thread_corners,
-    Solver::animate_darkbfs_thread_hunt,
-    Solver::animate_darkbfs_thread_gather,
-    Solver::animate_darkbfs_thread_corners,
-    Solver::animate_darkfloodfs_thread_hunt,
-    Solver::animate_darkfloodfs_thread_gather,
-    Solver::animate_darkfloodfs_thread_corners,
-    Solver::animate_darkrandomized_dfs_thread_hunt,
-    Solver::animate_darkrandomized_dfs_thread_gather,
-    Solver::animate_darkrandomized_dfs_thread_corners,
-    Paint::animate_distance_from_center,
-    Paint::animate_runs,
+    Dfs::animate_hunt,
+    Dfs::animate_gather,
+    Dfs::animate_corners,
+    Floodfs::animate_hunt,
+    Floodfs::animate_gather,
+    Floodfs::animate_corners,
+    Rdfs::animate_hunt,
+    Rdfs::animate_gather,
+    Rdfs::animate_corners,
+    Bfs::animate_hunt,
+    Bfs::animate_gather,
+    Bfs::animate_corners,
+    Dark_dfs::animate_hunt,
+    Dark_dfs::animate_gather,
+    Dark_dfs::animate_corners,
+    Dark_bfs::animate_hunt,
+    Dark_bfs::animate_gather,
+    Dark_bfs::animate_corners,
+    Dark_floodfs::animate_hunt,
+    Dark_floodfs::animate_gather,
+    Dark_floodfs::animate_corners,
+    Dark_rdfs::animate_hunt,
+    Dark_rdfs::animate_gather,
+    Dark_rdfs::animate_corners,
+    Distance::animate_distance_from_center,
+    Runs::animate_runs,
   };
 };
 
@@ -143,7 +138,7 @@ int main( int argc, char** argv )
   std::uniform_int_distribution<uint64_t> solver_chooser( 0, demo.solvers.size() - 1 );
   for ( ;; ) {
     demo.args.style = demo.wall_style[wall_chooser( gen )];
-    Builder::Maze maze( demo.args );
+    Maze::Maze maze( demo.args );
     demo.builders[builder_chooser( gen )]( maze, demo.builder_speed[speed_chooser( gen )] );
 
     if ( optional_modification( gen ) == 0 ) {

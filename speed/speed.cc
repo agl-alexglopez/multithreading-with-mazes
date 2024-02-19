@@ -1,8 +1,6 @@
-#pragma once
-#ifndef SPEED_HH
-#define SPEED_HH
+export module labyrinth:speed;
 
-namespace Speed {
+export namespace Speed {
 
 using Speed_unit = int;
 
@@ -19,5 +17,3 @@ enum class Speed
 };
 
 } // namespace Speed
-
-#endif // SPEED_HH

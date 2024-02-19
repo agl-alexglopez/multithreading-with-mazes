@@ -1,8 +1,4 @@
-#include "maze.hh"
-#include "maze_algorithms.hh"
-#include "maze_solvers.hh"
-#include "print_utilities.hh"
-#include "speed.hh"
+import labyrinth;
 
 #include <cstdint>
 #include <cstdlib>
@@ -19,10 +15,10 @@
 namespace {
 
 using Build_function
-  = std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Speed::Speed )>>;
+  = std::tuple<std::function<void( Maze::Maze& )>, std::function<void( Maze::Maze&, Speed::Speed )>>;
 
 using Solve_function
-  = std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Speed::Speed )>>;
+  = std::tuple<std::function<void( Maze::Maze& )>, std::function<void( Maze::Maze&, Speed::Speed )>>;
 
 constexpr int static_image = 0;
 constexpr int animated_playback = 1;
@@ -35,18 +31,18 @@ struct Flag_arg
 
 struct Maze_runner
 {
-  Builder::Maze::Maze_args args;
+  Maze::Maze_args args;
 
   int builder_view { static_image };
   Speed::Speed builder_speed {};
-  Build_function builder { Builder::generate_recursive_backtracker, Builder::animate_recursive_backtracker };
+  Build_function builder { Recursive_backtracker::generate_maze, Recursive_backtracker::animate_maze };
 
   int modification_getter { static_image };
   std::optional<Build_function> modder {};
 
   int solver_view { static_image };
   Speed::Speed solver_speed {};
-  Solve_function solver { Solver::dfs_thread_hunt, Solver::animate_dfs_thread_hunt };
+  Solve_function solver { Dfs::hunt, Dfs::animate_hunt };
   Maze_runner() : args {} {}
 };
 
@@ -56,7 +52,7 @@ struct Lookup_tables
   std::unordered_map<std::string, Build_function> builder_table;
   std::unordered_map<std::string, Build_function> modification_table;
   std::unordered_map<std::string, Solve_function> solver_table;
-  std::unordered_map<std::string, Builder::Maze::Maze_style> style_table;
+  std::unordered_map<std::string, Maze::Maze_style> style_table;
   std::unordered_map<std::string, Speed::Speed> solver_animation_table;
   std::unordered_map<std::string, Speed::Speed> builder_animation_table;
 };
@@ -74,53 +70,53 @@ int main( int argc, char** argv )
   const Lookup_tables tables = {
     { "-r", "-c", "-b", "-s", "-h", "-g", "-d", "-m", "-sa", "-ba" },
     {
-      { "rdfs", { Builder::generate_recursive_backtracker, Builder::animate_recursive_backtracker } },
-      { "wilson", { Builder::generate_wilson_path_carver, Builder::animate_wilson_path_carver } },
-      { "wilson-walls", { Builder::generate_wilson_wall_adder, Builder::animate_wilson_wall_adder } },
-      { "fractal", { Builder::generate_recursive_subdivision, Builder::animate_recursive_subdivision } },
-      { "kruskal", { Builder::generate_kruskal, Builder::animate_kruskal } },
-      { "eller", { Builder::generate_eller, Builder::animate_eller } },
-      { "prim", { Builder::generate_prim, Builder::animate_prim } },
-      { "grid", { Builder::generate_grid, Builder::animate_grid } },
-      { "arena", { Builder::generate_arena, Builder::animate_arena } },
+      { "rdfs", { Recursive_backtracker::generate_maze, Recursive_backtracker::animate_maze } },
+      { "wilson", { Wilson_path_carver::generate_maze, Wilson_path_carver::animate_maze } },
+      { "wilson-walls", { Wilson_wall_adder::generate_maze, Wilson_wall_adder::animate_maze } },
+      { "fractal", { Recursive_subdivision::generate_maze, Recursive_subdivision::animate_maze } },
+      { "kruskal", { Kruskal::generate_maze, Kruskal::animate_maze } },
+      { "eller", { Eller::generate_maze, Eller::animate_maze } },
+      { "prim", { Prim::generate_maze, Prim::animate_maze } },
+      { "grid", { Grid::generate_maze, Grid::animate_maze } },
+      { "arena", { Arena::generate_maze, Arena::animate_maze } },
     },
     {
-      { "cross", { Builder::add_cross, Builder::add_cross_animated } },
-      { "x", { Builder::add_x, Builder::add_x_animated } },
+      { "cross", { Mods::add_cross, Mods::add_cross_animated } },
+      { "x", { Mods::add_x, Mods::add_x_animated } },
     },
     {
-      { "dfs-hunt", { Solver::dfs_thread_hunt, Solver::animate_dfs_thread_hunt } },
-      { "dfs-gather", { Solver::dfs_thread_gather, Solver::animate_dfs_thread_gather } },
-      { "dfs-corners", { Solver::dfs_thread_corners, Solver::animate_dfs_thread_corners } },
-      { "floodfs-hunt", { Solver::floodfs_thread_hunt, Solver::animate_floodfs_thread_hunt } },
-      { "floodfs-gather", { Solver::floodfs_thread_gather, Solver::animate_floodfs_thread_gather } },
-      { "floodfs-corners", { Solver::floodfs_thread_corners, Solver::animate_floodfs_thread_corners } },
-      { "rdfs-hunt", { Solver::randomized_dfs_thread_hunt, Solver::animate_randomized_dfs_thread_hunt } },
-      { "rdfs-gather", { Solver::randomized_dfs_thread_gather, Solver::animate_randomized_dfs_thread_gather } },
-      { "rdfs-corners", { Solver::randomized_dfs_thread_corners, Solver::animate_randomized_dfs_thread_corners } },
-      { "bfs-hunt", { Solver::bfs_thread_hunt, Solver::animate_bfs_thread_hunt } },
-      { "bfs-gather", { Solver::bfs_thread_gather, Solver::animate_bfs_thread_gather } },
-      { "bfs-corners", { Solver::bfs_thread_corners, Solver::animate_bfs_thread_corners } },
-      { "darkdfs-hunt", { Solver::dfs_thread_hunt, Solver::animate_darkdfs_thread_hunt } },
-      { "darkdfs-gather", { Solver::dfs_thread_gather, Solver::animate_darkdfs_thread_gather } },
-      { "darkdfs-corners", { Solver::dfs_thread_gather, Solver::animate_darkdfs_thread_corners } },
-      { "darkbfs-hunt", { Solver::bfs_thread_hunt, Solver::animate_darkbfs_thread_hunt } },
-      { "darkbfs-gather", { Solver::bfs_thread_gather, Solver::animate_darkbfs_thread_gather } },
-      { "darkbfs-corners", { Solver::bfs_thread_gather, Solver::animate_darkbfs_thread_corners } },
-      { "darkfloodfs-hunt", { Solver::dfs_thread_hunt, Solver::animate_darkfloodfs_thread_hunt } },
-      { "darkfloodfs-gather", { Solver::dfs_thread_gather, Solver::animate_darkfloodfs_thread_gather } },
-      { "darkfloodfs-corners", { Solver::dfs_thread_gather, Solver::animate_darkfloodfs_thread_corners } },
-      { "darkrdfs-hunt", { Solver::dfs_thread_hunt, Solver::animate_darkrandomized_dfs_thread_hunt } },
-      { "darkrdfs-gather", { Solver::dfs_thread_gather, Solver::animate_darkrandomized_dfs_thread_gather } },
-      { "darkrdfs-corners", { Solver::dfs_thread_gather, Solver::animate_darkrandomized_dfs_thread_corners } },
+      { "dfs-hunt", { Dfs::hunt, Dfs::animate_hunt } },
+      { "dfs-gather", { Dfs::gather, Dfs::animate_gather } },
+      { "dfs-corners", { Dfs::corners, Dfs::animate_corners } },
+      { "floodfs-hunt", { Floodfs::hunt, Floodfs::animate_hunt } },
+      { "floodfs-gather", { Floodfs::gather, Floodfs::animate_gather } },
+      { "floodfs-corners", { Floodfs::corners, Floodfs::animate_corners } },
+      { "rdfs-hunt", { Rdfs::hunt, Rdfs::animate_hunt } },
+      { "rdfs-gather", { Rdfs::gather, Rdfs::animate_gather } },
+      { "rdfs-corners", { Rdfs::corners, Rdfs::animate_corners } },
+      { "bfs-hunt", { Bfs::hunt, Bfs::animate_hunt } },
+      { "bfs-gather", { Bfs::gather, Bfs::animate_gather } },
+      { "bfs-corners", { Bfs::corners, Bfs::animate_corners } },
+      { "darkdfs-hunt", { Dfs::hunt, Dark_dfs::animate_hunt } },
+      { "darkdfs-gather", { Dfs::gather, Dark_dfs::animate_gather } },
+      { "darkdfs-corners", { Dfs::corners, Dark_dfs::animate_corners } },
+      { "darkbfs-hunt", { Bfs::hunt, Dark_bfs::animate_hunt } },
+      { "darkbfs-gather", { Bfs::gather, Dark_bfs::animate_gather } },
+      { "darkbfs-corners", { Bfs::corners, Dark_bfs::animate_corners } },
+      { "darkfloodfs-hunt", { Floodfs::hunt, Dark_floodfs::animate_hunt } },
+      { "darkfloodfs-gather", { Floodfs::gather, Dark_floodfs::animate_gather } },
+      { "darkfloodfs-corners", { Floodfs::corners, Dark_floodfs::animate_corners } },
+      { "darkrdfs-hunt", { Rdfs::hunt, Dark_rdfs::animate_hunt } },
+      { "darkrdfs-gather", { Rdfs::gather, Dark_rdfs::animate_gather } },
+      { "darkrdfs-corners", { Rdfs::gather, Dark_rdfs::animate_corners } },
     },
     {
-      { "sharp", Builder::Maze::Maze_style::sharp },
-      { "round", Builder::Maze::Maze_style::round },
-      { "doubles", Builder::Maze::Maze_style::doubles },
-      { "bold", Builder::Maze::Maze_style::bold },
-      { "contrast", Builder::Maze::Maze_style::contrast },
-      { "spikes", Builder::Maze::Maze_style::spikes },
+      { "sharp", Maze::Maze_style::sharp },
+      { "round", Maze::Maze_style::round },
+      { "doubles", Maze::Maze_style::doubles },
+      { "bold", Maze::Maze_style::bold },
+      { "contrast", Maze::Maze_style::contrast },
+      { "spikes", Maze::Maze_style::spikes },
     },
     {
       { "0", Speed::Speed::instant },
@@ -170,7 +166,7 @@ int main( int argc, char** argv )
     }
   }
 
-  Builder::Maze maze( runner.args );
+  Maze::Maze maze( runner.args );
 
   // Functions are stored in tuples so use tuple get syntax and then call them immidiately.
 

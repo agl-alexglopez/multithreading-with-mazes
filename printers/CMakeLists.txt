@@ -1,2 +1,0 @@
-add_library(print_utilities print_utilities.hh)
-target_link_libraries(print_utilities PRIVATE maze)

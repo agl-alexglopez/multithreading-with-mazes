@@ -1,19 +1,26 @@
-#include "disjoint_set.hh"
-#include "maze.hh"
-#include "maze_algorithms.hh"
-#include "maze_utilities.hh"
-#include "speed.hh"
-
+module;
 #include <algorithm>
 #include <random>
 #include <unordered_map>
 #include <vector>
+export module labyrinth:kruskal;
+import :disjoint_set;
+import :maze;
+import :speed;
+import :build_utilities;
 
-namespace Builder {
+///////////////////////////////////   Exported Interface  ///////////////////////////////////////////
+
+export namespace Kruskal {
+void generate_maze( Maze::Maze& maze );
+void animate_maze( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Kruskal
+
+//////////////////////////////////   Implementation   /////////////////////////////////////////////////
 
 namespace {
 
-std::vector<Maze::Point> load_shuffled_walls( Maze& maze )
+std::vector<Maze::Point> load_shuffled_walls( Maze::Maze& maze )
 {
   std::vector<Maze::Point> walls = {};
   // The walls between cells to the left and right. If row is odd look left and right.
@@ -33,7 +40,7 @@ std::vector<Maze::Point> load_shuffled_walls( Maze& maze )
   return walls;
 }
 
-std::unordered_map<Maze::Point, int> tag_cells( Maze& maze )
+std::unordered_map<Maze::Point, int> tag_cells( Maze::Maze& maze )
 {
   std::unordered_map<Maze::Point, int> set_ids = {};
   int id = 0;
@@ -49,9 +56,11 @@ std::unordered_map<Maze::Point, int> tag_cells( Maze& maze )
 
 } // namespace
 
-void generate_kruskal( Maze& maze )
+namespace Kruskal {
+
+void generate_maze( Maze::Maze& maze )
 {
-  fill_maze_with_walls( maze );
+  Butil::fill_maze_with_walls( maze );
   const std::vector<Maze::Point> walls = load_shuffled_walls( maze );
   const std::unordered_map<Maze::Point, int> set_ids = tag_cells( maze );
   Disjoint_set sets( set_ids.size() );
@@ -60,24 +69,24 @@ void generate_kruskal( Maze& maze )
       const Maze::Point above_cell = { p.row - 1, p.col };
       const Maze::Point below_cell = { p.row + 1, p.col };
       if ( sets.made_union( set_ids.at( above_cell ), set_ids.at( below_cell ) ) ) {
-        join_squares( maze, above_cell, below_cell );
+        Butil::join_squares( maze, above_cell, below_cell );
       }
     } else {
       const Maze::Point left_cell = { p.row, p.col - 1 };
       const Maze::Point right_cell = { p.row, p.col + 1 };
       if ( sets.made_union( set_ids.at( left_cell ), set_ids.at( right_cell ) ) ) {
-        join_squares( maze, left_cell, right_cell );
+        Butil::join_squares( maze, left_cell, right_cell );
       }
     }
   }
-  clear_and_flush_grid( maze );
+  Butil::clear_and_flush_grid( maze );
 }
 
-void animate_kruskal( Maze& maze, Speed::Speed speed )
+void animate_maze( Maze::Maze& maze, Speed::Speed speed )
 {
-  const Speed::Speed_unit animation = builder_speeds.at( static_cast<int>( speed ) );
-  fill_maze_with_walls_animated( maze );
-  clear_and_flush_grid( maze );
+  const Speed::Speed_unit animation = Butil::builder_speeds.at( static_cast<int>( speed ) );
+  Butil::fill_maze_with_walls_animated( maze );
+  Butil::clear_and_flush_grid( maze );
   const std::vector<Maze::Point> walls = load_shuffled_walls( maze );
   const std::unordered_map<Maze::Point, int> set_ids = tag_cells( maze );
   Disjoint_set sets( set_ids.size() );
@@ -87,16 +96,16 @@ void animate_kruskal( Maze& maze, Speed::Speed speed )
       const Maze::Point above_cell = { p.row - 1, p.col };
       const Maze::Point below_cell = { p.row + 1, p.col };
       if ( sets.made_union( set_ids.at( above_cell ), set_ids.at( below_cell ) ) ) {
-        join_squares_animated( maze, above_cell, below_cell, animation );
+        Butil::join_squares_animated( maze, above_cell, below_cell, animation );
       }
     } else {
       const Maze::Point left_cell = { p.row, p.col - 1 };
       const Maze::Point right_cell = { p.row, p.col + 1 };
       if ( sets.made_union( set_ids.at( left_cell ), set_ids.at( right_cell ) ) ) {
-        join_squares_animated( maze, left_cell, right_cell, animation );
+        Butil::join_squares_animated( maze, left_cell, right_cell, animation );
       }
     }
   }
 }
 
-} // namespace Builder
+} // namespace Kruskal

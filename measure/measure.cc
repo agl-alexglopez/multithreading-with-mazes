@@ -1,9 +1,4 @@
-#include "maze.hh"
-#include "maze_algorithms.hh"
-#include "painters.hh"
-#include "print_utilities.hh"
-#include "speed.hh"
-
+import labyrinth;
 #include <cstdlib>
 #include <functional>
 #include <iostream>
@@ -18,10 +13,10 @@
 namespace {
 
 using Build_function
-  = std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Speed::Speed )>>;
+  = std::tuple<std::function<void( Maze::Maze& )>, std::function<void( Maze::Maze&, Speed::Speed )>>;
 
 using Paint_function
-  = std::tuple<std::function<void( Builder::Maze& )>, std::function<void( Builder::Maze&, Speed::Speed )>>;
+  = std::tuple<std::function<void( Maze::Maze& )>, std::function<void( Maze::Maze&, Speed::Speed )>>;
 
 constexpr int static_image = 0;
 constexpr int animated_playback = 1;
@@ -34,18 +29,18 @@ struct Flag_arg
 
 struct Maze_runner
 {
-  Builder::Maze::Maze_args args;
+  Maze::Maze_args args;
 
   int builder_view { static_image };
   Speed::Speed builder_speed {};
-  Build_function builder { Builder::generate_recursive_backtracker, Builder::animate_recursive_backtracker };
+  Build_function builder { Recursive_backtracker::generate_maze, Recursive_backtracker::animate_maze };
 
   int modification_getter { static_image };
   std::optional<Build_function> modder {};
 
   int painter_view { static_image };
   Speed::Speed painter_speed {};
-  Paint_function painter { Paint::paint_distance_from_center, Paint::animate_distance_from_center };
+  Paint_function painter { Distance::paint_distance_from_center, Distance::animate_distance_from_center };
   Maze_runner() : args {} {}
 };
 
@@ -55,7 +50,7 @@ struct Lookup_tables
   std::unordered_map<std::string, Build_function> builder_table;
   std::unordered_map<std::string, Build_function> modification_table;
   std::unordered_map<std::string, Paint_function> painter_table;
-  std::unordered_map<std::string, Builder::Maze::Maze_style> style_table;
+  std::unordered_map<std::string, Maze::Maze_style> style_table;
   std::unordered_map<std::string, Speed::Speed> painter_animation_table;
   std::unordered_map<std::string, Speed::Speed> builder_animation_table;
 };
@@ -73,31 +68,31 @@ int main( int argc, char** argv )
   const Lookup_tables tables = {
     { "-r", "-c", "-b", "-p", "-h", "-g", "-d", "-m", "-pa", "-ba" },
     {
-      { "rdfs", { Builder::generate_recursive_backtracker, Builder::animate_recursive_backtracker } },
-      { "wilson", { Builder::generate_wilson_path_carver, Builder::animate_wilson_path_carver } },
-      { "wilson-walls", { Builder::generate_wilson_wall_adder, Builder::animate_wilson_wall_adder } },
-      { "fractal", { Builder::generate_recursive_subdivision, Builder::animate_recursive_subdivision } },
-      { "kruskal", { Builder::generate_kruskal, Builder::animate_kruskal } },
-      { "eller", { Builder::generate_eller, Builder::animate_eller } },
-      { "prim", { Builder::generate_prim, Builder::animate_prim } },
-      { "grid", { Builder::generate_grid, Builder::animate_grid } },
-      { "arena", { Builder::generate_arena, Builder::animate_arena } },
+      { "rdfs", { Recursive_backtracker::generate_maze, Recursive_backtracker::animate_maze } },
+      { "wilson", { Wilson_path_carver::generate_maze, Wilson_path_carver::animate_maze } },
+      { "wilson-walls", { Wilson_wall_adder::generate_maze, Wilson_wall_adder::animate_maze } },
+      { "fractal", { Recursive_subdivision::generate_maze, Recursive_subdivision::animate_maze } },
+      { "kruskal", { Kruskal::generate_maze, Kruskal::animate_maze } },
+      { "eller", { Eller::generate_maze, Eller::animate_maze } },
+      { "prim", { Prim::generate_maze, Prim::animate_maze } },
+      { "grid", { Grid::generate_maze, Grid::animate_maze } },
+      { "arena", { Arena::generate_maze, Arena::animate_maze } },
     },
     {
-      { "cross", { Builder::add_cross, Builder::add_cross_animated } },
-      { "x", { Builder::add_x, Builder::add_x_animated } },
+      { "cross", { Mods::add_cross, Mods::add_cross_animated } },
+      { "x", { Mods::add_x, Mods::add_x_animated } },
     },
     {
-      { "distance", { Paint::paint_distance_from_center, Paint::animate_distance_from_center } },
-      { "runs", { Paint::paint_runs, Paint::animate_runs } },
+      { "distance", { Distance::paint_distance_from_center, Distance::animate_distance_from_center } },
+      { "runs", { Runs::paint_runs, Runs::animate_runs } },
     },
     {
-      { "sharp", Builder::Maze::Maze_style::sharp },
-      { "round", Builder::Maze::Maze_style::round },
-      { "doubles", Builder::Maze::Maze_style::doubles },
-      { "bold", Builder::Maze::Maze_style::bold },
-      { "contrast", Builder::Maze::Maze_style::contrast },
-      { "spikes", Builder::Maze::Maze_style::spikes },
+      { "sharp", Maze::Maze_style::sharp },
+      { "round", Maze::Maze_style::round },
+      { "doubles", Maze::Maze_style::doubles },
+      { "bold", Maze::Maze_style::bold },
+      { "contrast", Maze::Maze_style::contrast },
+      { "spikes", Maze::Maze_style::spikes },
     },
     {
       { "0", Speed::Speed::instant },
@@ -147,7 +142,7 @@ int main( int argc, char** argv )
     }
   }
 
-  Builder::Maze maze( runner.args );
+  Maze::Maze maze( runner.args );
 
   // Functions are stored in tuples so use tuple get syntax and then call them immidiately.
 

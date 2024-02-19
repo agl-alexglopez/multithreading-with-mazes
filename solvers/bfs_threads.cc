@@ -1,10 +1,4 @@
-#include "maze.hh"
-#include "maze_solvers.hh"
-#include "my_queue.hh"
-#include "print_utilities.hh"
-#include "solver_utilities.hh"
-#include "speed.hh"
-
+module;
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
@@ -16,73 +10,60 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+export module labyrinth:bfs;
+import :maze;
+import :speed;
+import :printers;
+import :solve_utilities;
+import :my_queue;
 
-namespace Solver {
+//////////////////////////////////   Exported Interface   /////////////////////////////////////
+
+export namespace Bfs {
+void hunt( Maze::Maze& maze );
+void animate_hunt( Maze::Maze& maze, Speed::Speed speed );
+void gather( Maze::Maze& maze );
+void animate_gather( Maze::Maze& maze, Speed::Speed speed );
+void corners( Maze::Maze& maze );
+void animate_corners( Maze::Maze& maze, Speed::Speed speed );
+} // namespace Bfs
+
+//////////////////////////////////   Implementation     ////////////////////////////////////
 
 namespace {
 
-struct Solver_monitor
+void hunter( Maze::Maze& maze, Sutil::Bfs_monitor& monitor, Sutil::Thread_id id )
 {
-  std::mutex monitor {};
-  std::optional<Speed::Speed_unit> speed {};
-  std::vector<std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>> thread_maps;
-  std::vector<My_queue<Builder::Maze::Point>> thread_queues;
-  std::vector<Builder::Maze::Point> starts {};
-  std::optional<int> winning_index {};
-  std::vector<std::vector<Builder::Maze::Point>> thread_paths;
-  Solver_monitor()
-    : thread_maps { num_threads }
-    , thread_queues { num_threads }
-    , thread_paths { num_threads, std::vector<Builder::Maze::Point> {} }
-  {
-    for ( std::vector<Builder::Maze::Point>& path : thread_paths ) {
-      path.reserve( initial_path_len );
-    }
-    for ( My_queue<Builder::Maze::Point>& q : thread_queues ) {
-      q.reserve( initial_path_len );
-    }
-  }
-};
-
-void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
-{
-  const Thread_paint paint_bit = id.bit << thread_paint_shift;
+  const Sutil::Thread_paint paint_bit( id.bit << Sutil::thread_paint_shift );
   // This will be how we rebuild the path because queue does not represent the current path.
-  std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>& seen = monitor.thread_maps[id.index];
+  std::unordered_map<Maze::Point, Maze::Point>& seen = monitor.thread_maps[id.index];
   seen[monitor.starts.at( id.index )] = { -1, -1 };
-  My_queue<Builder::Maze::Point>& bfs = monitor.thread_queues[id.index];
+  My_queue<Maze::Point>& bfs = monitor.thread_queues[id.index];
   bfs.push( monitor.starts.at( id.index ) );
-  Builder::Maze::Point cur = monitor.starts.at( id.index );
+  Maze::Point cur = monitor.starts.at( id.index );
   while ( !bfs.empty() ) {
     // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
-    if ( monitor.winning_index ) {
+    if ( monitor.winning_index != Sutil::no_winner ) {
       break;
     }
 
     cur = bfs.front();
     bfs.pop();
 
-    monitor.monitor.lock();
-    if ( maze[cur.row][cur.col] & finish_bit ) {
-      if ( !monitor.winning_index ) {
-        monitor.winning_index = id.index;
-      }
-      monitor.monitor.unlock();
+    if ( maze[cur.row][cur.col] & Sutil::finish_bit ) {
+      static_cast<void>( monitor.winning_index.ces( Sutil::no_winner.load(), id.index ) );
       break;
     }
     // This creates a nice fanning out of mixed color for each searching thread.
     maze[cur.row][cur.col] |= paint_bit;
-    monitor.monitor.unlock();
 
     // Bias each thread towards the direction it was dispatched when we first sent it.
-    for ( uint64_t count = 0, i = id.index; count < dirs.size(); count++, ++i %= dirs.size() ) {
-      const Builder::Maze::Point& p = dirs.at( i );
-      const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
+    for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size(); count++, ++i %= Sutil::dirs.size() ) {
+      const Maze::Point& p = Sutil::dirs.at( i );
+      const Maze::Point next = { cur.row + p.row, cur.col + p.col };
       const bool seen_next = seen.contains( next );
 
-      monitor.monitor.lock();
-      const bool push_next = !seen_next && ( maze[next.row][next.col] & Builder::Maze::path_bit );
-      monitor.monitor.unlock();
+      const bool push_next = !seen_next && ( maze[next.row][next.col] & Maze::path_bit );
 
       if ( push_next ) {
         seen[next] = cur;
@@ -97,48 +78,41 @@ void complete_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
   }
 }
 
-void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
+void animate_hunter( Maze::Maze& maze, Sutil::Bfs_monitor& monitor, Sutil::Thread_id id )
 {
-  const Thread_paint paint_bit = id.bit << thread_paint_shift;
+  const Sutil::Thread_paint paint_bit( id.bit << Sutil::thread_paint_shift );
   // This will be how we rebuild the path because queue does not represent the current path.
-  std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>& seen = monitor.thread_maps[id.index];
+  std::unordered_map<Maze::Point, Maze::Point>& seen = monitor.thread_maps[id.index];
   seen[monitor.starts.at( id.index )] = { -1, -1 };
-  My_queue<Builder::Maze::Point>& bfs = monitor.thread_queues[id.index];
+  My_queue<Maze::Point>& bfs = monitor.thread_queues[id.index];
   bfs.push( monitor.starts.at( id.index ) );
-  Builder::Maze::Point cur = monitor.starts.at( id.index );
+  Maze::Point cur = monitor.starts.at( id.index );
   while ( !bfs.empty() ) {
     // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
-    if ( monitor.winning_index ) {
+    if ( monitor.winning_index != Sutil::no_winner ) {
       break;
     }
 
     cur = bfs.front();
     bfs.pop();
 
-    monitor.monitor.lock();
-    if ( maze[cur.row][cur.col] & finish_bit ) {
-      if ( !monitor.winning_index ) {
-        monitor.winning_index = id.index;
-      }
-      monitor.monitor.unlock();
+    if ( maze[cur.row][cur.col] & Sutil::finish_bit ) {
+      static_cast<void>( monitor.winning_index.ces( Sutil::no_winner.load(), id.index ) );
       break;
     }
     // This creates a nice fanning out of mixed color for each searching thread.
     maze[cur.row][cur.col] |= paint_bit;
-    flush_cursor_path_coordinate( maze, cur );
+    monitor.monitor.lock();
+    Sutil::flush_cursor_path_coordinate( maze, cur );
     monitor.monitor.unlock();
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
 
     // Bias each thread towards the direction it was dispatched when we first sent it.
-    for ( uint64_t count = 0, i = id.index; count < dirs.size(); count++, ++i %= dirs.size() ) {
-      const Builder::Maze::Point& p = dirs.at( i );
-      const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
-      const bool seen_next = seen.contains( next );
+    for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size(); count++, ++i %= Sutil::dirs.size() ) {
+      const Maze::Point& p = Sutil::dirs.at( i );
+      const Maze::Point next = { cur.row + p.row, cur.col + p.col };
 
-      monitor.monitor.lock();
-      const bool push_next = !seen_next && ( maze[next.row][next.col] & Builder::Maze::path_bit );
-      monitor.monitor.unlock();
-
+      const bool push_next = !seen.contains( next ) && ( maze[next.row][next.col] & Maze::path_bit );
       if ( push_next ) {
         seen[next] = cur;
         bfs.push( next );
@@ -152,36 +126,30 @@ void animate_hunt( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
   }
 }
 
-void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
+void gatherer( Maze::Maze& maze, Sutil::Bfs_monitor& monitor, Sutil::Thread_id id )
 {
-  std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>& seen = monitor.thread_maps[id.index];
-  const Thread_cache seen_bit = id.bit << thread_cache_shift;
-  const Thread_paint paint_bit = id.bit << thread_paint_shift;
+  std::unordered_map<Maze::Point, Maze::Point>& seen = monitor.thread_maps[id.index];
+  const Sutil::Thread_cache seen_bit( id.bit << Sutil::thread_cache_shift );
+  const Sutil::Thread_paint paint_bit( id.bit << Sutil::thread_paint_shift );
   seen[monitor.starts[id.index]] = { -1, -1 };
-  My_queue<Builder::Maze::Point>& bfs = monitor.thread_queues[id.index];
+  My_queue<Maze::Point>& bfs = monitor.thread_queues[id.index];
   bfs.push( monitor.starts.at( id.index ) );
-  Builder::Maze::Point cur = monitor.starts.at( id.index );
+  Maze::Point cur = monitor.starts.at( id.index );
   while ( !bfs.empty() ) {
     cur = bfs.front();
     bfs.pop();
 
-    monitor.monitor.lock();
-    if ( maze[cur.row][cur.col] & finish_bit && !( maze[cur.row][cur.col] & cache_mask ) ) {
+    if ( maze[cur.row][cur.col] & Sutil::finish_bit && !( maze[cur.row][cur.col] & Sutil::cache_mask ) ) {
       maze[cur.row][cur.col] |= seen_bit;
-      monitor.monitor.unlock();
       break;
     }
     maze[cur.row][cur.col] |= paint_bit;
     maze[cur.row][cur.col] |= seen_bit;
-    monitor.monitor.unlock();
 
-    for ( uint64_t count = 0, i = id.index; count < dirs.size(); count++, ++i %= dirs.size() ) {
-      const Builder::Maze::Point& p = dirs.at( i );
-      const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
-      const bool seen_next = seen.contains( next );
-      monitor.monitor.lock();
-      const bool push_next = !seen_next && ( maze[next.row][next.col] & Builder::Maze::path_bit );
-      monitor.monitor.unlock();
+    for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size(); count++, ++i %= Sutil::dirs.size() ) {
+      const Maze::Point& p = Sutil::dirs.at( i );
+      const Maze::Point next = { cur.row + p.row, cur.col + p.col };
+      const bool push_next = !seen.contains( next ) && ( maze[next.row][next.col] & Maze::path_bit );
       if ( push_next ) {
         seen[next] = cur;
         bfs.push( next );
@@ -193,41 +161,38 @@ void complete_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id
     monitor.thread_paths[id.index].push_back( cur );
     cur = seen.at( cur );
   }
-  monitor.winning_index = id.index;
+  monitor.winning_index.store( id.index );
 }
 
-void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id )
+void animate_gatherer( Maze::Maze& maze, Sutil::Bfs_monitor& monitor, Sutil::Thread_id id )
 {
-  std::unordered_map<Builder::Maze::Point, Builder::Maze::Point>& seen = monitor.thread_maps[id.index];
-  const Thread_cache seen_bit = id.bit << thread_cache_shift;
-  const Thread_cache paint_bit = id.bit << thread_paint_shift;
+  std::unordered_map<Maze::Point, Maze::Point>& seen = monitor.thread_maps[id.index];
+  const Sutil::Thread_cache seen_bit( id.bit << Sutil::thread_cache_shift );
+  const Sutil::Thread_paint paint_bit( id.bit << Sutil::thread_paint_shift );
   seen[monitor.starts[id.index]] = { -1, -1 };
-  My_queue<Builder::Maze::Point>& bfs = monitor.thread_queues[id.index];
+  My_queue<Maze::Point>& bfs = monitor.thread_queues[id.index];
   bfs.push( monitor.starts.at( id.index ) );
-  Builder::Maze::Point cur = monitor.starts.at( id.index );
+  Maze::Point cur = monitor.starts.at( id.index );
   while ( !bfs.empty() ) {
     cur = bfs.front();
     bfs.pop();
 
-    monitor.monitor.lock();
-    if ( maze[cur.row][cur.col] & finish_bit && !( maze[cur.row][cur.col] & cache_mask ) ) {
+    if ( maze[cur.row][cur.col] & Sutil::finish_bit && !( maze[cur.row][cur.col] & Sutil::cache_mask ) ) {
       maze[cur.row][cur.col] |= seen_bit;
-      monitor.monitor.unlock();
       break;
     }
     maze[cur.row][cur.col] |= paint_bit;
     maze[cur.row][cur.col] |= seen_bit;
-    flush_cursor_path_coordinate( maze, cur );
+
+    monitor.monitor.lock();
+    Sutil::flush_cursor_path_coordinate( maze, cur );
     monitor.monitor.unlock();
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
 
-    for ( uint64_t count = 0, i = id.index; count < dirs.size(); count++, ++i %= dirs.size() ) {
-      const Builder::Maze::Point& p = dirs.at( i );
-      const Builder::Maze::Point next = { cur.row + p.row, cur.col + p.col };
-      const bool seen_next = seen.contains( next );
-      monitor.monitor.lock();
-      const bool push_next = !seen_next && ( maze[next.row][next.col] & Builder::Maze::path_bit );
-      monitor.monitor.unlock();
+    for ( uint64_t count = 0, i = id.index; count < Sutil::dirs.size(); count++, ++i %= Sutil::dirs.size() ) {
+      const Maze::Point& p = Sutil::dirs.at( i );
+      const Maze::Point next = { cur.row + p.row, cur.col + p.col };
+      const bool push_next = !seen.contains( next ) && ( maze[next.row][next.col] & Maze::path_bit );
       if ( push_next ) {
         seen[next] = cur;
         bfs.push( next );
@@ -239,134 +204,138 @@ void animate_gather( Builder::Maze& maze, Solver_monitor& monitor, Thread_id id 
     monitor.thread_paths[id.index].push_back( cur );
     cur = seen.at( cur );
   }
-  monitor.winning_index = id.index;
+  monitor.winning_index.store( id.index );
 }
 
 } // namespace
 
 /* * * * * * * * * * * *  Multithreaded Dispatcher Functions from Header Interface   * * * * * * * * * * * * * * */
 
-void bfs_thread_hunt( Builder::Maze& maze )
+namespace Bfs {
+
+void hunt( Maze::Maze& maze )
 {
-  Solver_monitor monitor;
-  monitor.starts = std::vector<Builder::Maze::Point>( num_threads, pick_random_point( maze ) );
-  maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit;
-  const Builder::Maze::Point finish = pick_random_point( maze );
-  maze[finish.row][finish.col] |= finish_bit;
-  std::vector<std::thread> threads( num_threads );
-  for ( int i_thread = 0; i_thread < num_threads; i_thread++ ) {
-    const Thread_id this_thread { i_thread, thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( complete_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+  Sutil::Bfs_monitor monitor;
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
+  const Maze::Point finish = Sutil::pick_random_point( maze );
+  maze[finish.row][finish.col] |= Sutil::finish_bit;
+  std::vector<std::thread> threads( Sutil::num_threads );
+  for ( uint16_t i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
+    const Sutil::Thread_id this_thread { i_thread, Sutil::thread_bits.at( i_thread ) };
+    threads[i_thread] = std::thread( hunter, std::ref( maze ), std::ref( monitor ), this_thread );
   }
   for ( std::thread& t : threads ) {
     t.join();
   }
 
-  if ( monitor.winning_index ) {
+  if ( monitor.winning_index != Sutil::no_winner ) {
     // It is cool to see the shortest path that the winning thread took to victory
-    const Thread_paint winner_color = ( thread_bits.at( monitor.winning_index.value() ) << thread_paint_shift );
-    for ( const Builder::Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.value() ) ) {
-      maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_paint_mask );
+    const Sutil::Thread_paint winner_color( Sutil::thread_bits.at( monitor.winning_index.load() )
+                                            << Sutil::thread_paint_shift );
+    for ( const Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.load() ) ) {
+      maze[p.row][p.col] &= ~Sutil::thread_paint_mask;
       maze[p.row][p.col] |= winner_color;
     }
   }
 
-  print_maze( maze );
-  print_overlap_key();
-  print_hunt_solution_message( monitor.winning_index );
+  Sutil::print_maze( maze );
+  Sutil::print_overlap_key();
+  Sutil::print_hunt_solution_message( monitor.winning_index );
   std::cout << "\n";
 }
 
-void animate_bfs_thread_hunt( Builder::Maze& maze, Speed::Speed speed )
+void animate_hunt( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
-  print_overlap_key();
-  Solver_monitor monitor;
-  monitor.speed = solver_speeds.at( static_cast<Speed::Speed_unit>( speed ) );
-  monitor.starts = std::vector<Builder::Maze::Point>( num_threads, pick_random_point( maze ) );
-  maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit;
-  const Builder::Maze::Point finish = pick_random_point( maze );
-  maze[finish.row][finish.col] |= finish_bit;
-  flush_cursor_path_coordinate( maze, finish );
+  Sutil::print_overlap_key();
+  Sutil::Bfs_monitor monitor;
+  monitor.speed = Sutil::solver_speeds.at( static_cast<Speed::Speed_unit>( speed ) );
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
+  const Maze::Point finish = Sutil::pick_random_point( maze );
+  maze[finish.row][finish.col] |= Sutil::finish_bit;
+  Sutil::flush_cursor_path_coordinate( maze, finish );
   std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
 
-  std::vector<std::thread> threads( num_threads );
-  for ( int i_thread = 0; i_thread < num_threads; i_thread++ ) {
-    const Thread_id this_thread { i_thread, thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+  std::vector<std::thread> threads( Sutil::num_threads );
+  for ( uint16_t i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
+    const Sutil::Thread_id this_thread { i_thread, Sutil::thread_bits.at( i_thread ) };
+    threads[i_thread] = std::thread( animate_hunter, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
     t.join();
   }
 
-  if ( monitor.winning_index ) {
+  if ( monitor.winning_index != Sutil::no_winner ) {
     // It is cool to see the shortest path that the winning thread took to victory
-    const Thread_paint winner_color = ( thread_bits.at( monitor.winning_index.value() ) << thread_paint_shift );
-    for ( const Builder::Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.value() ) ) {
-      maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_paint_mask );
+    const Sutil::Thread_paint winner_color( Sutil::thread_bits.at( monitor.winning_index.load() )
+                                            << Sutil::thread_paint_shift );
+    for ( const Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.load() ) ) {
+      maze[p.row][p.col] &= ~Sutil::thread_paint_mask;
       maze[p.row][p.col] |= winner_color;
-      flush_cursor_path_coordinate( maze, p );
+      Sutil::flush_cursor_path_coordinate( maze, p );
       std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
     }
   }
 
-  Printer::set_cursor_position( { maze.row_size() + overlap_key_and_message_height, 0 } );
-  print_hunt_solution_message( monitor.winning_index );
+  Printer::set_cursor_position( { maze.row_size() + Sutil::overlap_key_and_message_height, 0 } );
+  Sutil::print_hunt_solution_message( monitor.winning_index );
   std::cout << "\n";
 }
 
-void bfs_thread_gather( Builder::Maze& maze )
+void gather( Maze::Maze& maze )
 {
-  Solver_monitor monitor;
-  monitor.starts = std::vector<Builder::Maze::Point>( num_threads, pick_random_point( maze ) );
-  maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit;
-  for ( int finish_square = 0; finish_square < num_gather_finishes; finish_square++ ) {
-    const Builder::Maze::Point finish = pick_random_point( maze );
-    maze[finish.row][finish.col] |= finish_bit;
+  Sutil::Bfs_monitor monitor;
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
+  for ( int finish_square = 0; finish_square < Sutil::num_gather_finishes; finish_square++ ) {
+    const Maze::Point finish = Sutil::pick_random_point( maze );
+    maze[finish.row][finish.col] |= Sutil::finish_bit;
   }
-  std::vector<std::thread> threads( num_threads );
-  for ( int i_thread = 0; i_thread < num_threads; i_thread++ ) {
-    const Thread_id this_thread { i_thread, thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( complete_gather, std::ref( maze ), std::ref( monitor ), this_thread );
+  std::vector<std::thread> threads( Sutil::num_threads );
+  for ( uint16_t i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
+    const Sutil::Thread_id this_thread { i_thread, Sutil::thread_bits.at( i_thread ) };
+    threads[i_thread] = std::thread( gatherer, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
     t.join();
   }
   int thread = 0;
-  for ( const std::vector<Builder::Maze::Point>& path : monitor.thread_paths ) {
-    const Thread_paint color = ( thread_bits.at( thread ) << thread_paint_shift );
-    const Builder::Maze::Point& p = path.front();
-    maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_paint_mask );
+  for ( const std::vector<Maze::Point>& path : monitor.thread_paths ) {
+    const Sutil::Thread_paint color( Sutil::thread_bits.at( thread ) << Sutil::thread_paint_shift );
+    const Maze::Point& p = path.front();
+    maze[p.row][p.col] &= ~Sutil::thread_paint_mask;
     maze[p.row][p.col] |= color;
     thread++;
   }
-  print_maze( maze );
-  print_overlap_key();
-  print_gather_solution_message();
+  Sutil::print_maze( maze );
+  Sutil::print_overlap_key();
+  Sutil::print_gather_solution_message();
   std::cout << "\n";
 }
 
-void animate_bfs_thread_gather( Builder::Maze& maze, Speed::Speed speed )
+void animate_gather( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
-  print_overlap_key();
-  Solver_monitor monitor;
-  monitor.speed = solver_speeds.at( static_cast<int>( speed ) );
-  monitor.starts = std::vector<Builder::Maze::Point>( num_threads, pick_random_point( maze ) );
-  maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= start_bit;
-  for ( int finish_square = 0; finish_square < num_gather_finishes; finish_square++ ) {
-    const Builder::Maze::Point finish = pick_random_point( maze );
-    maze[finish.row][finish.col] |= finish_bit;
-    flush_cursor_path_coordinate( maze, finish );
+  Sutil::print_overlap_key();
+  Sutil::Bfs_monitor monitor;
+  monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
+  monitor.starts = std::vector<Maze::Point>( Sutil::num_threads, Sutil::pick_random_point( maze ) );
+  maze[monitor.starts.at( 0 ).row][monitor.starts.at( 0 ).col] |= Sutil::start_bit;
+  for ( int finish_square = 0; finish_square < Sutil::num_gather_finishes; finish_square++ ) {
+    const Maze::Point finish = Sutil::pick_random_point( maze );
+    maze[finish.row][finish.col] |= Sutil::finish_bit;
+    Sutil::flush_cursor_path_coordinate( maze, finish );
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
 
-  std::vector<std::thread> threads( num_threads );
-  for ( int i_thread = 0; i_thread < num_threads; i_thread++ ) {
-    const Thread_id this_thread { i_thread, thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( animate_gather, std::ref( maze ), std::ref( monitor ), this_thread );
+  std::vector<std::thread> threads( Sutil::num_threads );
+  for ( uint16_t i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
+    const Sutil::Thread_id this_thread { i_thread, Sutil::thread_bits.at( i_thread ) };
+    threads[i_thread] = std::thread( animate_gatherer, std::ref( maze ), std::ref( monitor ), this_thread );
   }
 
   for ( std::thread& t : threads ) {
@@ -374,100 +343,101 @@ void animate_bfs_thread_gather( Builder::Maze& maze, Speed::Speed speed )
   }
 
   int i_thread = 0;
-  for ( const std::vector<Builder::Maze::Point>& path : monitor.thread_paths ) {
-    const Thread_paint color = ( thread_bits.at( i_thread ) << thread_paint_shift );
-    const Builder::Maze::Point& p = path.front();
-    maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_paint_mask );
+  for ( const std::vector<Maze::Point>& path : monitor.thread_paths ) {
+    const Sutil::Thread_paint color( Sutil::thread_bits.at( i_thread ) << Sutil::thread_paint_shift );
+    const Maze::Point& p = path.front();
+    maze[p.row][p.col] &= static_cast<Sutil::Thread_paint>( ~Sutil::thread_paint_mask );
     maze[p.row][p.col] |= color;
-    flush_cursor_path_coordinate( maze, p );
+    Sutil::flush_cursor_path_coordinate( maze, p );
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
     ++i_thread;
   }
-  Printer::set_cursor_position( { maze.row_size() + overlap_key_and_message_height, 0 } );
-  print_gather_solution_message();
+  Printer::set_cursor_position( { maze.row_size() + Sutil::overlap_key_and_message_height, 0 } );
+  Sutil::print_gather_solution_message();
   std::cout << "\n";
 }
 
-void bfs_thread_corners( Builder::Maze& maze )
+void corners( Maze::Maze& maze )
 {
-  Solver_monitor monitor;
-  monitor.starts = set_corner_starts( maze );
-  for ( const Builder::Maze::Point& p : monitor.starts ) {
-    maze[p.row][p.col] |= start_bit;
+  Sutil::Bfs_monitor monitor;
+  monitor.starts = Sutil::set_corner_starts( maze );
+  for ( const Maze::Point& p : monitor.starts ) {
+    maze[p.row][p.col] |= Sutil::start_bit;
   }
-  const Builder::Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
-  for ( const Builder::Maze::Point& p : all_dirs ) {
-    const Builder::Maze::Point next = { finish.row + p.row, finish.col + p.col };
-    maze[next.row][next.col] |= Builder::Maze::path_bit;
+  const Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
+  for ( const Maze::Point& p : Sutil::dirs ) {
+    const Maze::Point next = { finish.row + p.row, finish.col + p.col };
+    maze[next.row][next.col] |= Maze::path_bit;
   }
-  maze[finish.row][finish.col] |= Builder::Maze::path_bit;
-  maze[finish.row][finish.col] |= finish_bit;
+  maze[finish.row][finish.col] |= Maze::path_bit;
+  maze[finish.row][finish.col] |= Sutil::finish_bit;
 
-  std::vector<std::thread> threads( num_threads );
+  std::vector<std::thread> threads( Sutil::num_threads );
   // Randomly shuffle thread start corners so colors mix differently each time.
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
-  for ( int i_thread = 0; i_thread < num_threads; i_thread++ ) {
-    const Thread_id this_thread = { i_thread, thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( complete_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+  for ( uint16_t i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
+    const Sutil::Thread_id this_thread = { i_thread, Sutil::thread_bits.at( i_thread ) };
+    threads[i_thread] = std::thread( hunter, std::ref( maze ), std::ref( monitor ), this_thread );
   }
   for ( std::thread& t : threads ) {
     t.join();
   }
-  print_maze( maze );
-  print_overlap_key();
-  print_hunt_solution_message( monitor.winning_index );
+  Sutil::print_maze( maze );
+  Sutil::print_overlap_key();
+  Sutil::print_hunt_solution_message( monitor.winning_index );
   std::cout << "\n";
 }
 
-void animate_bfs_thread_corners( Builder::Maze& maze, Speed::Speed speed )
+void animate_corners( Maze::Maze& maze, Speed::Speed speed )
 {
   Printer::set_cursor_position( { maze.row_size(), 0 } );
-  print_overlap_key();
-  Solver_monitor monitor;
-  monitor.speed = solver_speeds.at( static_cast<int>( speed ) );
-  monitor.starts = set_corner_starts( maze );
-  for ( const Builder::Maze::Point& p : monitor.starts ) {
-    maze[p.row][p.col] |= start_bit;
-    flush_cursor_path_coordinate( maze, p );
+  Sutil::print_overlap_key();
+  Sutil::Bfs_monitor monitor;
+  monitor.speed = Sutil::solver_speeds.at( static_cast<int>( speed ) );
+  monitor.starts = Sutil::set_corner_starts( maze );
+  for ( const Maze::Point& p : monitor.starts ) {
+    maze[p.row][p.col] |= Sutil::start_bit;
+    Sutil::flush_cursor_path_coordinate( maze, p );
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
-  const Builder::Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
-  for ( const Builder::Maze::Point& p : all_dirs ) {
-    const Builder::Maze::Point next = { finish.row + p.row, finish.col + p.col };
-    maze[next.row][next.col] |= Builder::Maze::path_bit;
-    flush_cursor_path_coordinate( maze, next );
+  const Maze::Point finish = { maze.row_size() / 2, maze.col_size() / 2 };
+  for ( const Maze::Point& p : Sutil::all_dirs ) {
+    const Maze::Point next = { finish.row + p.row, finish.col + p.col };
+    maze[next.row][next.col] |= Maze::path_bit;
+    Sutil::flush_cursor_path_coordinate( maze, next );
     std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
   }
-  maze[finish.row][finish.col] |= Builder::Maze::path_bit;
-  maze[finish.row][finish.col] |= finish_bit;
-  flush_cursor_path_coordinate( maze, finish );
+  maze[finish.row][finish.col] |= Maze::path_bit;
+  maze[finish.row][finish.col] |= Sutil::finish_bit;
+  Sutil::flush_cursor_path_coordinate( maze, finish );
   std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
 
-  std::vector<std::thread> threads( num_threads );
+  std::vector<std::thread> threads( Sutil::num_threads );
   // Randomly shuffle thread start corners so colors mix differently each time.
   shuffle( begin( monitor.starts ), end( monitor.starts ), std::mt19937( std::random_device {}() ) );
-  for ( int i_thread = 0; i_thread < num_threads; i_thread++ ) {
-    const Thread_id this_thread = { i_thread, thread_bits.at( i_thread ) };
-    threads[i_thread] = std::thread( animate_hunt, std::ref( maze ), std::ref( monitor ), this_thread );
+  for ( uint16_t i_thread = 0; i_thread < Sutil::num_threads; i_thread++ ) {
+    const Sutil::Thread_id this_thread = { i_thread, Sutil::thread_bits.at( i_thread ) };
+    threads[i_thread] = std::thread( animate_hunter, std::ref( maze ), std::ref( monitor ), this_thread );
   }
   for ( std::thread& t : threads ) {
     t.join();
   }
 
-  if ( monitor.winning_index ) {
+  if ( monitor.winning_index != Sutil::no_winner ) {
     // It is cool to see the shortest path that the winning thread took to victory
-    const Thread_paint winner_color = ( thread_bits.at( monitor.winning_index.value() ) << thread_paint_shift );
-    for ( const Builder::Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.value() ) ) {
-      maze[p.row][p.col] &= static_cast<Thread_paint>( ~thread_paint_mask );
+    const Sutil::Thread_paint winner_color( Sutil::thread_bits.at( monitor.winning_index.load() )
+                                            << Sutil::thread_paint_shift );
+    for ( const Maze::Point& p : monitor.thread_paths.at( monitor.winning_index.load() ) ) {
+      maze[p.row][p.col] &= static_cast<Sutil::Thread_paint>( ~Sutil::thread_paint_mask );
       maze[p.row][p.col] |= winner_color;
-      flush_cursor_path_coordinate( maze, p );
+      Sutil::flush_cursor_path_coordinate( maze, p );
       std::this_thread::sleep_for( std::chrono::microseconds( monitor.speed.value_or( 0 ) ) );
     }
   }
 
-  Printer::set_cursor_position( { maze.row_size() + overlap_key_and_message_height, 0 } );
-  print_hunt_solution_message( monitor.winning_index );
+  Printer::set_cursor_position( { maze.row_size() + Sutil::overlap_key_and_message_height, 0 } );
+  Sutil::print_hunt_solution_message( monitor.winning_index );
   std::cout << "\n";
 }
 
-} // namespace Solver
+} // namespace Bfs
