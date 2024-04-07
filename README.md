@@ -13,27 +13,29 @@ This project is a command line application that can be run with various combinat
 ```zsh
 $ cmake --prest=rel
 $ cmake --build build
-$ ./build/bin/run_maze
+$ ./build/rel/run_maze
 ```
 
 Alternatively, with the convenience Makefile provided.
 
 ```zsh
 $ make rel
-$ ./build/bin/run_maze
+$ ./build/rel/run_maze
 # If editing files for any reason, recompile with the following.
 $ make
 ```
+
+If building in debug mode replace all occurences of `rel` in the above with `deb`.
 
 If you would rather just see some cool mazes right away, run the demo I have included. It runs infinite random permutations of maze builder and solver animations so you can see a wide range of what the project has to offer. Stop the loop at any time with `CTRL<C>`.
 
 ```zsh
 $ cmake --prest=rel
 $ cmake --build build
-$ ./build/bin/demo
+$ ./build/rel/demo
 
 # Or set the rows and columns to your liking for bigger or smaller demo mazes.
-$ ./build/bin/demo -r 50 -c 50
+$ ./build/rel/demo -r 50 -c 50
 ```
 If you wish to dive into the more specific `run_maze` program, here is the help message that comes with the `-h` flag to get started.
 
@@ -88,12 +90,12 @@ If any flags are omitted, defaults are used.
 Examples:
 
 ```zsh
-./build/bin/run_maze
-./build/bin/run_maze -r 51 -c 111 -b rdfs -s bfs-hunt
-./build/bin/run_maze -c 111 -s bfs-gather
-./build/bin/run_maze -s bfs-corners -d round -b fractal
-./build/bin/run_maze -s dfs-hunt -ba 4 -sa 5 -b wilson-walls -m x
-./build/bin/run_maze -h
+./build/rel/run_maze
+./build/rel/run_maze -r 51 -c 111 -b rdfs -s bfs-hunt
+./build/rel/run_maze -c 111 -s bfs-gather
+./build/rel/run_maze -s bfs-corners -d round -b fractal
+./build/rel/run_maze -s dfs-hunt -ba 4 -sa 5 -b wilson-walls -m x
+./build/rel/run_maze -h
 ```
 
 ## Settings Detailed
@@ -149,9 +151,9 @@ The `-ba` flag indicates the speed of the builder animation on a scale from 1-7.
 This next section is pretty much directly inspired by Jamis Buck's implementation of colorizing his mazes based upon distance from a starting point, most commonly the center. All settings for this section are based on being able to see some aspect of maze quality rated with a color heat map. The program works by painting the maze, starting at a single point, based on some criterion such as distance from that point. This can help us assess the quality of the mazes that we produce. Here are the settings to use the program.
 
 ```zsh
-$ cmake -S . -B build/
+$ cmake --preset=rel
 $ cmake --build build
-$ ./build/bin/measure
+$ ./build/rel/measure
 ```
 Use flags, followed by arguments, in any order:
 
@@ -193,10 +195,10 @@ If any flags are omitted, defaults are used.
 Examples:
 
 ```zsh
-./build/bin/measure
-./build/bin/measure -r 51 -c 111 -b rdfs
-./build/bin/measure -c 111 -p distance -ba 5 -pa 5
-./build/bin/measure -h
+./build/rel/measure
+./build/rel/measure -r 51 -c 111 -b rdfs
+./build/rel/measure -c 111 -p distance -ba 5 -pa 5
+./build/rel/measure -h
 ```
 
 ## Settings Detailed
