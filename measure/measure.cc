@@ -154,7 +154,7 @@ main(int argc, char **argv)
             {
                 std::cerr << "Invalid argument flag: " << arg << "\n";
                 print_usage();
-                std::abort();
+                std::exit(1);
             }
             if (*found_arg == "-h")
             {
@@ -319,7 +319,7 @@ print_invalid_arg(const Flag_arg &pairs)
     std::cerr << "Flag was: " << pairs.flag << "\n";
     std::cerr << "Invalid argument: " << pairs.arg << "\n";
     print_usage();
-    std::abort();
+    std::exit(1);
 }
 
 void
@@ -370,5 +370,5 @@ print_usage()
     │   │     -If any flags are omitted, defaults are used. │     │ │   │ │
     │   │             │       │       │           │   │     │           │ │
     └───┴─────────────┴───────┴───────┴───────────┴───┴─────┴───────────┴─┘)";
-    std::cout << msg;
+    std::cout << msg << "\n";
 }

@@ -127,7 +127,7 @@ main(int argc, char **argv)
                 std::cerr << "The only arguments are optional row [-r] or "
                              "column [-c] dimensions."
                           << "\n";
-                std::abort();
+                std::exit(1);
             }
             process_current = true;
         }
@@ -182,7 +182,7 @@ set_rows(Demo_runner &runner, const Flag_arg &pairs)
     {
         std::cerr << "Minimum row may be 7."
                   << "\n";
-        std::abort();
+        std::exit(1);
     }
 }
 
@@ -198,6 +198,6 @@ set_cols(Demo_runner &runner, const Flag_arg &pairs)
     {
         std::cerr << "Minimum col may be 7."
                   << "\n";
-        std::abort();
+        std::exit(1);
     }
 }
