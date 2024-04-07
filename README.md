@@ -11,15 +11,24 @@ In order to enjoy the mazes built and solved by this repository, you will need a
 This project is a command line application that can be run with various combinations of commands. The basic principle behind the commands is that you can ask for any combination of settings, include any settings, exclude any settings, and the program will just work. There are sensible defaults for every flag so experiment with different combinations and tweaks until you get what you are looking for. To start, you should focus mainly on how big you want the maze to be, what algorithm you want to generate it, what algorithm you want to solve it, and if any of these algorithms should be animated in real time. For now, building the project is simple if you have a compiler that supports C++20. You will need CMake and pthreads installed. To get started run the following commands in sequence.
 
 ```zsh
-$ cmake -S . -B build/
+$ cmake --prest=rel
 $ cmake --build build
 $ ./build/bin/run_maze
+```
+
+Alternatively, with the convenience Makefile provided.
+
+```zsh
+$ make rel
+$ ./build/bin/run_maze
+# If editing files for any reason, recompile with the following.
+$ make
 ```
 
 If you would rather just see some cool mazes right away, run the demo I have included. It runs infinite random permutations of maze builder and solver animations so you can see a wide range of what the project has to offer. Stop the loop at any time with `CTRL<C>`.
 
 ```zsh
-$ cmake -S . -B build/
+$ cmake --prest=rel
 $ cmake --build build
 $ ./build/bin/demo
 

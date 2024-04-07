@@ -7,40 +7,7 @@
   },
   "configurePresets": [
     {
-      "name": "gcc-deb",
-      "displayName": "GCC",
-      "description": "Default build options for GCC",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_CXX_SCAN_FOR_MODULES": "ON",
-        "CMAKE_CXX_STANDARD": "20",
-        "CMAKE_CXX_COMPILER": "g++",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/deb",
-        "CMAKE_CXX_FLAGS": "-g3 -Wall -Wpedantic -Wextra -Werror -Wshadow -Wpointer-arith -Wcast-qual -Wformat=2 -Wno-unqualified-std-cast-call -fno-sanitize-recover=all -fsanitize=undefined -fsanitize=address",
-        "CMAKE_EXE_LINKER_FLAGS": "-fno-sanitize-recover=all -fsanitize=undefined -fsanitize=address"
-      }
-    },
-    {
-      "name": "gcc-rel",
-      "displayName": "GCC",
-      "description": "Default build options for GCC",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_CXX_SCAN_FOR_MODULES": "ON",
-        "CMAKE_CXX_STANDARD": "20",
-        "CMAKE_CXX_COMPILER": "g++",
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/rel",
-        "CMAKE_CXX_FLAGS": "-Wall -Wpedantic -Wextra -Werror -Wshadow -Wpointer-arith -Wcast-qual -Wformat=2 -Wno-unqualified-std-cast-call"
-      }
-    },
-    {
-      "name": "clang-deb",
+      "name": "deb",
       "displayName": "Clang",
       "description": "Default build options for Clang",
       "generator": "Ninja",
@@ -57,7 +24,7 @@
       }
     },
     {
-      "name": "clang-rel",
+      "name": "rel",
       "displayName": "Clang",
       "description": "Default build options for Clang",
       "generator": "Ninja",
@@ -70,41 +37,6 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/rel",
         "CMAKE_CXX_FLAGS": "-Wall -Wpedantic -Wextra -Werror -Wshadow -Wpointer-arith -Wcast-qual -Wformat=2 -Wno-unqualified-std-cast-call"
-      }
-    },
-    {
-      "name": "arm-deb",
-      "displayName": "ARM-Debug",
-      "description": "Default build options for Clang",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_THREAD_LIBS_INIT": "-lpthread",
-        "CMAKE_USE_PTHREADS_INIT": "1",
-        "THREADS_PREFER_PTHREAD_FLAG": "ON",
-        "CMAKE_CXX_STANDARD": "20",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/deb",
-        "CMAKE_CXX_FLAGS": "-g3 -Wall -Wpedantic -Wextra -Werror -Wshadow -Wpointer-arith -Wcast-qual -Wformat=2 -fno-sanitize-recover=all -fsanitize=undefined -fsanitize=address",
-        "CMAKE_EXE_LINKER_FLAGS": "-fno-sanitize-recover=all -fsanitize=undefined -fsanitize=address"
-      }
-    },
-    {
-      "name": "arm-rel",
-      "displayName": "ARM-Release",
-      "description": "Default build options for Clang",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_THREAD_LIBS_INIT": "-lpthread",
-        "CMAKE_USE_PTHREADS_INIT": "1",
-        "THREADS_PREFER_PTHREAD_FLAG": "ON",
-        "CMAKE_CXX_STANDARD": "20",
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/rel",
-        "CMAKE_CXX_FLAGS": "-Wall -Wpedantic -Wextra -Werror -Wshadow -Wpointer-arith -Wcast-qual -Wformat=2"
       }
     }
   ]
