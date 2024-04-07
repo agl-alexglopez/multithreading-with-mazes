@@ -54,7 +54,7 @@ void generate_maze( Maze::Maze& maze )
       for ( int col = 0; col < chamber_width; col++ ) {
         if ( col != passage ) {
           maze[chamber_offset.row + divide][chamber_offset.col + col]
-            &= static_cast<Maze::Square>( ~Maze::path_bit );
+            &= static_cast<Maze::Square_bits>( ~Maze::path_bit );
           Butil::build_wall_line( maze, { chamber_offset.row + divide, chamber_offset.col + col } );
         }
       }
@@ -68,7 +68,7 @@ void generate_maze( Maze::Maze& maze )
       for ( int row = 0; row < chamber_height; row++ ) {
         if ( row != passage ) {
           maze[chamber_offset.row + row][chamber_offset.col + divide]
-            &= static_cast<Maze::Square>( ~Maze::path_bit );
+            &= static_cast<Maze::Square_bits>( ~Maze::path_bit );
           Butil::build_wall_line( maze, { chamber_offset.row + row, chamber_offset.col + divide } );
         }
       }
@@ -102,7 +102,7 @@ void animate_maze( Maze::Maze& maze, Speed::Speed speed )
       for ( int col = 0; col < chamber_width; col++ ) {
         if ( col != passage ) {
           maze[chamber_offset.row + divide][chamber_offset.col + col]
-            &= static_cast<Maze::Square>( ~Maze::path_bit );
+            &= static_cast<Maze::Square_bits>( ~Maze::path_bit );
           Butil::build_wall_line_animated(
             maze, { chamber_offset.row + divide, chamber_offset.col + col }, animation );
         }
@@ -116,7 +116,7 @@ void animate_maze( Maze::Maze& maze, Speed::Speed speed )
       for ( int row = 0; row < chamber_height; row++ ) {
         if ( row != passage ) {
           maze[chamber_offset.row + row][chamber_offset.col + divide]
-            &= static_cast<Maze::Square>( ~Maze::path_bit );
+            &= static_cast<Maze::Square_bits>( ~Maze::path_bit );
           Butil::build_wall_line_animated(
             maze, { chamber_offset.row + row, chamber_offset.col + divide }, animation );
         }

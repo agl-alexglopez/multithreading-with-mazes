@@ -19,7 +19,7 @@ using Speed_unit = int32_t;
 using Rgb = std::array<uint16_t, 3>;
 constexpr uint64_t num_painters = 4;
 constexpr uint16_t paint { 0b1'0000'0000 };
-constexpr Maze::Square measure { 0b10'0000'0000 };
+constexpr Maze::Square_bits measure { 0b10'0000'0000 };
 constexpr uint64_t initial_path_len = 1024;
 constexpr std::array<Speed_unit, 8> animation_speeds = { 0, 10000, 5000, 2000, 1000, 500, 250, 50 };
 constexpr uint64_t r = 0;

@@ -37,9 +37,9 @@ namespace Sutil {
  * maze goals bit-------|||| |||| |||| ||||
  *                    0b0000 0000 0000 0000
  */
-using Thread_bit = Maze::Square;
-using Thread_paint = Maze::Square;
-using Thread_cache = Maze::Square;
+using Thread_bit = Maze::Square_bits;
+using Thread_paint = Maze::Square_bits;
+using Thread_cache = Maze::Square_bits;
 
 struct Thread_id
 {
@@ -188,8 +188,8 @@ void print_point( const Maze::Maze& maze, const Maze::Point& point )
     return;
   }
   if ( square & thread_paint_mask ) {
-    const Thread_paint thread_color = ( square & thread_paint_mask ) >> thread_paint_shift;
-    std::cout << thread_colors.at( thread_color.load() );
+    const Thread_paint thread_color = ( square & thread_paint_mask ).load() >> thread_paint_shift;
+    std::cout << thread_colors.at( thread_color );
     return;
   }
   if ( !( square & Maze::path_bit ) ) {
@@ -289,7 +289,7 @@ Maze::Point pick_random_point( const Maze::Maze& maze )
 void print_hunt_solution_message( uint16_t winning_index )
 {
   if ( winning_index == Sutil::no_winner ) {
-    std::cout << thread_colors.at( all_threads_failed_index.load() );
+    std::cout << thread_colors.at( all_threads_failed_index );
     return;
   }
   std::cout << ( thread_colors.at( thread_bits.at( winning_index ) ) ) << " thread won!\n";

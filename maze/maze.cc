@@ -62,10 +62,11 @@ export namespace Maze {
  * memory ordering is usually allowed as there is no purpose to the multithreading
  * other than more fun visuals.
  */
+using Square_bits = uint16_t;
 class Square
 {
 public:
-  constexpr explicit Square( uint16_t a );
+  constexpr explicit Square( Square_bits a );
   constexpr Square() = default;
   ~Square() = default;
   constexpr Square( const Square& other );
@@ -74,26 +75,26 @@ public:
   constexpr Square& operator=( Square&& other ) noexcept;
   constexpr bool operator==( const Square& other ) const noexcept;
   constexpr bool operator!=( const Square& other ) const noexcept;
-  constexpr Square operator&( const Square& other ) const noexcept;
-  constexpr Square operator|( const Square& other ) const noexcept;
-  constexpr Square operator^( const Square& other ) const noexcept;
+  constexpr Square operator&( Square_bits bits ) const noexcept;
+  constexpr Square operator|( Square_bits bits ) const noexcept;
+  constexpr Square operator^( Square_bits bits ) const noexcept;
   constexpr Square operator~() const noexcept;
-  constexpr Square operator>>( uint16_t n ) const noexcept;
-  constexpr Square operator<<( uint16_t n ) const noexcept;
-  constexpr Square operator&=( const Square& other ) noexcept;
-  constexpr Square& operator|=( const Square& other ) noexcept;
-  constexpr Square& operator^=( const Square& other ) noexcept;
+  constexpr Square operator>>( Square_bits n ) const noexcept;
+  constexpr Square operator<<( Square_bits n ) const noexcept;
+  constexpr Square operator&=( Square_bits bits ) noexcept;
+  constexpr Square& operator|=( Square_bits bits ) noexcept;
+  constexpr Square& operator^=( Square_bits bits ) noexcept;
   constexpr explicit operator bool() const noexcept;
   constexpr uint16_t load() const noexcept;
-  constexpr void store( uint16_t other ) noexcept;
-  constexpr bool ces( uint16_t expected, uint16_t desired ) noexcept;
+  constexpr void store( Square_bits bits ) noexcept;
+  constexpr bool ces( Square_bits expected, Square_bits desired ) noexcept;
 
 private:
   std::atomic_uint16_t u16;
 };
 
-using Wall_line = Square;
-using Backtrack_marker = Square;
+using Wall_line = Square_bits;
+using Backtrack_marker = Square_bits;
 
 /* * * * * * * * * * * * * * * * * *         Maze Types        * * * * * * * * * * * * * * * * * * * * * */
 
@@ -172,32 +173,32 @@ constexpr Square& Square::operator=( Square&& other ) noexcept
 
 constexpr bool Square::operator==( const Square& other ) const noexcept
 {
-  return u16.load() == other.u16.load();
+  return u16.load() == other.load();
 }
 
 constexpr bool Square::operator!=( const Square& other ) const noexcept
 {
-  return u16.load() != other.u16.load();
+  return u16.load() != other.load();
 }
 
-constexpr Square Square::operator&( const Square& other ) const noexcept
+constexpr Square Square::operator&( Square_bits bits ) const noexcept
 {
-  return Square( u16 & other.u16 );
+  return Square( u16.load() & bits );
 }
 
-constexpr Square Square::operator|( const Square& other ) const noexcept
+constexpr Square Square::operator|( Square_bits bits ) const noexcept
 {
-  return Square( u16 | other.u16 );
+  return Square( u16.load() | bits );
 }
 
-constexpr Square Square::operator^( const Square& other ) const noexcept
+constexpr Square Square::operator^( Square_bits bits ) const noexcept
 {
-  return Square( u16 ^ other.u16 );
+  return Square( u16.load() ^ bits );
 }
 
 constexpr Square Square::operator~() const noexcept
 {
-  return Square( ~u16 );
+  return Square( ~( u16.load() ) );
 }
 
 constexpr Square Square::operator>>( const uint16_t n ) const noexcept
@@ -210,21 +211,21 @@ constexpr Square Square::operator<<( const uint16_t n ) const noexcept
   return Square( u16.load() << n );
 }
 
-constexpr Square Square::operator&=( const Square& other ) noexcept
+constexpr Square Square::operator&=( Square_bits bits ) noexcept
 {
-  u16 &= other.u16;
+  u16 &= bits;
   return *this;
 }
 
-constexpr Square& Square::operator|=( const Square& other ) noexcept
+constexpr Square& Square::operator|=( Square_bits bits ) noexcept
 {
-  u16 |= other.u16;
+  u16 |= bits;
   return *this;
 }
 
-constexpr Square& Square::operator^=( const Square& other ) noexcept
+constexpr Square& Square::operator^=( Square_bits bits ) noexcept
 {
-  u16 ^= other.u16;
+  u16 ^= bits;
   return *this;
 }
 
@@ -232,16 +233,18 @@ constexpr Square::operator bool() const noexcept
 {
   return u16.load() != 0;
 }
+
 constexpr uint16_t Square::load() const noexcept
 {
   return u16.load( std::memory_order_relaxed );
 }
-constexpr void Square::store( uint16_t other ) noexcept
+
+constexpr void Square::store( uint16_t bits ) noexcept
 {
-  u16.store( other );
+  u16.store( bits );
 }
 
-constexpr bool Square::ces( uint16_t expected, uint16_t desired ) noexcept
+constexpr bool Square::ces( Square_bits expected, Square_bits desired ) noexcept
 {
   return u16.compare_exchange_strong( expected, desired, std::memory_order_relaxed );
 }
@@ -308,10 +311,10 @@ bool operator!=( const Point& lhs, const Point& rhs )
 
 /* * * * * * * * * * * * * * * * *    Read Only Helper Data    * * * * * * * * * * * * * * * * * * * * */
 
-constexpr Square path_bit { 0b0010'0000'0000'0000 };
-constexpr Square clear_available_bits { 0b0001'1111'1111'0000 };
-constexpr Square start_bit { 0b0100'0000'0000'0000 };
-constexpr Square builder_bit { 0b0001'0000'0000'0000 };
+constexpr Square_bits path_bit { 0b0010'0000'0000'0000 };
+constexpr Square_bits clear_available_bits { 0b0001'1111'1111'0000 };
+constexpr Square_bits start_bit { 0b0100'0000'0000'0000 };
+constexpr Square_bits builder_bit { 0b0001'0000'0000'0000 };
 constexpr uint16_t marker_shift { 4 };
 constexpr Backtrack_marker markers_mask { 0b1111'0000 };
 constexpr Backtrack_marker is_origin { 0b0000'0000 };

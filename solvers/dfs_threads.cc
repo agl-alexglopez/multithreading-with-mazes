@@ -33,10 +33,9 @@ namespace {
 
 void hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thread_id id )
 {
-  /* We have useful bits in a square. Each square can use a unique bit to track seen threads.
-   * Each thread could maintain its own hashset, but this is much more space efficient. Use
-   * the space the maze already occupies and provides.
-   */
+  // We have useful bits in a square. Each square can use a unique bit to track seen threads.
+  // Each thread could maintain its own hashset, but this is much more space efficient. Use
+  // the space the maze already occupies and provides.
   const Sutil::Thread_cache seen( id.bit << Sutil::thread_cache_shift );
   const Sutil::Thread_paint paint_bit( id.bit << Sutil::thread_paint_shift );
   // Each thread only needs enough space for an O(current path length) stack.
@@ -44,7 +43,6 @@ void hunter( Maze::Maze& maze, Sutil::Dfs_monitor& monitor, Sutil::Thread_id id 
   dfs.push_back( monitor.starts.at( id.index ) );
   Maze::Point cur = monitor.starts.at( id.index );
   while ( !dfs.empty() ) {
-    // Lock? Garbage read stolen mid write by winning thread is still ok for program logic.
     if ( monitor.winning_index.load() != Sutil::no_winner ) {
       break;
     }
