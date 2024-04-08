@@ -239,8 +239,7 @@ animate_gather(Maze::Maze &maze, Speed::Speed speed)
         const Sutil::Thread_paint color(Sutil::thread_bits.at(i_thread)
                                         << Sutil::thread_paint_shift);
         const Maze::Point &p = path.back();
-        maze[p.row][p.col]
-            &= static_cast<Sutil::Thread_paint>(~Sutil::thread_paint_mask);
+        maze[p.row][p.col] &= ~Sutil::thread_paint_mask;
         maze[p.row][p.col] |= color;
         Sutil::flush_cursor_path_coordinate(maze, p);
         std::this_thread::sleep_for(
