@@ -7,6 +7,8 @@ module;
 #include <vector>
 export module labyrinth:maze;
 
+////////////////////////////  Exported Interface
+
 export namespace Maze {
 
 /// Here is the scheme we will use to store tons of data in a square.
@@ -145,6 +147,76 @@ class Maze {
     int wall_style_index_;
 };
 
+// Walls are constructed in terms of other walls they need to connect to. For
+// example, read 0b0011 as, "this is a wall square that must connect to other
+// walls to the East and North."
+constexpr std::array<std::string_view, 96> wall_styles = {{
+    // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall
+    // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
+    // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
+    "■", "╵", "╶", "└", "╷", "│", "┌", "├", // standard
+    "╴", "┘", "─", "┴", "┐", "┤", "┬", "┼", // standard
+    "●", "╵", "╶", "╰", "╷", "│", "╭", "├", // rounded
+    "╴", "╯", "─", "┴", "╮", "┤", "┬", "┼", // rounded
+    "◫", "║", "═", "╚", "║", "║", "╔", "╠", // doubles
+    "═", "╝", "═", "╩", "╗", "╣", "╦", "╬", // doubles
+    "■", "╹", "╺", "┗", "╻", "┃", "┏", "┣", // bold
+    "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋", // bold
+    "█", "█", "█", "█", "█", "█", "█", "█", // contrast
+    "█", "█", "█", "█", "█", "█", "█", "█", // contrast
+    "✸", "╀", "┾", "╊", "╁", "╂", "╆", "╊", // spikes
+    "┽", "╃", "┿", "╇", "╅", "╉", "╈", "╋", // spikes
+}};
+constexpr uint64_t wall_row = 16;
+
+///////////////////    Read Only Helper Data
+
+constexpr Square_bits path_bit{0b0010'0000'0000'0000};
+constexpr Square_bits clear_available_bits{0b0001'1111'1111'0000};
+constexpr Square_bits start_bit{0b0100'0000'0000'0000};
+constexpr Square_bits builder_bit{0b0001'0000'0000'0000};
+constexpr uint16_t marker_shift{4};
+constexpr Backtrack_marker markers_mask{0b1111'0000};
+constexpr Backtrack_marker is_origin{0b0000'0000};
+constexpr Backtrack_marker from_north{0b0001'0000};
+constexpr Backtrack_marker from_east{0b0010'0000};
+constexpr Backtrack_marker from_south{0b0011'0000};
+constexpr Backtrack_marker from_west{0b0100'0000};
+constexpr std::string_view from_north_mark
+    = "\033[38;5;15m\033[48;5;1m↑\033[0m";
+constexpr std::string_view from_east_mark = "\033[38;5;15m\033[48;5;2m→\033[0m";
+constexpr std::string_view from_south_mark
+    = "\033[38;5;15m\033[48;5;3m↓\033[0m";
+constexpr std::string_view from_west_mark = "\033[38;5;15m\033[48;5;4m←\033[0m";
+
+constexpr std::array<std::string_view, 5> backtracking_symbols
+    = {{" ", from_north_mark, from_east_mark, from_south_mark, from_west_mark}};
+constexpr std::array<Point, 5> backtracking_marks
+    = {{{0, 0}, {-2, 0}, {0, 2}, {2, 0}, {0, -2}}};
+constexpr std::array<Point, 5> backtracking_half_marks
+    = {{{0, 0}, {-1, 0}, {0, 1}, {1, 0}, {0, -1}}};
+
+constexpr Wall_line wall_mask{0b1111};
+constexpr Wall_line floating_wall{0b0000};
+constexpr Wall_line north_wall{0b0001};
+constexpr Wall_line east_wall{0b0010};
+constexpr Wall_line south_wall{0b0100};
+constexpr Wall_line west_wall{0b1000};
+
+// north, east, south, west
+constexpr std::array<Point, 4> dirs = {{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}};
+constexpr std::array<Point, 4> build_dirs
+    = {{{-2, 0}, {0, 2}, {2, 0}, {0, -2}}};
+// south, south-east, east, north-east, north, north-west, west, south-west
+constexpr std::array<Point, 8> all_dirs
+    = {{{1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}, {1, -1}}};
+
+} // namespace Maze
+
+/////////////////////////  Internal Implementations
+
+namespace Maze {
+
 ///////////////////////  Square Implementation
 
 constexpr Square::Square(uint16_t a) : u16(a)
@@ -269,30 +341,6 @@ Square::ces(Square_bits expected, Square_bits desired) noexcept
                                        std::memory_order_relaxed);
 }
 
-///////////////////////     Maze Implementation
-
-// Walls are constructed in terms of other walls they need to connect to. For
-// example, read 0b0011 as, "this is a wall square that must connect to other
-// walls to the East and North."
-constexpr std::array<std::string_view, 96> wall_styles = {{
-    // 0bWestSouthEastNorth. Note: 0b0000 is a floating wall
-    // 0b0000  0b0001  0b0010  0b0011  0b0100  0b0101  0b0110  0b0111
-    // 0b1000  0b1001  0b1010  0b1011  0b1100  0b1101  0b1110  0b1111
-    "■", "╵", "╶", "└", "╷", "│", "┌", "├", // standard
-    "╴", "┘", "─", "┴", "┐", "┤", "┬", "┼", // standard
-    "●", "╵", "╶", "╰", "╷", "│", "╭", "├", // rounded
-    "╴", "╯", "─", "┴", "╮", "┤", "┬", "┼", // rounded
-    "◫", "║", "═", "╚", "║", "║", "╔", "╠", // doubles
-    "═", "╝", "═", "╩", "╗", "╣", "╦", "╬", // doubles
-    "■", "╹", "╺", "┗", "╻", "┃", "┏", "┣", // bold
-    "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋", // bold
-    "█", "█", "█", "█", "█", "█", "█", "█", // contrast
-    "█", "█", "█", "█", "█", "█", "█", "█", // contrast
-    "✸", "╀", "┾", "╊", "╁", "╂", "╆", "╊", // spikes
-    "┽", "╃", "┿", "╇", "╅", "╉", "╈", "╋", // spikes
-}};
-constexpr uint64_t wall_row = 16;
-
 Maze::Maze(const Maze_args &args)
     : maze_row_size_(static_cast<int>(args.odd_rows)),
       maze_col_size_(static_cast<int>(args.odd_cols)),
@@ -343,48 +391,6 @@ operator!=(const Point &lhs, const Point &rhs)
 {
     return !(lhs == rhs);
 }
-
-///////////////////    Read Only Helper Data
-
-constexpr Square_bits path_bit{0b0010'0000'0000'0000};
-constexpr Square_bits clear_available_bits{0b0001'1111'1111'0000};
-constexpr Square_bits start_bit{0b0100'0000'0000'0000};
-constexpr Square_bits builder_bit{0b0001'0000'0000'0000};
-constexpr uint16_t marker_shift{4};
-constexpr Backtrack_marker markers_mask{0b1111'0000};
-constexpr Backtrack_marker is_origin{0b0000'0000};
-constexpr Backtrack_marker from_north{0b0001'0000};
-constexpr Backtrack_marker from_east{0b0010'0000};
-constexpr Backtrack_marker from_south{0b0011'0000};
-constexpr Backtrack_marker from_west{0b0100'0000};
-constexpr std::string_view from_north_mark
-    = "\033[38;5;15m\033[48;5;1m↑\033[0m";
-constexpr std::string_view from_east_mark = "\033[38;5;15m\033[48;5;2m→\033[0m";
-constexpr std::string_view from_south_mark
-    = "\033[38;5;15m\033[48;5;3m↓\033[0m";
-constexpr std::string_view from_west_mark = "\033[38;5;15m\033[48;5;4m←\033[0m";
-
-constexpr std::array<std::string_view, 5> backtracking_symbols
-    = {{" ", from_north_mark, from_east_mark, from_south_mark, from_west_mark}};
-constexpr std::array<Point, 5> backtracking_marks
-    = {{{0, 0}, {-2, 0}, {0, 2}, {2, 0}, {0, -2}}};
-constexpr std::array<Point, 5> backtracking_half_marks
-    = {{{0, 0}, {-1, 0}, {0, 1}, {1, 0}, {0, -1}}};
-
-constexpr Wall_line wall_mask{0b1111};
-constexpr Wall_line floating_wall{0b0000};
-constexpr Wall_line north_wall{0b0001};
-constexpr Wall_line east_wall{0b0010};
-constexpr Wall_line south_wall{0b0100};
-constexpr Wall_line west_wall{0b1000};
-
-// north, east, south, west
-constexpr std::array<Point, 4> dirs = {{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}};
-constexpr std::array<Point, 4> build_dirs
-    = {{{-2, 0}, {0, 2}, {2, 0}, {0, -2}}};
-// south, south-east, east, north-east, north, north-west, west, south-west
-constexpr std::array<Point, 8> all_dirs
-    = {{{1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}, {1, -1}}};
 
 } // namespace Maze
 
