@@ -108,8 +108,7 @@ template <class Value_type> class My_queue {
     grow()
     {
         std::vector<Value_type> new_elems(capacity_ * 2);
-        const size_t back_front_diff = capacity_ - front_;
-        const size_t first_chunk = std::min(size_, back_front_diff);
+        const size_t first_chunk = std::min(size_, capacity_ - front_);
         std::copy_n(&elems_[front_], first_chunk, new_elems.data());
         if (first_chunk < capacity_)
         {
