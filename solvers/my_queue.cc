@@ -8,7 +8,6 @@
 /// non-contiguous and therefore I cannot know how many heap requests may be
 /// taking place behind the scenes, slowing parallelism.
 module;
-#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
@@ -103,21 +102,11 @@ template <class Value_type> class My_queue {
     size_t size_{0};
     size_t front_{0};
     size_t back_{0};
+
     void
     grow()
     {
-        std::vector<Value_type> new_elems(capacity_ * 2);
-        const size_t back_front_diff = capacity_ - front_;
-        const size_t first_chunk = std::min(size_, back_front_diff);
-        std::copy_n(&elems_[front_], first_chunk, new_elems.data());
-        if (first_chunk < size_)
-        {
-            std::copy_n(new_elems.data() + first_chunk, size_ - first_chunk,
-                        elems_.data());
-        }
         capacity_ *= 2;
-        front_ = 0;
-        back_ = size_;
-        elems_ = std::move(new_elems);
+        elems_.resize(capacity_);
     }
 };
