@@ -8,6 +8,7 @@
 /// non-contiguous and therefore I cannot know how many heap requests may be
 /// taking place behind the scenes, slowing parallelism.
 module;
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
@@ -16,15 +17,15 @@ module labyrinth:my_queue;
 template <class Value_type> class My_queue {
 
   public:
-    My_queue() : elems_(initial_size), allocated_size_(initial_size)
+    My_queue() : elems_(initial_size), capacity_(initial_size)
     {}
 
     void
     reserve(size_t capacity)
     {
         elems_ = std::vector<Value_type>(capacity);
-        allocated_size_ = capacity;
-        logical_size_ = 0;
+        capacity_ = capacity;
+        size_ = 0;
         front_ = 0;
         back_ = 0;
     }
@@ -34,36 +35,36 @@ template <class Value_type> class My_queue {
     {
         // Doubling allocations so we can't acheive ULLONG_MAX for our container
         // size. Slightly less.
-        if (logical_size_ == full_queue)
+        if (size_ == full_queue)
         {
             std::cerr << "My_queue is at max capacity.\n";
             std::abort();
         }
-        if (logical_size_ == allocated_size_)
+        if (size_ == capacity_)
         {
             grow();
         }
         elems_[back_++] = elem;
-        back_ %= allocated_size_;
-        logical_size_++;
+        back_ %= capacity_;
+        size_++;
     }
 
     void
     pop()
     {
-        if (logical_size_ == 0)
+        if (size_ == 0)
         {
             std::cerr << "My_queue is empty.\n";
             std::abort();
         }
-        ++front_ %= allocated_size_;
-        logical_size_--;
+        ++front_ %= capacity_;
+        size_--;
     }
 
     const Value_type &
     front() const
     {
-        if (logical_size_ == 0)
+        if (size_ == 0)
         {
             std::cerr << "My_queue is empty.\n";
             std::abort();
@@ -74,7 +75,7 @@ template <class Value_type> class My_queue {
     Value_type &
     front()
     {
-        if (logical_size_ == 0)
+        if (size_ == 0)
         {
             std::cerr << "My_queue is empty.\n";
             std::abort();
@@ -85,35 +86,38 @@ template <class Value_type> class My_queue {
     size_t
     size() const
     {
-        return logical_size_;
+        return size_;
     }
 
     bool
     empty() const
     {
-        return logical_size_ == 0;
+        return size_ == 0;
     }
 
   private:
     static constexpr size_t initial_size = 8;
     static constexpr size_t full_queue = 1UL << 63;
     std::vector<Value_type> elems_;
-    size_t allocated_size_;
-    size_t logical_size_{0};
+    size_t capacity_;
+    size_t size_{0};
     size_t front_{0};
     size_t back_{0};
     void
     grow()
     {
-        std::vector<Value_type> new_elems(allocated_size_ * 2);
-        for (size_t i = 0; i < logical_size_; i++)
+        std::vector<Value_type> new_elems(capacity_ * 2);
+        const size_t back_front_diff = capacity_ - front_;
+        const size_t first_chunk = std::min(size_, back_front_diff);
+        std::copy_n(&elems_[front_], first_chunk, new_elems.data());
+        if (first_chunk < size_)
         {
-            new_elems[i] = elems_[front_];
-            ++front_ %= allocated_size_;
+            std::copy_n(new_elems.data() + first_chunk, size_ - first_chunk,
+                        elems_.data());
         }
-        allocated_size_ *= 2;
+        capacity_ *= 2;
         front_ = 0;
-        back_ = logical_size_;
+        back_ = size_;
         elems_ = std::move(new_elems);
     }
 };
