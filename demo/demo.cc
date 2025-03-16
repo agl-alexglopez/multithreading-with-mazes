@@ -1,5 +1,6 @@
 import labyrinth;
 
+#include <charconv>
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
@@ -87,10 +88,10 @@ struct Demo_runner
     };
 };
 
-} // namespace
-
 void set_rows(Demo_runner &runner, const Flag_arg &pairs);
 void set_cols(Demo_runner &runner, const Flag_arg &pairs);
+
+} // namespace
 
 int
 main(int argc, char **argv)
@@ -158,7 +159,7 @@ main(int argc, char **argv)
                 maze, demo.builder_speed[speed_chooser(gen)]);
         }
 
-        Printer::set_cursor_position({0, 0});
+        Printer::set_cursor_position({});
         demo.solvers[solver_chooser(gen)](
             maze, demo.solver_speed[speed_chooser(gen)]);
 
@@ -166,14 +167,23 @@ main(int argc, char **argv)
         // transition after the solution finishes.
         std::cout << "Loading next maze..." << std::flush;
         std::this_thread::sleep_for(std::chrono::seconds(2));
-        Printer::set_cursor_position({0, 0});
+        Printer::set_cursor_position({});
     }
 }
+
+namespace {
 
 void
 set_rows(Demo_runner &runner, const Flag_arg &pairs)
 {
-    runner.args.odd_rows = std::stoi(pairs.arg.data());
+    std::from_chars_result r = std::from_chars(
+        pairs.arg.data(), pairs.arg.data() + pairs.arg.length(),
+        runner.args.odd_rows);
+    if (r.ec != std::errc())
+    {
+        std::cerr << "Integer conversion error.\n";
+        exit(1);
+    }
     if (runner.args.odd_rows % 2 == 0)
     {
         runner.args.odd_rows++;
@@ -189,7 +199,14 @@ set_rows(Demo_runner &runner, const Flag_arg &pairs)
 void
 set_cols(Demo_runner &runner, const Flag_arg &pairs)
 {
-    runner.args.odd_cols = std::stoi(pairs.arg.data());
+    std::from_chars_result r = std::from_chars(
+        pairs.arg.data(), pairs.arg.data() + pairs.arg.length(),
+        runner.args.odd_cols);
+    if (r.ec != std::errc())
+    {
+        std::cerr << "Integer conversion error.\n";
+        exit(1);
+    }
     if (runner.args.odd_cols % 2 == 0)
     {
         runner.args.odd_cols++;
@@ -201,3 +218,5 @@ set_cols(Demo_runner &runner, const Flag_arg &pairs)
         std::exit(1);
     }
 }
+
+} // namespace

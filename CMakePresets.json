@@ -19,7 +19,7 @@
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/deb",
-        "CMAKE_CXX_FLAGS": "-g3 -Wall -Wpedantic -Wextra -Werror -Wshadow -Wpointer-arith -Wcast-qual -Wformat=2 -Wno-unqualified-std-cast-call -fno-sanitize-recover=all -fsanitize=undefined -fsanitize=address",
+        "CMAKE_CXX_FLAGS": "-g3 -Wall -Wpedantic -Wextra -Werror -Wshadow -Wpointer-arith -Wcast-qual -Wformat=2 -Wno-unqualified-std-cast-call -fno-sanitize-recover=all -fsanitize=undefined -fsanitize=address -Wno-import-implementation-partition-unit-in-interface-unit",
         "CMAKE_EXE_LINKER_FLAGS": "-fno-sanitize-recover=all -fsanitize=undefined -fsanitize=address"
       }
     },
@@ -36,7 +36,7 @@
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/rel",
-        "CMAKE_CXX_FLAGS": "-Wall -Wpedantic -Wextra -Werror -Wshadow -Wpointer-arith -Wcast-qual -Wformat=2 -Wno-unqualified-std-cast-call"
+        "CMAKE_CXX_FLAGS": "-Wall -Wpedantic -Wextra -Werror -Wshadow -Wpointer-arith -Wcast-qual -Wformat=2 -Wno-unqualified-std-cast-call -Wno-import-implementation-partition-unit-in-interface-unit"
       }
     }
   ]
