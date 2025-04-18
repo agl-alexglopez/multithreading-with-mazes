@@ -2,6 +2,7 @@
 Checks: >
    *,
    -altera-*,
+   -boost*,
    -llvmlibc-*,
    -google-*,
    -abseil-*,

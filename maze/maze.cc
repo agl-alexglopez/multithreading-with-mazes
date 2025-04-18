@@ -98,14 +98,14 @@ using Backtrack_marker = Square_bits;
 
 ///////////////////////         Maze Types
 
-enum class Maze_modification
+enum class Maze_modification : uint8_t
 {
     none,
     add_cross,
     add_x
 };
 
-enum class Maze_style
+enum class Maze_style : uint8_t
 {
     sharp = 0,
     round,
@@ -191,10 +191,20 @@ constexpr std::string_view from_west_mark = "\033[38;5;15m\033[48;5;4m←\033[0m
 
 constexpr std::array<std::string_view, 5> backtracking_symbols
     = {{" ", from_north_mark, from_east_mark, from_south_mark, from_west_mark}};
-constexpr std::array<Point, 5> backtracking_marks
-    = {{{0, 0}, {-2, 0}, {0, 2}, {2, 0}, {0, -2}}};
-constexpr std::array<Point, 5> backtracking_half_marks
-    = {{{0, 0}, {-1, 0}, {0, 1}, {1, 0}, {0, -1}}};
+constexpr std::array<Point, 5> backtracking_marks = {{
+    {.row = 0, .col = 0},
+    {.row = -2, .col = 0},
+    {.row = 0, .col = 2},
+    {.row = 2, .col = 0},
+    {.row = 0, .col = -2},
+}};
+constexpr std::array<Point, 5> backtracking_half_marks = {{
+    {.row = 0, .col = 0},
+    {.row = -1, .col = 0},
+    {.row = 0, .col = 1},
+    {.row = 1, .col = 0},
+    {.row = 0, .col = -1},
+}};
 
 constexpr Wall_line wall_mask{0b1111};
 constexpr Wall_line floating_wall{0b0000};
@@ -204,12 +214,29 @@ constexpr Wall_line south_wall{0b0100};
 constexpr Wall_line west_wall{0b1000};
 
 // north, east, south, west
-constexpr std::array<Point, 4> dirs = {{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}};
-constexpr std::array<Point, 4> build_dirs
-    = {{{-2, 0}, {0, 2}, {2, 0}, {0, -2}}};
+constexpr std::array<Point, 4> dirs = {{
+    {.row = -1, .col = 0},
+    {.row = 0, .col = 1},
+    {.row = 1, .col = 0},
+    {.row = 0, .col = -1},
+}};
+constexpr std::array<Point, 4> build_dirs = {{
+    {.row = -2, .col = 0},
+    {.row = 0, .col = 2},
+    {.row = 2, .col = 0},
+    {.row = 0, .col = -2},
+}};
 // south, south-east, east, north-east, north, north-west, west, south-west
-constexpr std::array<Point, 8> all_dirs
-    = {{{1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}, {1, -1}}};
+constexpr std::array<Point, 8> all_dirs = {{
+    {.row = 1, .col = 0},
+    {.row = 1, .col = 1},
+    {.row = 0, .col = 1},
+    {.row = -1, .col = 1},
+    {.row = -1, .col = 0},
+    {.row = -1, .col = -1},
+    {.row = 0, .col = -1},
+    {.row = 1, .col = -1},
+}};
 
 } // namespace Maze
 
@@ -317,7 +344,8 @@ Square::operator^=(Square_bits bits) noexcept
     return *this;
 }
 
-constexpr Square::operator bool() const noexcept
+constexpr Square::
+operator bool() const noexcept
 {
     return u16.load() != 0;
 }
@@ -399,7 +427,7 @@ operator!=(const Point &lhs, const Point &rhs)
 namespace std {
 template <> struct hash<Maze::Point>
 {
-    inline size_t
+    size_t
     operator()(const Maze::Point &p) const
     {
         const std::hash<int> hasher;

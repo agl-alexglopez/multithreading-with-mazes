@@ -22,7 +22,7 @@ generate_maze(Maze::Maze &maze)
     {
         for (int col = 1; col < maze.col_size() - 1; col++)
         {
-            Butil::build_path(maze, {row, col});
+            Butil::build_path(maze, {.row = row, .col = col});
         }
     }
     Butil::clear_and_flush_grid(maze);
@@ -39,7 +39,8 @@ animate_maze(Maze::Maze &maze, Speed::Speed speed)
     {
         for (int col = 1; col < maze.col_size() - 1; col++)
         {
-            Butil::carve_path_walls_animated(maze, {row, col}, animation);
+            Butil::carve_path_walls_animated(maze, {.row = row, .col = col},
+                                             animation);
         }
     }
 }

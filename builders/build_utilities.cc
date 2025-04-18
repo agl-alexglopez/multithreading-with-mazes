@@ -1,5 +1,6 @@
 module;
 #include <chrono>
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <thread>
@@ -10,7 +11,7 @@ import :printers;
 
 namespace Butil {
 
-enum class Parity_point
+enum class Parity_point : uint8_t
 {
     even,
     odd,

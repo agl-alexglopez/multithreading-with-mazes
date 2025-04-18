@@ -39,7 +39,7 @@ struct Maze_runner
                            Recursive_backtracker::animate_maze};
 
     int modification_getter{static_image};
-    std::optional<Build_function> modder{};
+    std::optional<Build_function> modder;
 
     int painter_view{static_image};
     Speed::Speed painter_speed{};
@@ -60,8 +60,6 @@ struct Lookup_tables
     std::unordered_map<std::string, Speed::Speed> builder_animation_table;
 };
 
-} // namespace
-
 void set_relevant_arg(const Lookup_tables &tables, Maze_runner &runner,
                       const Flag_arg &pairs);
 void set_rows(Maze_runner &runner, const Flag_arg &pairs);
@@ -69,12 +67,14 @@ void set_cols(Maze_runner &runner, const Flag_arg &pairs);
 void print_invalid_arg(const Flag_arg &pairs);
 void print_usage();
 
+} // namespace
+
 int
 main(int argc, char **argv)
 {
     const Lookup_tables tables = {
-        {"-r", "-c", "-b", "-p", "-h", "-g", "-d", "-m", "-pa", "-ba"},
-        {
+        .argument_flags={"-r", "-c", "-b", "-p", "-h", "-g", "-d", "-m", "-pa", "-ba"},
+        .builder_table={
             {"rdfs",
              {Recursive_backtracker::generate_maze,
               Recursive_backtracker::animate_maze}},
@@ -93,17 +93,17 @@ main(int argc, char **argv)
             {"grid", {Grid::generate_maze, Grid::animate_maze}},
             {"arena", {Arena::generate_maze, Arena::animate_maze}},
         },
-        {
+        .modification_table={
             {"cross", {Mods::add_cross, Mods::add_cross_animated}},
             {"x", {Mods::add_x, Mods::add_x_animated}},
         },
-        {
+        .painter_table={
             {"distance",
              {Distance::paint_distance_from_center,
               Distance::animate_distance_from_center}},
             {"runs", {Runs::paint_runs, Runs::animate_runs}},
         },
-        {
+        .style_table={
             {"sharp", Maze::Maze_style::sharp},
             {"round", Maze::Maze_style::round},
             {"doubles", Maze::Maze_style::doubles},
@@ -111,7 +111,7 @@ main(int argc, char **argv)
             {"contrast", Maze::Maze_style::contrast},
             {"spikes", Maze::Maze_style::spikes},
         },
-        {
+        .painter_animation_table={
             {"0", Speed::Speed::instant},
             {"1", Speed::Speed::speed_1},
             {"2", Speed::Speed::speed_2},
@@ -121,7 +121,7 @@ main(int argc, char **argv)
             {"6", Speed::Speed::speed_6},
             {"7", Speed::Speed::speed_7},
         },
-        {
+        .builder_animation_table={
             {"0", Speed::Speed::instant},
             {"1", Speed::Speed::speed_1},
             {"2", Speed::Speed::speed_2},
@@ -144,7 +144,7 @@ main(int argc, char **argv)
         auto *arg = args[i];
         if (process_current)
         {
-            set_relevant_arg(tables, runner, {prev_flag, arg});
+            set_relevant_arg(tables, runner, {.flag = prev_flag, .arg = arg});
             process_current = false;
         }
         else
@@ -191,7 +191,7 @@ main(int argc, char **argv)
 
     // This helps ensure we have a smooth transition from build to solve with no
     // flashing from redrawing frame.
-    Printer::set_cursor_position({0, 0});
+    Printer::set_cursor_position({.row = 0, .col = 0});
 
     if (runner.painter_view == animated_playback)
     {
@@ -204,10 +204,13 @@ main(int argc, char **argv)
     return 0;
 }
 
+namespace {
+
 void
 set_relevant_arg(const Lookup_tables &tables, Maze_runner &runner,
                  const Flag_arg &pairs)
 {
+    const std::string arg_data{pairs.arg};
     if (pairs.flag == "-r")
     {
         set_rows(runner, pairs);
@@ -220,7 +223,7 @@ set_relevant_arg(const Lookup_tables &tables, Maze_runner &runner,
     }
     if (pairs.flag == "-b")
     {
-        const auto found = tables.builder_table.find(pairs.arg.data());
+        const auto found = tables.builder_table.find(arg_data);
         if (found == tables.builder_table.end())
         {
             print_invalid_arg(pairs);
@@ -230,7 +233,7 @@ set_relevant_arg(const Lookup_tables &tables, Maze_runner &runner,
     }
     if (pairs.flag == "-m")
     {
-        const auto found = tables.modification_table.find(pairs.arg.data());
+        const auto found = tables.modification_table.find(arg_data);
         if (found == tables.modification_table.end())
         {
             print_invalid_arg(pairs);
@@ -240,7 +243,7 @@ set_relevant_arg(const Lookup_tables &tables, Maze_runner &runner,
     }
     if (pairs.flag == "-p")
     {
-        const auto found = tables.painter_table.find(pairs.arg.data());
+        const auto found = tables.painter_table.find(arg_data);
         if (found == tables.painter_table.end())
         {
             print_invalid_arg(pairs);
@@ -250,7 +253,7 @@ set_relevant_arg(const Lookup_tables &tables, Maze_runner &runner,
     }
     if (pairs.flag == "-d")
     {
-        const auto found = tables.style_table.find(pairs.arg.data());
+        const auto found = tables.style_table.find(arg_data);
         if (found == tables.style_table.end())
         {
             print_invalid_arg(pairs);
@@ -260,8 +263,7 @@ set_relevant_arg(const Lookup_tables &tables, Maze_runner &runner,
     }
     if (pairs.flag == "-pa")
     {
-        const auto found
-            = tables.painter_animation_table.find(pairs.arg.data());
+        const auto found = tables.painter_animation_table.find(arg_data);
         if (found == tables.painter_animation_table.end())
         {
             print_invalid_arg(pairs);
@@ -272,8 +274,7 @@ set_relevant_arg(const Lookup_tables &tables, Maze_runner &runner,
     }
     if (pairs.flag == "-ba")
     {
-        const auto found
-            = tables.builder_animation_table.find(pairs.arg.data());
+        const auto found = tables.builder_animation_table.find(arg_data);
         if (found == tables.builder_animation_table.end())
         {
             print_invalid_arg(pairs);
@@ -289,7 +290,7 @@ set_relevant_arg(const Lookup_tables &tables, Maze_runner &runner,
 void
 set_rows(Maze_runner &runner, const Flag_arg &pairs)
 {
-    runner.args.odd_rows = std::stoi(pairs.arg.data());
+    runner.args.odd_rows = std::stoi(std::string{pairs.arg});
     if (runner.args.odd_rows % 2 == 0)
     {
         runner.args.odd_rows++;
@@ -302,7 +303,7 @@ set_rows(Maze_runner &runner, const Flag_arg &pairs)
 void
 set_cols(Maze_runner &runner, const Flag_arg &pairs)
 {
-    runner.args.odd_cols = std::stoi(pairs.arg.data());
+    runner.args.odd_cols = std::stoi(std::string{pairs.arg});
     if (runner.args.odd_cols % 2 == 0)
     {
         runner.args.odd_cols++;
@@ -372,3 +373,5 @@ print_usage()
     └───┴─────────────┴───────┴───────┴───────────┴───┴─────┴───────────┴─┘)";
     std::cout << msg << "\n";
 }
+
+} // namespace
