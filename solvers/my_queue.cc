@@ -112,8 +112,8 @@ template <class Value_type> class My_queue {
         std::copy_n(&elems_[front_], first_chunk, new_elems.data());
         if (first_chunk < capacity_)
         {
-            std::copy_n(new_elems.data() + first_chunk, size_ - first_chunk,
-                        elems_.data());
+            std::copy_n(elems_.data(), size_ - first_chunk,
+                        new_elems.data() + first_chunk);
         }
         capacity_ *= 2;
         front_ = 0;
