@@ -29,23 +29,19 @@ constexpr uint64_t b = 2;
 constexpr std::string_view rgb_escape = "\033[38;2;";
 constexpr std::string_view brush = "m█\033[0m";
 
-struct Bfs_monitor
-{
+struct Bfs_monitor {
     std::mutex monitor{};
     std::atomic_uint64_t count{0};
     std::vector<My_queue<Maze::Point>> paths;
     std::vector<std::unordered_set<Maze::Point>> seen;
-    Bfs_monitor() : paths{num_painters}, seen{num_painters}
-    {
-        for (My_queue<Maze::Point> &p : paths)
-        {
+    Bfs_monitor() : paths{num_painters}, seen{num_painters} {
+        for (My_queue<Maze::Point> &p : paths) {
             p.reserve(initial_path_len);
         }
     }
 };
 
-struct Thread_guide
-{
+struct Thread_guide {
     uint64_t bias;
     uint64_t color_i;
     Speed::Speed_unit animation;
@@ -53,24 +49,21 @@ struct Thread_guide
 };
 
 void
-print_rgb(Rgb rgb, Maze::Point p)
-{
+print_rgb(Rgb rgb, Maze::Point p) {
     Printer::set_cursor_position(p);
     std::cout << rgb_escape << rgb[r] << ";" << rgb[g] << ";" << rgb[b]
               << brush;
 }
 
 void
-animate_rgb(Rgb rgb, Maze::Point p)
-{
+animate_rgb(Rgb rgb, Maze::Point p) {
     Printer::set_cursor_position(p);
     std::cout << rgb_escape << rgb[r] << ";" << rgb[g] << ";" << rgb[b] << brush
               << std::flush;
 }
 
 void
-print_wall(Maze::Maze &maze, Maze::Point p)
-{
+print_wall(Maze::Maze &maze, Maze::Point p) {
     Printer::set_cursor_position(p);
     const Maze::Square &square = maze[p.row][p.col];
     std::cout << maze.wall_style()[(square & Maze::wall_mask).load()];

@@ -41,14 +41,12 @@ using Thread_bit = Maze::Square_bits;
 using Thread_paint = Maze::Square_bits;
 using Thread_cache = Maze::Square_bits;
 
-struct Thread_id
-{
+struct Thread_id {
     uint16_t index;
     uint16_t bit;
 };
 
-enum class Maze_game
-{
+enum class Maze_game {
     hunt,
     gather,
     corners,
@@ -132,24 +130,20 @@ constexpr int overlap_key_and_message_height = 9;
 constexpr std::array<Speed::Speed_unit, 8> solver_speeds
     = {0, 20000, 10000, 5000, 2000, 1000, 500, 250};
 
-struct Dfs_monitor
-{
+struct Dfs_monitor {
     std::mutex monitor{};
     std::optional<Speed::Speed_unit> speed{};
     std::vector<Maze::Point> starts{};
     Maze::Square winning_index{no_winner};
     std::vector<std::vector<Maze::Point>> thread_paths;
-    Dfs_monitor() : thread_paths{num_threads, std::vector<Maze::Point>{}}
-    {
-        for (std::vector<Maze::Point> &path : thread_paths)
-        {
+    Dfs_monitor() : thread_paths{num_threads, std::vector<Maze::Point>{}} {
+        for (std::vector<Maze::Point> &path : thread_paths) {
             path.reserve(initial_path_len);
         }
     }
 };
 
-struct Bfs_monitor
-{
+struct Bfs_monitor {
     std::mutex monitor{};
     std::optional<Speed::Speed_unit> speed{};
     std::vector<std::unordered_map<Maze::Point, Maze::Point>> thread_maps;
@@ -159,22 +153,18 @@ struct Bfs_monitor
     std::vector<std::vector<Maze::Point>> thread_paths;
     Bfs_monitor()
         : thread_maps{num_threads}, thread_queues{num_threads},
-          thread_paths{num_threads, std::vector<Maze::Point>{}}
-    {
-        for (std::vector<Maze::Point> &path : thread_paths)
-        {
+          thread_paths{num_threads, std::vector<Maze::Point>{}} {
+        for (std::vector<Maze::Point> &path : thread_paths) {
             path.reserve(initial_path_len);
         }
-        for (My_queue<Maze::Point> &q : thread_queues)
-        {
+        for (My_queue<Maze::Point> &q : thread_queues) {
             q.reserve(initial_path_len);
         }
     }
 };
 
 bool
-is_valid_start_or_finish(const Maze::Maze &maze, const Maze::Point &choice)
-{
+is_valid_start_or_finish(const Maze::Maze &maze, const Maze::Point &choice) {
     return choice.row > 0 && choice.row < maze.row_size() - 1 && choice.col > 0
            && choice.col < maze.col_size() - 1
            && (maze[choice.row][choice.col] & Maze::path_bit)
@@ -183,33 +173,27 @@ is_valid_start_or_finish(const Maze::Maze &maze, const Maze::Point &choice)
 }
 
 void
-print_point(const Maze::Maze &maze, const Maze::Point &point)
-{
+print_point(const Maze::Maze &maze, const Maze::Point &point) {
     const Maze::Square &square = maze[point.row][point.col];
-    if (square & finish_bit)
-    {
+    if (square & finish_bit) {
         std::cout << ansi_finish;
         return;
     }
-    if (square & start_bit)
-    {
+    if (square & start_bit) {
         std::cout << ansi_start;
         return;
     }
-    if (square & thread_paint_mask)
-    {
+    if (square & thread_paint_mask) {
         const Thread_paint thread_color
             = (square & thread_paint_mask).load() >> thread_paint_shift;
         std::cout << thread_colors.at(thread_color);
         return;
     }
-    if (!(square & Maze::path_bit))
-    {
+    if (!(square & Maze::path_bit)) {
         std::cout << maze.wall_style()[(square & Maze::wall_mask).load()];
         return;
     }
-    if (square & Maze::path_bit)
-    {
+    if (square & Maze::path_bit) {
         std::cout << " ";
         return;
     }
@@ -219,12 +203,9 @@ print_point(const Maze::Maze &maze, const Maze::Point &point)
 }
 
 void
-print_maze(const Maze::Maze &maze)
-{
-    for (int row = 0; row < maze.row_size(); row++)
-    {
-        for (int col = 0; col < maze.col_size(); col++)
-        {
+print_maze(const Maze::Maze &maze) {
+    for (int row = 0; row < maze.row_size(); row++) {
+        for (int col = 0; col < maze.col_size(); col++) {
             print_point(maze, {row, col});
         }
         std::cout << "\n";
@@ -233,40 +214,32 @@ print_maze(const Maze::Maze &maze)
 }
 
 void
-flush_cursor_path_coordinate(const Maze::Maze &maze, const Maze::Point &point)
-{
+flush_cursor_path_coordinate(const Maze::Maze &maze, const Maze::Point &point) {
     Printer::set_cursor_position(point);
     print_point(maze, point);
     std::cout << std::flush;
 }
 
 void
-clear_and_flush_paths(const Maze::Maze &maze)
-{
+clear_and_flush_paths(const Maze::Maze &maze) {
     Printer::clear_screen();
     print_maze(maze);
 }
 
 Maze::Point
-find_nearest_square(const Maze::Maze &maze, const Maze::Point &choice)
-{
+find_nearest_square(const Maze::Maze &maze, const Maze::Point &choice) {
     // Fanning out from a starting point should work on any medium to large
     // maze.
-    for (const Maze::Point &p : all_dirs)
-    {
+    for (const Maze::Point &p : all_dirs) {
         const Maze::Point next = {choice.row + p.row, choice.col + p.col};
-        if (is_valid_start_or_finish(maze, next))
-        {
+        if (is_valid_start_or_finish(maze, next)) {
             return next;
         }
     }
     // Getting desperate here. We should only need this for very small mazes.
-    for (int row = 1; row < maze.row_size() - 1; row++)
-    {
-        for (int col = 1; col < maze.col_size() - 1; col++)
-        {
-            if (is_valid_start_or_finish(maze, {row, col}))
-            {
+    for (int row = 1; row < maze.row_size() - 1; row++) {
+        for (int col = 1; col < maze.col_size() - 1; col++) {
+            if (is_valid_start_or_finish(maze, {row, col})) {
                 return {row, col};
             }
         }
@@ -279,50 +252,41 @@ find_nearest_square(const Maze::Maze &maze, const Maze::Point &choice)
 }
 
 std::vector<Maze::Point>
-set_corner_starts(const Maze::Maze &maze)
-{
+set_corner_starts(const Maze::Maze &maze) {
     Maze::Point point1 = {1, 1};
-    if (!(maze[point1.row][point1.col] & Maze::path_bit))
-    {
+    if (!(maze[point1.row][point1.col] & Maze::path_bit)) {
         point1 = find_nearest_square(maze, point1);
     }
     Maze::Point point2 = {1, maze.col_size() - 2};
-    if (!(maze[point2.row][point2.col] & Maze::path_bit))
-    {
+    if (!(maze[point2.row][point2.col] & Maze::path_bit)) {
         point2 = find_nearest_square(maze, point2);
     }
     Maze::Point point3 = {maze.row_size() - 2, 1};
-    if (!(maze[point3.row][point3.col] & Maze::path_bit))
-    {
+    if (!(maze[point3.row][point3.col] & Maze::path_bit)) {
         point3 = find_nearest_square(maze, point3);
     }
     Maze::Point point4 = {maze.row_size() - 2, maze.col_size() - 2};
-    if (!(maze[point4.row][point4.col] & Maze::path_bit))
-    {
+    if (!(maze[point4.row][point4.col] & Maze::path_bit)) {
         point4 = find_nearest_square(maze, point4);
     }
     return {point1, point2, point3, point4};
 }
 
 Maze::Point
-pick_random_point(const Maze::Maze &maze)
-{
+pick_random_point(const Maze::Maze &maze) {
     std::mt19937 generator(std::random_device{}());
     std::uniform_int_distribution<int> row_random(1, maze.row_size() - 2);
     std::uniform_int_distribution<int> col_random(1, maze.col_size() - 2);
     Maze::Point choice = {row_random(generator), col_random(generator)};
-    if (!is_valid_start_or_finish(maze, choice))
-    {
+    if (!is_valid_start_or_finish(maze, choice)) {
         choice = find_nearest_square(maze, choice);
     }
     return choice;
 }
 
 void
-print_hunt_solution_message(uint16_t winning_index)
-{
-    if (winning_index == Sutil::no_winner)
-    {
+print_hunt_solution_message(uint16_t winning_index) {
+    if (winning_index == Sutil::no_winner) {
         std::cout << thread_colors.at(all_threads_failed_index);
         return;
     }
@@ -331,22 +295,17 @@ print_hunt_solution_message(uint16_t winning_index)
 }
 
 void
-print_gather_solution_message()
-{
-    for (const uint16_t &mask : thread_bits)
-    {
+print_gather_solution_message() {
+    for (const uint16_t &mask : thread_bits) {
         std::cout << thread_colors.at(mask);
     }
     std::cout << " All threads found their finish squares!\n";
 }
 
 void
-deluminate_maze(Maze::Maze &maze)
-{
-    for (int row = 0; row < maze.row_size(); ++row)
-    {
-        for (int col = 0; col < maze.col_size(); ++col)
-        {
+deluminate_maze(Maze::Maze &maze) {
+    for (int row = 0; row < maze.row_size(); ++row) {
+        for (int col = 0; col < maze.col_size(); ++col) {
             Printer::set_cursor_position({row, col});
             std::cout << " ";
         }
@@ -356,8 +315,7 @@ deluminate_maze(Maze::Maze &maze)
 }
 
 void
-print_overlap_key()
-{
+print_overlap_key() {
     std::cout << "┌────────────────────────────────────────────────────────────"
                  "────┐\n"
               << "│     Overlap Key: 3_THREAD | 2_THREAD | 1_THREAD | 0_THREAD "

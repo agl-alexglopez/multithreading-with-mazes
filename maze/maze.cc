@@ -98,15 +98,9 @@ using Backtrack_marker = Square_bits;
 
 ///////////////////////         Maze Types
 
-enum class Maze_modification : uint8_t
-{
-    none,
-    add_cross,
-    add_x
-};
+enum class Maze_modification : uint8_t { none, add_cross, add_x };
 
-enum class Maze_style : uint8_t
-{
+enum class Maze_style : uint8_t {
     sharp = 0,
     round,
     doubles,
@@ -115,14 +109,12 @@ enum class Maze_style : uint8_t
     spikes,
 };
 
-struct Point
-{
+struct Point {
     int row;
     int col;
 };
 
-struct Maze_args
-{
+struct Maze_args {
     uint64_t odd_rows = 31;
     uint64_t odd_cols = 111;
     Maze_style style = Maze_style::sharp;
@@ -246,125 +238,106 @@ namespace Maze {
 
 ///////////////////////  Square Implementation
 
-constexpr Square::Square(uint16_t a) : u16(a)
-{}
+constexpr Square::Square(uint16_t a) : u16(a) {
+}
 
-constexpr Square::Square(const Square &other) : u16(other.u16.load())
-{}
+constexpr Square::Square(const Square &other) : u16(other.u16.load()) {
+}
 
-constexpr Square::Square(Square &&other) noexcept : u16(other.u16.load())
-{}
+constexpr Square::Square(Square &&other) noexcept : u16(other.u16.load()) {
+}
 
 constexpr Square &
-Square::operator=(const Square &other) noexcept
-{
-    if (&other != this)
-    {
+Square::operator=(const Square &other) noexcept {
+    if (&other != this) {
         u16.store(other.u16.load());
     }
     return *this;
 }
 
 constexpr Square &
-Square::operator=(Square &&other) noexcept
-{
-    if (&other != this)
-    {
+Square::operator=(Square &&other) noexcept {
+    if (&other != this) {
         u16.store(other.u16.load());
     }
     return *this;
 }
 
 constexpr bool
-Square::operator==(const Square &other) const noexcept
-{
+Square::operator==(const Square &other) const noexcept {
     return u16.load() == other.load();
 }
 
 constexpr bool
-Square::operator!=(const Square &other) const noexcept
-{
+Square::operator!=(const Square &other) const noexcept {
     return u16.load() != other.load();
 }
 
 constexpr Square
-Square::operator&(Square_bits bits) const noexcept
-{
+Square::operator&(Square_bits bits) const noexcept {
     return Square(u16.load() & bits);
 }
 
 constexpr Square
-Square::operator|(Square_bits bits) const noexcept
-{
+Square::operator|(Square_bits bits) const noexcept {
     return Square(u16.load() | bits);
 }
 
 constexpr Square
-Square::operator^(Square_bits bits) const noexcept
-{
+Square::operator^(Square_bits bits) const noexcept {
     return Square(u16.load() ^ bits);
 }
 
 constexpr Square
-Square::operator~() const noexcept
-{
+Square::operator~() const noexcept {
     return Square(~(u16.load()));
 }
 
 constexpr Square
-Square::operator>>(const uint16_t n) const noexcept
-{
+Square::operator>>(const uint16_t n) const noexcept {
     return Square(u16.load() >> n);
 }
 
 constexpr Square
-Square::operator<<(const uint16_t n) const noexcept
-{
+Square::operator<<(const uint16_t n) const noexcept {
     return Square(u16.load() << n);
 }
 
 constexpr Square
-Square::operator&=(Square_bits bits) noexcept
-{
+Square::operator&=(Square_bits bits) noexcept {
     u16 &= bits;
     return *this;
 }
 
 constexpr Square &
-Square::operator|=(Square_bits bits) noexcept
-{
+Square::operator|=(Square_bits bits) noexcept {
     u16 |= bits;
     return *this;
 }
 
 constexpr Square &
-Square::operator^=(Square_bits bits) noexcept
-{
+Square::operator^=(Square_bits bits) noexcept {
     u16 ^= bits;
     return *this;
 }
 
 constexpr Square::
-operator bool() const noexcept
-{
+operator bool() const noexcept {
     return u16.load() != 0;
 }
 
 constexpr uint16_t
-Square::load() const noexcept
-{
+Square::load() const noexcept {
     return u16.load(std::memory_order_relaxed);
 }
 
 constexpr void
-Square::store(uint16_t bits) noexcept
-{
+Square::store(uint16_t bits) noexcept {
     u16.store(bits);
 }
 
 constexpr bool
-Square::ces(Square_bits expected, Square_bits desired) noexcept
-{
+Square::ces(Square_bits expected, Square_bits desired) noexcept {
     return u16.compare_exchange_strong(expected, desired,
                                        std::memory_order_relaxed);
 }
@@ -373,50 +346,43 @@ Maze::Maze(const Maze_args &args)
     : maze_row_size_(static_cast<int>(args.odd_rows)),
       maze_col_size_(static_cast<int>(args.odd_cols)),
       maze_(args.odd_rows * args.odd_cols, Square{0}),
-      wall_style_index_(static_cast<int>(args.style))
-{}
+      wall_style_index_(static_cast<int>(args.style)) {
+}
 
 std::span<Square>
-Maze::operator[](uint64_t index)
-{
+Maze::operator[](uint64_t index) {
     return {&maze_.at(index * maze_col_size_),
             static_cast<uint64_t>(maze_col_size_)};
 }
 
 std::span<const Square>
-Maze::operator[](uint64_t index) const
-{
+Maze::operator[](uint64_t index) const {
     return {&maze_.at(index * maze_col_size_),
             static_cast<uint64_t>(maze_col_size_)};
 }
 
 int
-Maze::row_size() const
-{
+Maze::row_size() const {
     return maze_row_size_;
 }
 
 int
-Maze::col_size() const
-{
+Maze::col_size() const {
     return maze_col_size_;
 }
 
 std::span<const std::string_view>
-Maze::wall_style() const
-{
+Maze::wall_style() const {
     return {&wall_styles.at(wall_style_index_ * wall_row), wall_row};
 }
 
 bool
-operator==(const Point &lhs, const Point &rhs)
-{
+operator==(const Point &lhs, const Point &rhs) {
     return lhs.row == rhs.row && lhs.col == rhs.col;
 }
 
 bool
-operator!=(const Point &lhs, const Point &rhs)
-{
+operator!=(const Point &lhs, const Point &rhs) {
     return !(lhs == rhs);
 }
 
@@ -425,11 +391,9 @@ operator!=(const Point &lhs, const Point &rhs)
 // Points should be hashable for ease of use in most containers. Helpful for
 // Kruskal's algorithm.
 namespace std {
-template <> struct hash<Maze::Point>
-{
+template <> struct hash<Maze::Point> {
     size_t
-    operator()(const Maze::Point &p) const
-    {
+    operator()(const Maze::Point &p) const {
         const std::hash<int> hasher;
         return hasher(p.row) ^ hasher(p.col);
     }

@@ -24,14 +24,12 @@ void animate_maze(Maze::Maze &maze, Speed::Speed speed);
 
 namespace {
 
-struct Loop
-{
+struct Loop {
     Maze::Point walk;
     Maze::Point root;
 };
 
-struct Random_walk
-{
+struct Random_walk {
     Maze::Point prev;
     Maze::Point walk;
     Maze::Point next;
@@ -39,34 +37,23 @@ struct Random_walk
 
 bool
 is_valid_random_step(Maze::Maze &maze, const Maze::Point &next,
-                     const Maze::Point &previous)
-{
+                     const Maze::Point &previous) {
     return next.row > 0 && next.row < maze.row_size() - 1 && next.col > 0
            && next.col < maze.col_size() - 1 && next != previous;
 }
 
 void
-build_marks(Maze::Maze &maze, const Maze::Point &cur, const Maze::Point &next)
-{
+build_marks(Maze::Maze &maze, const Maze::Point &cur, const Maze::Point &next) {
     Maze::Point wall = cur;
-    if (next.row < cur.row)
-    {
+    if (next.row < cur.row) {
         wall.row--;
-    }
-    else if (next.row > cur.row)
-    {
+    } else if (next.row > cur.row) {
         wall.row++;
-    }
-    else if (next.col < cur.col)
-    {
+    } else if (next.col < cur.col) {
         wall.col--;
-    }
-    else if (next.col > cur.col)
-    {
+    } else if (next.col > cur.col) {
         wall.col++;
-    }
-    else
-    {
+    } else {
         std::cerr << "Wall break error. Step through wall didn't work"
                   << "\n";
         std::abort();
@@ -80,27 +67,17 @@ build_marks(Maze::Maze &maze, const Maze::Point &cur, const Maze::Point &next)
 
 void
 animate_marks(Maze::Maze &maze, const Maze::Point &cur, const Maze::Point &next,
-              Speed::Speed_unit speed)
-{
+              Speed::Speed_unit speed) {
     Maze::Point wall = cur;
-    if (next.row < cur.row)
-    {
+    if (next.row < cur.row) {
         wall.row--;
-    }
-    else if (next.row > cur.row)
-    {
+    } else if (next.row > cur.row) {
         wall.row++;
-    }
-    else if (next.col < cur.col)
-    {
+    } else if (next.col < cur.col) {
         wall.col--;
-    }
-    else if (next.col > cur.col)
-    {
+    } else if (next.col > cur.col) {
         wall.col++;
-    }
-    else
-    {
+    } else {
         std::cerr << "Wall break error. Step through wall didn't work"
                   << "\n";
     }
@@ -112,11 +89,9 @@ animate_marks(Maze::Maze &maze, const Maze::Point &cur, const Maze::Point &next,
 }
 
 void
-connect_walk_to_maze(Maze::Maze &maze, const Maze::Point &walk)
-{
+connect_walk_to_maze(Maze::Maze &maze, const Maze::Point &walk) {
     Maze::Point cur = walk;
-    while (maze[cur.row][cur.col] & Maze::markers_mask)
-    {
+    while (maze[cur.row][cur.col] & Maze::markers_mask) {
         const Maze::Backtrack_marker mark{static_cast<Maze::Square_bits>(
             (maze[cur.row][cur.col] & Maze::markers_mask).load()
             >> Maze::marker_shift)};
@@ -136,11 +111,9 @@ connect_walk_to_maze(Maze::Maze &maze, const Maze::Point &walk)
 
 void
 animate_walk_to_maze(Maze::Maze &maze, const Maze::Point &walk,
-                     Speed::Speed_unit speed)
-{
+                     Speed::Speed_unit speed) {
     Maze::Point cur = walk;
-    while (maze[cur.row][cur.col] & Maze::markers_mask)
-    {
+    while (maze[cur.row][cur.col] & Maze::markers_mask) {
         const Maze::Backtrack_marker mark{static_cast<Maze::Square_bits>(
             (maze[cur.row][cur.col] & Maze::markers_mask).load()
             >> Maze::marker_shift)};
@@ -169,11 +142,9 @@ animate_walk_to_maze(Maze::Maze &maze, const Maze::Point &walk,
 }
 
 void
-erase_loop(Maze::Maze &maze, const Loop &loop)
-{
+erase_loop(Maze::Maze &maze, const Loop &loop) {
     Maze::Point cur = loop.walk;
-    while (cur != loop.root)
-    {
+    while (cur != loop.root) {
         maze[cur.row][cur.col] &= ~Maze::start_bit;
         const Maze::Backtrack_marker mark{static_cast<Maze::Square_bits>(
             (maze[cur.row][cur.col] & Maze::markers_mask).load()
@@ -187,11 +158,10 @@ erase_loop(Maze::Maze &maze, const Loop &loop)
 }
 
 void
-animate_erase_loop(Maze::Maze &maze, const Loop &loop, Speed::Speed_unit speed)
-{
+animate_erase_loop(Maze::Maze &maze, const Loop &loop,
+                   Speed::Speed_unit speed) {
     Maze::Point cur = loop.walk;
-    while (cur != loop.root)
-    {
+    while (cur != loop.root) {
         maze[cur.row][cur.col] &= ~Maze::start_bit;
         const Maze::Backtrack_marker mark{static_cast<Maze::Square_bits>(
             (maze[cur.row][cur.col] & Maze::markers_mask).load()
@@ -213,16 +183,13 @@ animate_erase_loop(Maze::Maze &maze, const Loop &loop, Speed::Speed_unit speed)
 }
 
 bool
-continue_random_walks(Maze::Maze &maze, Random_walk &cur)
-{
-    if (Butil::has_builder_bit(maze, cur.next))
-    {
+continue_random_walks(Maze::Maze &maze, Random_walk &cur) {
+    if (Butil::has_builder_bit(maze, cur.next)) {
         build_marks(maze, cur.walk, cur.next);
         connect_walk_to_maze(maze, cur.walk);
         cur.walk = choose_arbitrary_point(maze, Butil::Parity_point::odd);
 
-        if (!cur.walk.row)
-        {
+        if (!cur.walk.row) {
             return false;
         }
 
@@ -230,8 +197,7 @@ continue_random_walks(Maze::Maze &maze, Random_walk &cur)
         cur.prev = {};
         return true;
     }
-    if (maze[cur.next.row][cur.next.col] & Maze::start_bit)
-    {
+    if (maze[cur.next.row][cur.next.col] & Maze::start_bit) {
         erase_loop(maze, {cur.walk, cur.next});
         cur.walk = cur.next;
         cur.prev = {};
@@ -250,16 +216,13 @@ continue_random_walks(Maze::Maze &maze, Random_walk &cur)
 
 bool
 animate_random_walks(Maze::Maze &maze, Random_walk &cur,
-                     Speed::Speed_unit speed)
-{
-    if (Butil::has_builder_bit(maze, cur.next))
-    {
+                     Speed::Speed_unit speed) {
+    if (Butil::has_builder_bit(maze, cur.next)) {
         animate_marks(maze, cur.walk, cur.next, speed);
         animate_walk_to_maze(maze, cur.walk, speed);
         cur.walk = choose_arbitrary_point(maze, Butil::Parity_point::odd);
 
-        if (!cur.walk.row)
-        {
+        if (!cur.walk.row) {
             return false;
         }
 
@@ -267,8 +230,7 @@ animate_random_walks(Maze::Maze &maze, Random_walk &cur,
         cur.prev = {};
         return true;
     }
-    if (maze[cur.next.row][cur.next.col] & Maze::start_bit)
-    {
+    if (maze[cur.next.row][cur.next.col] & Maze::start_bit) {
         animate_erase_loop(maze, {cur.walk, cur.next}, speed);
         cur.walk = cur.next;
         cur.prev = {};
@@ -292,8 +254,7 @@ animate_random_walks(Maze::Maze &maze, Random_walk &cur,
 namespace Wilson_path_carver {
 
 void
-generate_maze(Maze::Maze &maze)
-{
+generate_maze(Maze::Maze &maze) {
     Butil::fill_maze_with_walls(maze);
     // Important to remember that this maze builds by jumping two squares at a
     // time. Therefore for Wilson's algorithm to work two points must both be
@@ -313,23 +274,19 @@ generate_maze(Maze::Maze &maze)
     std::iota(begin(random_direction_indices), end(random_direction_indices),
               0);
 
-    for (;;)
-    {
+    for (;;) {
         maze[cur.walk.row][cur.walk.col] |= Maze::start_bit;
         std::shuffle(begin(random_direction_indices),
                      end(random_direction_indices), generator);
 
-        for (const int &i : random_direction_indices)
-        {
+        for (const int &i : random_direction_indices) {
 
             const Maze::Point &p = Maze::build_dirs.at(i);
             cur.next = {cur.walk.row + p.row, cur.walk.col + p.col};
-            if (!is_valid_random_step(maze, cur.next, cur.prev))
-            {
+            if (!is_valid_random_step(maze, cur.next, cur.prev)) {
                 continue;
             }
-            if (!continue_random_walks(maze, cur))
-            {
+            if (!continue_random_walks(maze, cur)) {
                 Butil::clear_and_flush_grid(maze);
                 return;
             }
@@ -339,8 +296,7 @@ generate_maze(Maze::Maze &maze)
 }
 
 void
-animate_maze(Maze::Maze &maze, Speed::Speed speed)
-{
+animate_maze(Maze::Maze &maze, Speed::Speed speed) {
     const Speed::Speed_unit animation
         = Butil::builder_speeds.at(static_cast<int>(speed));
     Butil::fill_maze_with_walls_animated(maze);
@@ -360,23 +316,19 @@ animate_maze(Maze::Maze &maze, Speed::Speed speed)
     std::iota(begin(random_direction_indices), end(random_direction_indices),
               0);
 
-    for (;;)
-    {
+    for (;;) {
         maze[cur.walk.row][cur.walk.col] |= Maze::start_bit;
         std::shuffle(begin(random_direction_indices),
                      end(random_direction_indices), generator);
 
-        for (const int &i : random_direction_indices)
-        {
+        for (const int &i : random_direction_indices) {
 
             const Maze::Point &p = Maze::build_dirs.at(i);
             cur.next = {cur.walk.row + p.row, cur.walk.col + p.col};
-            if (!is_valid_random_step(maze, cur.next, cur.prev))
-            {
+            if (!is_valid_random_step(maze, cur.next, cur.prev)) {
                 continue;
             }
-            if (!animate_random_walks(maze, cur, animation))
-            {
+            if (!animate_random_walks(maze, cur, animation)) {
                 return;
             }
             break;

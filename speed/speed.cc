@@ -4,8 +4,7 @@ export namespace Speed {
 
 using Speed_unit = int;
 
-enum class Speed
-{
+enum class Speed {
     instant = 0,
     speed_1,
     speed_2,

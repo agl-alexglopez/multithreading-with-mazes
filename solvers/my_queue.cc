@@ -17,12 +17,11 @@ module labyrinth:my_queue;
 template <class Value_type> class My_queue {
 
   public:
-    My_queue() : elems_(initial_size), capacity_(initial_size)
-    {}
+    My_queue() : elems_(initial_size), capacity_(initial_size) {
+    }
 
     void
-    reserve(size_t capacity)
-    {
+    reserve(size_t capacity) {
         elems_ = std::vector<Value_type>(capacity);
         capacity_ = capacity;
         size_ = 0;
@@ -31,17 +30,14 @@ template <class Value_type> class My_queue {
     }
 
     void
-    push(const Value_type &elem)
-    {
+    push(const Value_type &elem) {
         // Doubling allocations so we can't acheive ULLONG_MAX for our container
         // size. Slightly less.
-        if (size_ == full_queue)
-        {
+        if (size_ == full_queue) {
             std::cerr << "My_queue is at max capacity.\n";
             std::abort();
         }
-        if (size_ == capacity_)
-        {
+        if (size_ == capacity_) {
             grow();
         }
         elems_[back_++] = elem;
@@ -50,10 +46,8 @@ template <class Value_type> class My_queue {
     }
 
     void
-    pop()
-    {
-        if (size_ == 0)
-        {
+    pop() {
+        if (size_ == 0) {
             std::cerr << "My_queue is empty.\n";
             std::abort();
         }
@@ -62,10 +56,8 @@ template <class Value_type> class My_queue {
     }
 
     const Value_type &
-    front() const
-    {
-        if (size_ == 0)
-        {
+    front() const {
+        if (size_ == 0) {
             std::cerr << "My_queue is empty.\n";
             std::abort();
         }
@@ -73,10 +65,8 @@ template <class Value_type> class My_queue {
     }
 
     Value_type &
-    front()
-    {
-        if (size_ == 0)
-        {
+    front() {
+        if (size_ == 0) {
             std::cerr << "My_queue is empty.\n";
             std::abort();
         }
@@ -84,14 +74,12 @@ template <class Value_type> class My_queue {
     }
 
     size_t
-    size() const
-    {
+    size() const {
         return size_;
     }
 
     bool
-    empty() const
-    {
+    empty() const {
         return size_ == 0;
     }
 
@@ -105,13 +93,11 @@ template <class Value_type> class My_queue {
     size_t back_{0};
 
     void
-    grow()
-    {
+    grow() {
         std::vector<Value_type> new_elems(capacity_ * 2);
         const size_t first_chunk = std::min(size_, capacity_ - front_);
         std::copy_n(&elems_[front_], first_chunk, new_elems.data());
-        if (first_chunk < capacity_)
-        {
+        if (first_chunk < capacity_) {
             std::copy_n(elems_.data(), size_ - first_chunk,
                         new_elems.data() + first_chunk);
         }

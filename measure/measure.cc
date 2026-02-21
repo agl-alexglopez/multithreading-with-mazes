@@ -23,14 +23,12 @@ using Paint_function
 constexpr int static_image = 0;
 constexpr int animated_playback = 1;
 
-struct Flag_arg
-{
+struct Flag_arg {
     std::string_view flag;
     std::string_view arg;
 };
 
-struct Maze_runner
-{
+struct Maze_runner {
     Maze::Maze_args args;
 
     int builder_view{static_image};
@@ -45,12 +43,11 @@ struct Maze_runner
     Speed::Speed painter_speed{};
     Paint_function painter{Distance::paint_distance_from_center,
                            Distance::animate_distance_from_center};
-    Maze_runner() : args{}
-    {}
+    Maze_runner() : args{} {
+    }
 };
 
-struct Lookup_tables
-{
+struct Lookup_tables {
     std::unordered_set<std::string> argument_flags;
     std::unordered_map<std::string, Build_function> builder_table;
     std::unordered_map<std::string, Build_function> modification_table;
@@ -70,8 +67,7 @@ void print_usage();
 } // namespace
 
 int
-main(int argc, char **argv)
-{
+main(int argc, char **argv) {
     const Lookup_tables tables = {
         .argument_flags={"-r", "-c", "-b", "-p", "-h", "-g", "-d", "-m", "-pa", "-ba"},
         .builder_table={
@@ -139,25 +135,19 @@ main(int argc, char **argv)
     std::string_view prev_flag = {};
     // In the case of no arguments this is skipped and we use our sensible
     // defaults.
-    for (size_t i = 1; i < args.size(); i++)
-    {
+    for (size_t i = 1; i < args.size(); i++) {
         auto *arg = args[i];
-        if (process_current)
-        {
+        if (process_current) {
             set_relevant_arg(tables, runner, {.flag = prev_flag, .arg = arg});
             process_current = false;
-        }
-        else
-        {
+        } else {
             const auto &found_arg = tables.argument_flags.find(arg);
-            if (found_arg == tables.argument_flags.end())
-            {
+            if (found_arg == tables.argument_flags.end()) {
                 std::cerr << "Invalid argument flag: " << arg << "\n";
                 print_usage();
                 std::exit(1);
             }
-            if (*found_arg == "-h")
-            {
+            if (*found_arg == "-h") {
                 print_usage();
                 return 0;
             }
@@ -171,20 +161,15 @@ main(int argc, char **argv)
     // Functions are stored in tuples so use tuple get syntax and then call them
     // immidiately.
 
-    if (runner.builder_view == animated_playback)
-    {
+    if (runner.builder_view == animated_playback) {
         std::get<animated_playback>(runner.builder)(maze, runner.builder_speed);
-        if (runner.modder)
-        {
+        if (runner.modder) {
             std::get<animated_playback>(runner.modder.value())(
                 maze, runner.builder_speed);
         }
-    }
-    else
-    {
+    } else {
         std::get<static_image>(runner.builder)(maze);
-        if (runner.modder)
-        {
+        if (runner.modder) {
             std::get<static_image>(runner.modder.value())(maze);
         }
     }
@@ -193,12 +178,9 @@ main(int argc, char **argv)
     // flashing from redrawing frame.
     Printer::set_cursor_position({.row = 0, .col = 0});
 
-    if (runner.painter_view == animated_playback)
-    {
+    if (runner.painter_view == animated_playback) {
         std::get<animated_playback>(runner.painter)(maze, runner.painter_speed);
-    }
-    else
-    {
+    } else {
         std::get<static_image>(runner.painter)(maze);
     }
     return 0;
@@ -208,75 +190,60 @@ namespace {
 
 void
 set_relevant_arg(const Lookup_tables &tables, Maze_runner &runner,
-                 const Flag_arg &pairs)
-{
+                 const Flag_arg &pairs) {
     const std::string arg_data{pairs.arg};
-    if (pairs.flag == "-r")
-    {
+    if (pairs.flag == "-r") {
         set_rows(runner, pairs);
         return;
     }
-    if (pairs.flag == "-c")
-    {
+    if (pairs.flag == "-c") {
         set_cols(runner, pairs);
         return;
     }
-    if (pairs.flag == "-b")
-    {
+    if (pairs.flag == "-b") {
         const auto found = tables.builder_table.find(arg_data);
-        if (found == tables.builder_table.end())
-        {
+        if (found == tables.builder_table.end()) {
             print_invalid_arg(pairs);
         }
         runner.builder = found->second;
         return;
     }
-    if (pairs.flag == "-m")
-    {
+    if (pairs.flag == "-m") {
         const auto found = tables.modification_table.find(arg_data);
-        if (found == tables.modification_table.end())
-        {
+        if (found == tables.modification_table.end()) {
             print_invalid_arg(pairs);
         }
         runner.modder = found->second;
         return;
     }
-    if (pairs.flag == "-p")
-    {
+    if (pairs.flag == "-p") {
         const auto found = tables.painter_table.find(arg_data);
-        if (found == tables.painter_table.end())
-        {
+        if (found == tables.painter_table.end()) {
             print_invalid_arg(pairs);
         }
         runner.painter = found->second;
         return;
     }
-    if (pairs.flag == "-d")
-    {
+    if (pairs.flag == "-d") {
         const auto found = tables.style_table.find(arg_data);
-        if (found == tables.style_table.end())
-        {
+        if (found == tables.style_table.end()) {
             print_invalid_arg(pairs);
         }
         runner.args.style = found->second;
         return;
     }
-    if (pairs.flag == "-pa")
-    {
+    if (pairs.flag == "-pa") {
         const auto found = tables.painter_animation_table.find(arg_data);
-        if (found == tables.painter_animation_table.end())
-        {
+        if (found == tables.painter_animation_table.end()) {
             print_invalid_arg(pairs);
         }
         runner.painter_speed = found->second;
         runner.painter_view = animated_playback;
         return;
     }
-    if (pairs.flag == "-ba")
-    {
+    if (pairs.flag == "-ba") {
         const auto found = tables.builder_animation_table.find(arg_data);
-        if (found == tables.builder_animation_table.end())
-        {
+        if (found == tables.builder_animation_table.end()) {
             print_invalid_arg(pairs);
         }
         runner.builder_speed = found->second;
@@ -288,35 +255,28 @@ set_relevant_arg(const Lookup_tables &tables, Maze_runner &runner,
 }
 
 void
-set_rows(Maze_runner &runner, const Flag_arg &pairs)
-{
+set_rows(Maze_runner &runner, const Flag_arg &pairs) {
     runner.args.odd_rows = std::stoi(std::string{pairs.arg});
-    if (runner.args.odd_rows % 2 == 0)
-    {
+    if (runner.args.odd_rows % 2 == 0) {
         runner.args.odd_rows++;
     }
-    if (runner.args.odd_rows < 7)
-    {
+    if (runner.args.odd_rows < 7) {
         print_invalid_arg(pairs);
     }
 }
 void
-set_cols(Maze_runner &runner, const Flag_arg &pairs)
-{
+set_cols(Maze_runner &runner, const Flag_arg &pairs) {
     runner.args.odd_cols = std::stoi(std::string{pairs.arg});
-    if (runner.args.odd_cols % 2 == 0)
-    {
+    if (runner.args.odd_cols % 2 == 0) {
         runner.args.odd_cols++;
     }
-    if (runner.args.odd_cols < 7)
-    {
+    if (runner.args.odd_cols < 7) {
         print_invalid_arg(pairs);
     }
 }
 
 void
-print_invalid_arg(const Flag_arg &pairs)
-{
+print_invalid_arg(const Flag_arg &pairs) {
     std::cerr << "Flag was: " << pairs.flag << "\n";
     std::cerr << "Invalid argument: " << pairs.arg << "\n";
     print_usage();
@@ -324,8 +284,7 @@ print_invalid_arg(const Flag_arg &pairs)
 }
 
 void
-print_usage()
-{
+print_usage() {
     constexpr auto msg =
         R"(
     ┌───┬─────────┬─────┬───┬───────────┬─────┬───────┬─────────────┬─────┐

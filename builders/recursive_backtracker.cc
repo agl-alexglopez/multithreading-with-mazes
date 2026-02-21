@@ -25,8 +25,7 @@ namespace Recursive_backtracker {
 constexpr Speed::Speed_unit backtrack_delay = 8;
 
 void
-generate_maze(Maze::Maze &maze)
-{
+generate_maze(Maze::Maze &maze) {
     Butil::fill_maze_with_walls(maze);
     // Note that backtracking occurs by encoding directions into path bits. No
     // stack needed.
@@ -41,28 +40,24 @@ generate_maze(Maze::Maze &maze)
               0);
     Maze::Point cur = start;
     bool branches_remain = true;
-    while (branches_remain)
-    {
+    while (branches_remain) {
         // The unvisited neighbor is always random because array is re-shuffled
         // each time.
         shuffle(begin(random_direction_indices), end(random_direction_indices),
                 generator);
         branches_remain = false;
-        for (const int &i : random_direction_indices)
-        {
+        for (const int &i : random_direction_indices) {
             const Maze::Point &direction = Maze::build_dirs.at(i);
             const Maze::Point next
                 = {cur.row + direction.row, cur.col + direction.col};
-            if (Butil::can_build_new_square(maze, next))
-            {
+            if (Butil::can_build_new_square(maze, next)) {
                 branches_remain = true;
                 Butil::carve_path_markings(maze, cur, next);
                 cur = next;
                 break;
             }
         }
-        if (!branches_remain && cur != start)
-        {
+        if (!branches_remain && cur != start) {
             const Maze::Backtrack_marker dir{static_cast<Maze::Square_bits>(
                 (maze[cur.row][cur.col] & Maze::markers_mask).load()
                 >> Maze::marker_shift)};
@@ -80,8 +75,7 @@ generate_maze(Maze::Maze &maze)
 }
 
 void
-animate_maze(Maze::Maze &maze, Speed::Speed speed)
-{
+animate_maze(Maze::Maze &maze, Speed::Speed speed) {
     const Speed::Speed_unit animation
         = Butil::builder_speeds.at(static_cast<int>(speed));
     Butil::fill_maze_with_walls_animated(maze);
@@ -96,26 +90,22 @@ animate_maze(Maze::Maze &maze, Speed::Speed speed)
               0);
     Maze::Point cur = start;
     bool branches_remain = true;
-    while (branches_remain)
-    {
+    while (branches_remain) {
         shuffle(begin(random_direction_indices), end(random_direction_indices),
                 generator);
         branches_remain = false;
-        for (const int &i : random_direction_indices)
-        {
+        for (const int &i : random_direction_indices) {
             const Maze::Point &direction = Maze::build_dirs.at(i);
             const Maze::Point next
                 = {cur.row + direction.row, cur.col + direction.col};
-            if (Butil::can_build_new_square(maze, next))
-            {
+            if (Butil::can_build_new_square(maze, next)) {
                 Butil::carve_path_markings_animated(maze, cur, next, animation);
                 branches_remain = true;
                 cur = next;
                 break;
             }
         }
-        if (!branches_remain && cur != start)
-        {
+        if (!branches_remain && cur != start) {
             const Maze::Backtrack_marker dir{static_cast<Maze::Square_bits>(
                 (maze[cur.row][cur.col] & Maze::markers_mask).load()
                 >> Maze::marker_shift)};

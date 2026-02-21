@@ -19,14 +19,12 @@ namespace {
 using Build_demo = std::function<void(Maze::Maze &, Speed::Speed)>;
 using Solve_demo = std::function<void(Maze::Maze &, Speed::Speed)>;
 
-struct Flag_arg
-{
+struct Flag_arg {
     std::string_view flag;
     std::string_view arg;
 };
 
-struct Demo_runner
-{
+struct Demo_runner {
     Maze::Maze_args args{};
 
     std::vector<Speed::Speed> builder_speed{
@@ -94,37 +92,26 @@ void set_cols(Demo_runner &runner, const Flag_arg &pairs);
 } // namespace
 
 int
-main(int argc, char **argv)
-{
+main(int argc, char **argv) {
     Demo_runner demo;
     const auto args = std::span(argv, static_cast<uint64_t>(argc));
     bool process_current = false;
     Flag_arg flags = {};
-    for (uint64_t i = 1; i < args.size(); i++)
-    {
+    for (uint64_t i = 1; i < args.size(); i++) {
         const auto *arg = args[i];
-        if (process_current)
-        {
+        if (process_current) {
             flags.arg = arg;
-            if (flags.flag == "-r")
-            {
+            if (flags.flag == "-r") {
                 set_rows(demo, flags);
-            }
-            else if (flags.flag == "-c")
-            {
+            } else if (flags.flag == "-c") {
                 set_cols(demo, flags);
             }
             process_current = false;
-        }
-        else
-        {
+        } else {
             const std::string arg_str(arg);
-            if (arg_str == "-r" || arg_str == "-c")
-            {
+            if (arg_str == "-r" || arg_str == "-c") {
                 flags.flag = arg;
-            }
-            else
-            {
+            } else {
                 std::cerr << "The only arguments are optional row [-r] or "
                              "column [-c] dimensions."
                           << "\n";
@@ -146,15 +133,13 @@ main(int argc, char **argv)
         0, demo.modifications.size() - 1);
     std::uniform_int_distribution<uint64_t> solver_chooser(
         0, demo.solvers.size() - 1);
-    for (;;)
-    {
+    for (;;) {
         demo.args.style = demo.wall_style[wall_chooser(gen)];
         Maze::Maze maze(demo.args);
         demo.builders[builder_chooser(gen)](
             maze, demo.builder_speed[speed_chooser(gen)]);
 
-        if (optional_modification(gen) == 0)
-        {
+        if (optional_modification(gen) == 0) {
             demo.modifications[modification_chooser(gen)](
                 maze, demo.builder_speed[speed_chooser(gen)]);
         }
@@ -174,22 +159,18 @@ main(int argc, char **argv)
 namespace {
 
 void
-set_rows(Demo_runner &runner, const Flag_arg &pairs)
-{
+set_rows(Demo_runner &runner, const Flag_arg &pairs) {
     std::from_chars_result r = std::from_chars(
         pairs.arg.data(), pairs.arg.data() + pairs.arg.length(),
         runner.args.odd_rows);
-    if (r.ec != std::errc())
-    {
+    if (r.ec != std::errc()) {
         std::cerr << "Integer conversion error.\n";
         exit(1);
     }
-    if (runner.args.odd_rows % 2 == 0)
-    {
+    if (runner.args.odd_rows % 2 == 0) {
         runner.args.odd_rows++;
     }
-    if (runner.args.odd_rows < 7)
-    {
+    if (runner.args.odd_rows < 7) {
         std::cerr << "Minimum row may be 7."
                   << "\n";
         std::exit(1);
@@ -197,22 +178,18 @@ set_rows(Demo_runner &runner, const Flag_arg &pairs)
 }
 
 void
-set_cols(Demo_runner &runner, const Flag_arg &pairs)
-{
+set_cols(Demo_runner &runner, const Flag_arg &pairs) {
     std::from_chars_result r = std::from_chars(
         pairs.arg.data(), pairs.arg.data() + pairs.arg.length(),
         runner.args.odd_cols);
-    if (r.ec != std::errc())
-    {
+    if (r.ec != std::errc()) {
         std::cerr << "Integer conversion error.\n";
         exit(1);
     }
-    if (runner.args.odd_cols % 2 == 0)
-    {
+    if (runner.args.odd_cols % 2 == 0) {
         runner.args.odd_cols++;
     }
-    if (runner.args.odd_cols < 7)
-    {
+    if (runner.args.odd_cols < 7) {
         std::cerr << "Minimum col may be 7."
                   << "\n";
         std::exit(1);
