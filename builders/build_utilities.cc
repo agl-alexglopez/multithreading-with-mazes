@@ -22,10 +22,10 @@ constexpr std::array<Speed::Speed_unit, 8> builder_speeds
 ///////////////////      Cout Printing Functions
 
 void
-print_square(const Maze::Maze &maze, const Maze::Point &p) {
-    const Maze::Square &square = maze[p.row][p.col];
+print_square(Maze::Maze const &maze, Maze::Point const &p) {
+    Maze::Square const &square = maze[p.row][p.col];
     if (square & Maze::markers_mask) {
-        const Maze::Backtrack_marker mark{static_cast<Maze::Square_bits>(
+        Maze::Backtrack_marker const mark{static_cast<Maze::Square_bits>(
             (square & Maze::markers_mask).load() >> Maze::marker_shift)};
         std::cout << Maze::backtracking_symbols.at(mark);
     } else if (!(square & Maze::path_bit)) {
@@ -39,7 +39,7 @@ print_square(const Maze::Maze &maze, const Maze::Point &p) {
 }
 
 void
-print_maze(const Maze::Maze &maze) {
+print_maze(Maze::Maze const &maze) {
     for (int row = 0; row < maze.row_size(); row++) {
         for (int col = 0; col < maze.col_size(); col++) {
             print_square(maze, {row, col});
@@ -49,7 +49,7 @@ print_maze(const Maze::Maze &maze) {
 }
 
 void
-clear_and_flush_grid(const Maze::Maze &maze) {
+clear_and_flush_grid(Maze::Maze const &maze) {
     Printer::clear_screen();
     for (int row = 0; row < maze.row_size(); row++) {
         for (int col = 0; col < maze.col_size(); col++) {
@@ -61,15 +61,15 @@ clear_and_flush_grid(const Maze::Maze &maze) {
 }
 
 void
-flush_cursor_maze_coordinate(const Maze::Maze &maze, const Maze::Point &p) {
+flush_cursor_maze_coordinate(Maze::Maze const &maze, Maze::Point const &p) {
     Printer::set_cursor_position(p);
     print_square(maze, p);
     std::cout << std::flush;
 }
 
 void
-print_maze_square(const Maze::Maze &maze, const Maze::Point &p) {
-    const Maze::Square &square = maze[p.row][p.col];
+print_maze_square(Maze::Maze const &maze, Maze::Point const &p) {
+    Maze::Square const &square = maze[p.row][p.col];
     if (!(square & Maze::path_bit)) {
         std::cout << maze.wall_style()[(square & Maze::wall_mask).load()];
     } else if (square & Maze::path_bit) {
@@ -81,26 +81,26 @@ print_maze_square(const Maze::Maze &maze, const Maze::Point &p) {
 }
 
 bool
-can_build_new_square(const Maze::Maze &maze, const Maze::Point &next) {
+can_build_new_square(Maze::Maze const &maze, Maze::Point const &next) {
     return next.row > 0 && next.row < maze.row_size() - 1 && next.col > 0
            && next.col < maze.col_size() - 1
            && !(maze[next.row][next.col] & Maze::builder_bit);
 }
 
 bool
-has_builder_bit(const Maze::Maze &maze, const Maze::Point &next) {
+has_builder_bit(Maze::Maze const &maze, Maze::Point const &next) {
     return maze[next.row][next.col].load() & Maze::builder_bit;
 }
 
 bool
-is_square_within_perimeter_walls(const Maze::Maze &maze,
-                                 const Maze::Point &next) {
+is_square_within_perimeter_walls(Maze::Maze const &maze,
+                                 Maze::Point const &next) {
     return next.row < maze.row_size() - 1 && next.row > 0
            && next.col < maze.col_size() - 1 && next.col > 0;
 }
 
 void
-build_wall_line(Maze::Maze &maze, const Maze::Point &p) {
+build_wall_line(Maze::Maze &maze, Maze::Point const &p) {
     Maze::Wall_line wall{0b0};
     if (p.row - 1 >= 0 && !(maze[p.row - 1][p.col] & Maze::path_bit)) {
         wall |= Maze::north_wall;
@@ -126,7 +126,7 @@ build_wall_line(Maze::Maze &maze, const Maze::Point &p) {
 }
 
 void
-build_wall_line_animated(Maze::Maze &maze, const Maze::Point &p,
+build_wall_line_animated(Maze::Maze &maze, Maze::Point const &p,
                          Speed::Speed_unit speed) {
     Maze::Wall_line wall{0b0};
     if (p.row - 1 >= 0 && !(maze[p.row - 1][p.col] & Maze::path_bit)) {
@@ -163,7 +163,7 @@ build_wall_line_animated(Maze::Maze &maze, const Maze::Point &p,
 }
 
 void
-build_path(Maze::Maze &maze, const Maze::Point &p) {
+build_path(Maze::Maze &maze, Maze::Point const &p) {
     if (p.row - 1 >= 0) {
         maze[p.row - 1][p.col] &= ~Maze::south_wall;
     }
@@ -180,7 +180,7 @@ build_path(Maze::Maze &maze, const Maze::Point &p) {
 }
 
 void
-build_path_animated(Maze::Maze &maze, const Maze::Point &p,
+build_path_animated(Maze::Maze &maze, Maze::Point const &p,
                     Speed::Speed_unit speed) {
     maze[p.row][p.col] |= Maze::path_bit;
     flush_cursor_maze_coordinate(maze, p);
@@ -224,8 +224,8 @@ clear_for_wall_adders(Maze::Maze &maze) {
 }
 
 void
-mark_origin(Maze::Maze &maze, const Maze::Point &walk,
-            const Maze::Point &next) {
+mark_origin(Maze::Maze &maze, Maze::Point const &walk,
+            Maze::Point const &next) {
     if (next.row > walk.row) {
         maze[next.row][next.col] |= Maze::from_north;
     } else if (next.row < walk.row) {
@@ -238,8 +238,8 @@ mark_origin(Maze::Maze &maze, const Maze::Point &walk,
 }
 
 void
-mark_origin_animated(Maze::Maze &maze, const Maze::Point &walk,
-                     const Maze::Point &next, Speed::Speed_unit speed) {
+mark_origin_animated(Maze::Maze &maze, Maze::Point const &walk,
+                     Maze::Point const &next, Speed::Speed_unit speed) {
     Maze::Point wall = walk;
     if (next.row > walk.row) {
         wall.row++;
@@ -267,7 +267,7 @@ mark_origin_animated(Maze::Maze &maze, const Maze::Point &walk,
 /* * * * * * * * * Path Carvers * * * * * * * */
 
 void
-build_wall(Maze::Maze &maze, const Maze::Point &p) {
+build_wall(Maze::Maze &maze, Maze::Point const &p) {
     Maze::Wall_line wall{0b0};
     if (p.row - 1 >= 0) {
         wall |= Maze::north_wall;
@@ -286,7 +286,7 @@ build_wall(Maze::Maze &maze, const Maze::Point &p) {
 }
 
 void
-build_wall_carefully(Maze::Maze &maze, const Maze::Point &p) {
+build_wall_carefully(Maze::Maze &maze, Maze::Point const &p) {
     Maze::Wall_line wall{0b0};
     if (p.row - 1 >= 0 && !(maze[p.row - 1][p.col] & Maze::path_bit)) {
         wall |= Maze::north_wall;
@@ -330,7 +330,7 @@ fill_maze_with_walls_animated(Maze::Maze &maze) {
 }
 
 void
-carve_path_walls(Maze::Maze &maze, const Maze::Point &p) {
+carve_path_walls(Maze::Maze &maze, Maze::Point const &p) {
     maze[p.row][p.col] |= Maze::path_bit;
     if (p.row - 1 >= 0) {
         maze[p.row - 1][p.col] &= ~Maze::south_wall;
@@ -350,7 +350,7 @@ carve_path_walls(Maze::Maze &maze, const Maze::Point &p) {
 // The animated version tries to save cursor movements if they are not
 // necessary.
 void
-carve_path_walls_animated(Maze::Maze &maze, const Maze::Point &p,
+carve_path_walls_animated(Maze::Maze &maze, Maze::Point const &p,
                           Speed::Speed_unit speed) {
     maze[p.row][p.col] |= Maze::path_bit;
     flush_cursor_maze_coordinate(maze, p);
@@ -381,8 +381,8 @@ carve_path_walls_animated(Maze::Maze &maze, const Maze::Point &p,
 }
 
 void
-carve_path_markings(Maze::Maze &maze, const Maze::Point &cur,
-                    const Maze::Point &next) {
+carve_path_markings(Maze::Maze &maze, Maze::Point const &cur,
+                    Maze::Point const &next) {
     Maze::Point wall = cur;
     if (next.row < cur.row) {
         wall.row--;
@@ -405,8 +405,8 @@ carve_path_markings(Maze::Maze &maze, const Maze::Point &cur,
 }
 
 void
-carve_path_markings_animated(Maze::Maze &maze, const Maze::Point &cur,
-                             const Maze::Point &next, Speed::Speed_unit speed) {
+carve_path_markings_animated(Maze::Maze &maze, Maze::Point const &cur,
+                             Maze::Point const &next, Speed::Speed_unit speed) {
     Maze::Point wall = cur;
     if (next.row < cur.row) {
         wall.row--;
@@ -433,8 +433,8 @@ carve_path_markings_animated(Maze::Maze &maze, const Maze::Point &cur,
 }
 
 void
-join_squares(Maze::Maze &maze, const Maze::Point &cur,
-             const Maze::Point &next) {
+join_squares(Maze::Maze &maze, Maze::Point const &cur,
+             Maze::Point const &next) {
     Maze::Point wall = cur;
     build_path(maze, cur);
     maze[cur.row][cur.col] |= Maze::builder_bit;
@@ -456,8 +456,8 @@ join_squares(Maze::Maze &maze, const Maze::Point &cur,
 }
 
 void
-join_squares_animated(Maze::Maze &maze, const Maze::Point &cur,
-                      const Maze::Point &next, Speed::Speed_unit speed) {
+join_squares_animated(Maze::Maze &maze, Maze::Point const &cur,
+                      Maze::Point const &next, Speed::Speed_unit speed) {
     Maze::Point wall = cur;
     if (next.row < cur.row) {
         wall.row--;
@@ -476,15 +476,15 @@ join_squares_animated(Maze::Maze &maze, const Maze::Point &cur,
 }
 
 void
-add_positive_slope(Maze::Maze &maze, const Maze::Point &p) {
-    const auto row_size = static_cast<float>(maze.row_size()) - 2.0F;
-    const auto col_size = static_cast<float>(maze.col_size()) - 2.0F;
-    const auto cur_row = static_cast<float>(p.row);
+add_positive_slope(Maze::Maze &maze, Maze::Point const &p) {
+    auto const row_size = static_cast<float>(maze.row_size()) - 2.0F;
+    auto const col_size = static_cast<float>(maze.col_size()) - 2.0F;
+    auto const cur_row = static_cast<float>(p.row);
     // y = mx + b. We will get the negative slope. This line goes top left to
     // bottom right.
-    const float slope = (2.0F - row_size) / (2.0F - col_size);
-    const float b = 2.0F - (2.0F * slope);
-    const int on_line = static_cast<int>((cur_row - b) / slope);
+    float const slope = (2.0F - row_size) / (2.0F - col_size);
+    float const b = 2.0F - (2.0F * slope);
+    int const on_line = static_cast<int>((cur_row - b) / slope);
     if (p.col == on_line && p.col < maze.col_size() - 2 && p.col > 1) {
         // An X is hard to notice and might miss breaking wall lines so make it
         // wider.
@@ -505,16 +505,16 @@ add_positive_slope(Maze::Maze &maze, const Maze::Point &p) {
 }
 
 void
-add_positive_slope_animated(Maze::Maze &maze, const Maze::Point &p,
+add_positive_slope_animated(Maze::Maze &maze, Maze::Point const &p,
                             Speed::Speed_unit speed) {
-    const auto row_size = static_cast<float>(maze.row_size()) - 2.0F;
-    const auto col_size = static_cast<float>(maze.col_size()) - 2.0F;
-    const auto cur_row = static_cast<float>(p.row);
+    auto const row_size = static_cast<float>(maze.row_size()) - 2.0F;
+    auto const col_size = static_cast<float>(maze.col_size()) - 2.0F;
+    auto const cur_row = static_cast<float>(p.row);
     // y = mx + b. We will get the negative slope. This line goes top left to
     // bottom right.
-    const float slope = (2.0F - row_size) / (2.0F - col_size);
-    const float b = 2.0F - (2.0F * slope);
-    const int on_line = static_cast<int>((cur_row - b) / slope);
+    float const slope = (2.0F - row_size) / (2.0F - col_size);
+    float const b = 2.0F - (2.0F * slope);
+    int const on_line = static_cast<int>((cur_row - b) / slope);
     if (p.col == on_line && p.col < maze.col_size() - 2 && p.col > 1) {
         // An X is hard to notice so make it wider.
         build_path_animated(maze, p, speed);
@@ -534,13 +534,13 @@ add_positive_slope_animated(Maze::Maze &maze, const Maze::Point &p,
 }
 
 void
-add_negative_slope(Maze::Maze &maze, const Maze::Point &p) {
-    const auto row_size = static_cast<float>(maze.row_size()) - 2.0F;
-    const auto col_size = static_cast<float>(maze.col_size()) - 2.0F;
-    const auto cur_row = static_cast<float>(p.row);
-    const float slope = (2.0F - row_size) / (col_size - 2.0F);
-    const float b = row_size - (2.0F * slope);
-    const int on_line = static_cast<int>((cur_row - b) / slope);
+add_negative_slope(Maze::Maze &maze, Maze::Point const &p) {
+    auto const row_size = static_cast<float>(maze.row_size()) - 2.0F;
+    auto const col_size = static_cast<float>(maze.col_size()) - 2.0F;
+    auto const cur_row = static_cast<float>(p.row);
+    float const slope = (2.0F - row_size) / (col_size - 2.0F);
+    float const b = row_size - (2.0F * slope);
+    int const on_line = static_cast<int>((cur_row - b) / slope);
     if (p.col == on_line && p.col > 1 && p.col < maze.col_size() - 2
         && p.row < maze.row_size() - 2) {
         build_path(maze, p);
@@ -560,14 +560,14 @@ add_negative_slope(Maze::Maze &maze, const Maze::Point &p) {
 }
 
 void
-add_negative_slope_animated(Maze::Maze &maze, const Maze::Point &p,
+add_negative_slope_animated(Maze::Maze &maze, Maze::Point const &p,
                             Speed::Speed_unit speed) {
-    const auto row_size = static_cast<float>(maze.row_size()) - 2.0F;
-    const auto col_size = static_cast<float>(maze.col_size()) - 2.0F;
-    const auto cur_row = static_cast<float>(p.row);
-    const float slope = (2.0F - row_size) / (col_size - 2.0F);
-    const float b = row_size - (2.0F * slope);
-    const int on_line = static_cast<int>((cur_row - b) / slope);
+    auto const row_size = static_cast<float>(maze.row_size()) - 2.0F;
+    auto const col_size = static_cast<float>(maze.col_size()) - 2.0F;
+    auto const cur_row = static_cast<float>(p.row);
+    float const slope = (2.0F - row_size) / (col_size - 2.0F);
+    float const b = row_size - (2.0F * slope);
+    int const on_line = static_cast<int>((cur_row - b) / slope);
     if (p.col == on_line && p.col > 1 && p.col < maze.col_size() - 2
         && p.row < maze.row_size() - 2) {
         build_path_animated(maze, p, speed);
@@ -602,8 +602,8 @@ build_wall_outline(Maze::Maze &maze) {
 }
 
 Maze::Point
-choose_arbitrary_point(const Maze::Maze &maze, Parity_point parity) {
-    const int init = parity == Parity_point::even ? 2 : 1;
+choose_arbitrary_point(Maze::Maze const &maze, Parity_point parity) {
+    int const init = parity == Parity_point::even ? 2 : 1;
     for (int row = init; row < maze.row_size() - 1; row += 2) {
         for (int col = init; col < maze.col_size() - 1; col += 2) {
             if (!(maze[row][col] & Maze::builder_bit)) {

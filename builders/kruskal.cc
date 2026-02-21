@@ -62,20 +62,20 @@ namespace Kruskal {
 void
 generate_maze(Maze::Maze &maze) {
     Butil::fill_maze_with_walls(maze);
-    const std::vector<Maze::Point> walls = load_shuffled_walls(maze);
-    const std::unordered_map<Maze::Point, int> set_ids = tag_cells(maze);
+    std::vector<Maze::Point> const walls = load_shuffled_walls(maze);
+    std::unordered_map<Maze::Point, int> const set_ids = tag_cells(maze);
     Disjoint_set sets(set_ids.size());
-    for (const Maze::Point &p : walls) {
+    for (Maze::Point const &p : walls) {
         if (p.row % 2 == 0) {
-            const Maze::Point above_cell = {p.row - 1, p.col};
-            const Maze::Point below_cell = {p.row + 1, p.col};
+            Maze::Point const above_cell = {p.row - 1, p.col};
+            Maze::Point const below_cell = {p.row + 1, p.col};
             if (sets.made_union(set_ids.at(above_cell),
                                 set_ids.at(below_cell))) {
                 Butil::join_squares(maze, above_cell, below_cell);
             }
         } else {
-            const Maze::Point left_cell = {p.row, p.col - 1};
-            const Maze::Point right_cell = {p.row, p.col + 1};
+            Maze::Point const left_cell = {p.row, p.col - 1};
+            Maze::Point const right_cell = {p.row, p.col + 1};
             if (sets.made_union(set_ids.at(left_cell),
                                 set_ids.at(right_cell))) {
                 Butil::join_squares(maze, left_cell, right_cell);
@@ -87,26 +87,26 @@ generate_maze(Maze::Maze &maze) {
 
 void
 animate_maze(Maze::Maze &maze, Speed::Speed speed) {
-    const Speed::Speed_unit animation
+    Speed::Speed_unit const animation
         = Butil::builder_speeds.at(static_cast<int>(speed));
     Butil::fill_maze_with_walls_animated(maze);
     Butil::clear_and_flush_grid(maze);
-    const std::vector<Maze::Point> walls = load_shuffled_walls(maze);
-    const std::unordered_map<Maze::Point, int> set_ids = tag_cells(maze);
+    std::vector<Maze::Point> const walls = load_shuffled_walls(maze);
+    std::unordered_map<Maze::Point, int> const set_ids = tag_cells(maze);
     Disjoint_set sets(set_ids.size());
 
-    for (const Maze::Point &p : walls) {
+    for (Maze::Point const &p : walls) {
         if (p.row % 2 == 0) {
-            const Maze::Point above_cell = {p.row - 1, p.col};
-            const Maze::Point below_cell = {p.row + 1, p.col};
+            Maze::Point const above_cell = {p.row - 1, p.col};
+            Maze::Point const below_cell = {p.row + 1, p.col};
             if (sets.made_union(set_ids.at(above_cell),
                                 set_ids.at(below_cell))) {
                 Butil::join_squares_animated(maze, above_cell, below_cell,
                                              animation);
             }
         } else {
-            const Maze::Point left_cell = {p.row, p.col - 1};
-            const Maze::Point right_cell = {p.row, p.col + 1};
+            Maze::Point const left_cell = {p.row, p.col - 1};
+            Maze::Point const right_cell = {p.row, p.col + 1};
             if (sets.made_union(set_ids.at(left_cell),
                                 set_ids.at(right_cell))) {
                 Butil::join_squares_animated(maze, left_cell, right_cell,

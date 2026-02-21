@@ -82,13 +82,13 @@ generate_maze(Maze::Maze &maze) {
     std::iota(begin(random_direction_indices), end(random_direction_indices),
               0);
     while (!dfs.empty()) {
-        const Maze::Point cur = dfs.top();
+        Maze::Point const cur = dfs.top();
         std::shuffle(begin(random_direction_indices),
                      end(random_direction_indices), generator);
         bool branches_remain = false;
-        for (const int &i : random_direction_indices) {
-            const Maze::Point &direction = Maze::build_dirs.at(i);
-            const Maze::Point next
+        for (int const &i : random_direction_indices) {
+            Maze::Point const &direction = Maze::build_dirs.at(i);
+            Maze::Point const next
                 = {cur.row + direction.row, cur.col + direction.col};
             if (Butil::can_build_new_square(maze, next)) {
                 complete_run(maze, dfs, {cur, direction});
@@ -105,7 +105,7 @@ generate_maze(Maze::Maze &maze) {
 
 void
 animate_maze(Maze::Maze &maze, Speed::Speed speed) {
-    const Speed::Speed_unit animation
+    Speed::Speed_unit const animation
         = Butil::builder_speeds.at(static_cast<int>(speed));
     Butil::fill_maze_with_walls_animated(maze);
     Butil::clear_and_flush_grid(maze);
@@ -118,13 +118,13 @@ animate_maze(Maze::Maze &maze, Speed::Speed speed) {
     std::iota(begin(random_direction_indices), end(random_direction_indices),
               0);
     while (!dfs.empty()) {
-        const Maze::Point cur = dfs.top();
+        Maze::Point const cur = dfs.top();
         shuffle(begin(random_direction_indices), end(random_direction_indices),
                 generator);
         bool branches_remain = false;
-        for (const int &i : random_direction_indices) {
-            const Maze::Point &direction = Maze::build_dirs.at(i);
-            const Maze::Point next
+        for (int const &i : random_direction_indices) {
+            Maze::Point const &direction = Maze::build_dirs.at(i);
+            Maze::Point const next
                 = {cur.row + direction.row, cur.col + direction.col};
             if (Butil::can_build_new_square(maze, next)) {
                 animate_run(maze, dfs, {cur, direction}, animation);

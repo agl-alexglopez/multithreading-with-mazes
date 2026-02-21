@@ -8,7 +8,7 @@ module labyrinth:disjoint_set;
 class Disjoint_set {
 
   public:
-    explicit Disjoint_set(const std::vector<uint64_t> &maze_square_ids)
+    explicit Disjoint_set(std::vector<uint64_t> const &maze_square_ids)
         : parent_set_(maze_square_ids.size()),
           set_rank_(maze_square_ids.size(), 0) {
         for (uint64_t elem = 0; elem < maze_square_ids.size(); elem++) {
@@ -38,8 +38,8 @@ class Disjoint_set {
     bool
     made_union(uint64_t a, uint64_t b) {
 
-        const uint64_t x = find(a);
-        const uint64_t y = find(b);
+        uint64_t const x = find(a);
+        uint64_t const y = find(b);
         if (x == y) {
             return false;
         }

@@ -65,7 +65,7 @@ animate_rgb(Rgb rgb, Maze::Point p) {
 void
 print_wall(Maze::Maze &maze, Maze::Point p) {
     Printer::set_cursor_position(p);
-    const Maze::Square &square = maze[p.row][p.col];
+    Maze::Square const &square = maze[p.row][p.col];
     std::cout << maze.wall_style()[(square & Maze::wall_mask).load()];
 }
 

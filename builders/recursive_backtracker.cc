@@ -33,7 +33,7 @@ generate_maze(Maze::Maze &maze) {
     std::uniform_int_distribution<int> row_random(1, maze.row_size() - 2);
     std::uniform_int_distribution<int> col_random(1, maze.col_size() - 2);
 
-    const Maze::Point start = {2 * (row_random(generator) / 2) + 1,
+    Maze::Point const start = {2 * (row_random(generator) / 2) + 1,
                                2 * (col_random(generator) / 2) + 1};
     std::vector<int> random_direction_indices(Maze::build_dirs.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices),
@@ -46,9 +46,9 @@ generate_maze(Maze::Maze &maze) {
         shuffle(begin(random_direction_indices), end(random_direction_indices),
                 generator);
         branches_remain = false;
-        for (const int &i : random_direction_indices) {
-            const Maze::Point &direction = Maze::build_dirs.at(i);
-            const Maze::Point next
+        for (int const &i : random_direction_indices) {
+            Maze::Point const &direction = Maze::build_dirs.at(i);
+            Maze::Point const next
                 = {cur.row + direction.row, cur.col + direction.col};
             if (Butil::can_build_new_square(maze, next)) {
                 branches_remain = true;
@@ -58,11 +58,11 @@ generate_maze(Maze::Maze &maze) {
             }
         }
         if (!branches_remain && cur != start) {
-            const Maze::Backtrack_marker dir{static_cast<Maze::Square_bits>(
+            Maze::Backtrack_marker const dir{static_cast<Maze::Square_bits>(
                 (maze[cur.row][cur.col] & Maze::markers_mask).load()
                 >> Maze::marker_shift)};
-            const Maze::Point &backtracking = Maze::backtracking_marks.at(dir);
-            const Maze::Point next
+            Maze::Point const &backtracking = Maze::backtracking_marks.at(dir);
+            Maze::Point const next
                 = {cur.row + backtracking.row, cur.col + backtracking.col};
             // We are using fields the threads will use later. Clear bits as we
             // backtrack.
@@ -76,14 +76,14 @@ generate_maze(Maze::Maze &maze) {
 
 void
 animate_maze(Maze::Maze &maze, Speed::Speed speed) {
-    const Speed::Speed_unit animation
+    Speed::Speed_unit const animation
         = Butil::builder_speeds.at(static_cast<int>(speed));
     Butil::fill_maze_with_walls_animated(maze);
     Butil::clear_and_flush_grid(maze);
     std::mt19937 generator(std::random_device{}());
     std::uniform_int_distribution<int> row_random(1, maze.row_size() - 2);
     std::uniform_int_distribution<int> col_random(1, maze.col_size() - 2);
-    const Maze::Point start = {2 * (row_random(generator) / 2) + 1,
+    Maze::Point const start = {2 * (row_random(generator) / 2) + 1,
                                2 * (col_random(generator) / 2) + 1};
     std::vector<int> random_direction_indices(Maze::build_dirs.size());
     std::iota(begin(random_direction_indices), end(random_direction_indices),
@@ -94,9 +94,9 @@ animate_maze(Maze::Maze &maze, Speed::Speed speed) {
         shuffle(begin(random_direction_indices), end(random_direction_indices),
                 generator);
         branches_remain = false;
-        for (const int &i : random_direction_indices) {
-            const Maze::Point &direction = Maze::build_dirs.at(i);
-            const Maze::Point next
+        for (int const &i : random_direction_indices) {
+            Maze::Point const &direction = Maze::build_dirs.at(i);
+            Maze::Point const next
                 = {cur.row + direction.row, cur.col + direction.col};
             if (Butil::can_build_new_square(maze, next)) {
                 Butil::carve_path_markings_animated(maze, cur, next, animation);
@@ -106,15 +106,15 @@ animate_maze(Maze::Maze &maze, Speed::Speed speed) {
             }
         }
         if (!branches_remain && cur != start) {
-            const Maze::Backtrack_marker dir{static_cast<Maze::Square_bits>(
+            Maze::Backtrack_marker const dir{static_cast<Maze::Square_bits>(
                 (maze[cur.row][cur.col] & Maze::markers_mask).load()
                 >> Maze::marker_shift)};
-            const Maze::Point &backtracking = Maze::backtracking_marks.at(dir);
-            const Maze::Point &backtracking_half
+            Maze::Point const &backtracking = Maze::backtracking_marks.at(dir);
+            Maze::Point const &backtracking_half
                 = Maze::backtracking_half_marks.at(dir);
-            const Maze::Point half = {cur.row + backtracking_half.row,
+            Maze::Point const half = {cur.row + backtracking_half.row,
                                       cur.col + backtracking_half.col};
-            const Maze::Point next
+            Maze::Point const next
                 = {cur.row + backtracking.row, cur.col + backtracking.col};
             // We are using fields the threads will use later. Clear bits as we
             // backtrack.

@@ -36,15 +36,15 @@ struct Random_walk {
 };
 
 bool
-is_valid_walk_step(Maze::Maze &maze, const Maze::Point &next,
-                   const Maze::Point &prev) {
+is_valid_walk_step(Maze::Maze &maze, Maze::Point const &next,
+                   Maze::Point const &prev) {
     return next.row >= 0 && next.row < maze.row_size() && next.col >= 0
            && next.col < maze.col_size() && next != prev;
 }
 
 void
-join_walk_walls(Maze::Maze &maze, const Maze::Point &cur,
-                const Maze::Point &next) {
+join_walk_walls(Maze::Maze &maze, Maze::Point const &cur,
+                Maze::Point const &next) {
     Maze::Point wall = cur;
     if (next.row < cur.row) {
         wall.row--;
@@ -67,8 +67,8 @@ join_walk_walls(Maze::Maze &maze, const Maze::Point &cur,
 }
 
 void
-animate_walk_walls(Maze::Maze &maze, const Maze::Point &cur,
-                   const Maze::Point &next, Speed::Speed_unit speed) {
+animate_walk_walls(Maze::Maze &maze, Maze::Point const &cur,
+                   Maze::Point const &next, Speed::Speed_unit speed) {
     Maze::Point wall = cur;
     if (next.row < cur.row) {
         wall.row--;
@@ -91,14 +91,14 @@ animate_walk_walls(Maze::Maze &maze, const Maze::Point &cur,
 }
 
 void
-connect_walk_to_maze(Maze::Maze &maze, const Maze::Point &walk) {
+connect_walk_to_maze(Maze::Maze &maze, Maze::Point const &walk) {
     Maze::Point cur = walk;
     while (maze[cur.row][cur.col] & Maze::markers_mask) {
-        const Maze::Backtrack_marker mark{static_cast<Maze::Square_bits>(
+        Maze::Backtrack_marker const mark{static_cast<Maze::Square_bits>(
             (maze[cur.row][cur.col] & Maze::markers_mask).load()
             >> Maze::marker_shift)};
-        const Maze::Point &direction = Maze::backtracking_marks.at(mark);
-        const Maze::Point next
+        Maze::Point const &direction = Maze::backtracking_marks.at(mark);
+        Maze::Point const next
             = {cur.row + direction.row, cur.col + direction.col};
         join_walk_walls(maze, cur, next);
         // Clean up after ourselves and leave no marks behind for the maze
@@ -112,18 +112,18 @@ connect_walk_to_maze(Maze::Maze &maze, const Maze::Point &walk) {
 }
 
 void
-animate_walk_to_maze(Maze::Maze &maze, const Maze::Point &walk,
+animate_walk_to_maze(Maze::Maze &maze, Maze::Point const &walk,
                      Speed::Speed_unit speed) {
     Maze::Point cur = walk;
     while (maze[cur.row][cur.col] & Maze::markers_mask) {
-        const Maze::Backtrack_marker mark{static_cast<Maze::Square_bits>(
+        Maze::Backtrack_marker const mark{static_cast<Maze::Square_bits>(
             (maze[cur.row][cur.col] & Maze::markers_mask).load()
             >> Maze::marker_shift)};
-        const Maze::Point &direction = Maze::backtracking_marks.at(mark);
-        const Maze::Point &half_step = Maze::backtracking_half_marks.at(mark);
-        const Maze::Point half
+        Maze::Point const &direction = Maze::backtracking_marks.at(mark);
+        Maze::Point const &half_step = Maze::backtracking_half_marks.at(mark);
+        Maze::Point const half
             = {cur.row + half_step.row, cur.col + half_step.col};
-        const Maze::Point next
+        Maze::Point const next
             = {cur.row + direction.row, cur.col + direction.col};
         animate_walk_walls(maze, cur, next, speed);
         // Clean up after ourselves and leave no marks behind for the maze
@@ -142,15 +142,15 @@ animate_walk_to_maze(Maze::Maze &maze, const Maze::Point &walk,
 }
 
 void
-erase_loop(Maze::Maze &maze, const Loop &loop) {
+erase_loop(Maze::Maze &maze, Loop const &loop) {
     Maze::Point cur = loop.walk;
     while (cur != loop.root) {
         maze[cur.row][cur.col] &= ~Maze::start_bit;
-        const Maze::Backtrack_marker mark{static_cast<Maze::Square_bits>(
+        Maze::Backtrack_marker const mark{static_cast<Maze::Square_bits>(
             (maze[cur.row][cur.col] & Maze::markers_mask).load()
             >> Maze::marker_shift)};
-        const Maze::Point &direction = Maze::backtracking_marks.at(mark);
-        const Maze::Point next
+        Maze::Point const &direction = Maze::backtracking_marks.at(mark);
+        Maze::Point const next
             = {cur.row + direction.row, cur.col + direction.col};
         maze[cur.row][cur.col] &= ~Maze::markers_mask;
         cur = next;
@@ -158,19 +158,19 @@ erase_loop(Maze::Maze &maze, const Loop &loop) {
 }
 
 void
-animate_erase_loop(Maze::Maze &maze, const Loop &loop,
+animate_erase_loop(Maze::Maze &maze, Loop const &loop,
                    Speed::Speed_unit speed) {
     Maze::Point cur = loop.walk;
     while (cur != loop.root) {
         maze[cur.row][cur.col] &= ~Maze::start_bit;
-        const Maze::Backtrack_marker mark{static_cast<Maze::Square_bits>(
+        Maze::Backtrack_marker const mark{static_cast<Maze::Square_bits>(
             (maze[cur.row][cur.col] & Maze::markers_mask).load()
             >> Maze::marker_shift)};
-        const Maze::Point &direction = Maze::backtracking_marks.at(mark);
-        const Maze::Point &half_step = Maze::backtracking_half_marks.at(mark);
-        const Maze::Point half
+        Maze::Point const &direction = Maze::backtracking_marks.at(mark);
+        Maze::Point const &half_step = Maze::backtracking_half_marks.at(mark);
+        Maze::Point const half
             = {cur.row + half_step.row, cur.col + half_step.col};
-        const Maze::Point next
+        Maze::Point const next
             = {cur.row + direction.row, cur.col + direction.col};
         maze[half.row][half.col] &= ~Maze::markers_mask;
         maze[cur.row][cur.col] &= ~Maze::markers_mask;
@@ -202,10 +202,10 @@ continue_random_walks(Maze::Maze &maze, Random_walk &cur) {
         erase_loop(maze, {cur.walk, cur.next});
         cur.walk = cur.next;
         cur.prev = {};
-        const Maze::Backtrack_marker mark{static_cast<Maze::Square_bits>(
+        Maze::Backtrack_marker const mark{static_cast<Maze::Square_bits>(
             (maze[cur.walk.row][cur.walk.col] & Maze::markers_mask).load()
             >> Maze::marker_shift)};
-        const Maze::Point &direction = Maze::backtracking_marks.at(mark);
+        Maze::Point const &direction = Maze::backtracking_marks.at(mark);
         cur.prev = {cur.walk.row + direction.row, cur.walk.col + direction.col};
         return true;
     }
@@ -236,10 +236,10 @@ animate_random_walks(Maze::Maze &maze, Random_walk &cur,
         animate_erase_loop(maze, {cur.walk, cur.next}, speed);
         cur.walk = cur.next;
         cur.prev = {};
-        const Maze::Backtrack_marker mark{static_cast<Maze::Square_bits>(
+        Maze::Backtrack_marker const mark{static_cast<Maze::Square_bits>(
             (maze[cur.walk.row][cur.walk.col] & Maze::markers_mask).load()
             >> Maze::marker_shift)};
-        const Maze::Point &direction = Maze::backtracking_marks.at(mark);
+        Maze::Point const &direction = Maze::backtracking_marks.at(mark);
         cur.prev = {cur.walk.row + direction.row, cur.walk.col + direction.col};
         return true;
     }
@@ -272,8 +272,8 @@ generate_maze(Maze::Maze &maze) {
         maze[cur.walk.row][cur.walk.col] |= Maze::start_bit;
         shuffle(begin(random_direction_indices), end(random_direction_indices),
                 generator);
-        for (const int &i : random_direction_indices) {
-            const Maze::Point &p = Maze::build_dirs.at(i);
+        for (int const &i : random_direction_indices) {
+            Maze::Point const &p = Maze::build_dirs.at(i);
             cur.next = {cur.walk.row + p.row, cur.walk.col + p.col};
             if (!is_valid_walk_step(maze, cur.next, cur.prev)) {
                 continue;
@@ -289,7 +289,7 @@ generate_maze(Maze::Maze &maze) {
 
 void
 animate_maze(Maze::Maze &maze, Speed::Speed speed) {
-    const Speed::Speed_unit animation
+    Speed::Speed_unit const animation
         = Butil::builder_speeds.at(static_cast<int>(speed));
     Butil::build_wall_outline(maze);
     Butil::clear_and_flush_grid(maze);
@@ -307,8 +307,8 @@ animate_maze(Maze::Maze &maze, Speed::Speed speed) {
         maze[cur.walk.row][cur.walk.col] |= Maze::start_bit;
         shuffle(begin(random_direction_indices), end(random_direction_indices),
                 generator);
-        for (const int &i : random_direction_indices) {
-            const Maze::Point &p = Maze::build_dirs.at(i);
+        for (int const &i : random_direction_indices) {
+            Maze::Point const &p = Maze::build_dirs.at(i);
             cur.next = {cur.walk.row + p.row, cur.walk.col + p.col};
             if (!is_valid_walk_step(maze, cur.next, cur.prev)) {
                 continue;

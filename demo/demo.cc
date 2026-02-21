@@ -86,19 +86,19 @@ struct Demo_runner {
     };
 };
 
-void set_rows(Demo_runner &runner, const Flag_arg &pairs);
-void set_cols(Demo_runner &runner, const Flag_arg &pairs);
+void set_rows(Demo_runner &runner, Flag_arg const &pairs);
+void set_cols(Demo_runner &runner, Flag_arg const &pairs);
 
 } // namespace
 
 int
 main(int argc, char **argv) {
     Demo_runner demo;
-    const auto args = std::span(argv, static_cast<uint64_t>(argc));
+    auto const args = std::span(argv, static_cast<uint64_t>(argc));
     bool process_current = false;
     Flag_arg flags = {};
     for (uint64_t i = 1; i < args.size(); i++) {
-        const auto *arg = args[i];
+        auto const *arg = args[i];
         if (process_current) {
             flags.arg = arg;
             if (flags.flag == "-r") {
@@ -108,7 +108,7 @@ main(int argc, char **argv) {
             }
             process_current = false;
         } else {
-            const std::string arg_str(arg);
+            std::string const arg_str(arg);
             if (arg_str == "-r" || arg_str == "-c") {
                 flags.flag = arg;
             } else {
@@ -159,7 +159,7 @@ main(int argc, char **argv) {
 namespace {
 
 void
-set_rows(Demo_runner &runner, const Flag_arg &pairs) {
+set_rows(Demo_runner &runner, Flag_arg const &pairs) {
     std::from_chars_result r = std::from_chars(
         pairs.arg.data(), pairs.arg.data() + pairs.arg.length(),
         runner.args.odd_rows);
@@ -178,7 +178,7 @@ set_rows(Demo_runner &runner, const Flag_arg &pairs) {
 }
 
 void
-set_cols(Demo_runner &runner, const Flag_arg &pairs) {
+set_cols(Demo_runner &runner, Flag_arg const &pairs) {
     std::from_chars_result r = std::from_chars(
         pairs.arg.data(), pairs.arg.data() + pairs.arg.length(),
         runner.args.odd_cols);

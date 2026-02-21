@@ -12,7 +12,7 @@ clear_screen() {
 }
 
 inline void
-set_cursor_position(const Maze::Point &p) {
+set_cursor_position(Maze::Point const &p) {
     std::cout << "\033[" + std::to_string(p.row + 1) + ";"
                      + std::to_string(p.col + 1) + "f";
 }

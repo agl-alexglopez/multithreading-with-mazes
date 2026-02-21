@@ -33,7 +33,7 @@ struct Sliding_set_window {
     // This is a flat 2xmaze.col_size() vector of setids that we will overwrite
     // with std::spans as we slide.
     std::vector<Set_id> sets;
-    explicit Sliding_set_window(const Maze::Maze &maze)
+    explicit Sliding_set_window(Maze::Maze const &maze)
         : width(maze.col_size()), sets(window_height * width, {0}) {
     }
 };
@@ -44,7 +44,7 @@ struct Id_merge_request {
 };
 
 void
-merge_sets(Sliding_set_window &sets, const Id_merge_request &merge,
+merge_sets(Sliding_set_window &sets, Id_merge_request const &merge,
            int col_in_row) {
     for (uint64_t set_elem = col_in_row + 2; set_elem < sets.width - 1;
          set_elem += 2) {
@@ -63,15 +63,15 @@ merge_sets(Sliding_set_window &sets, const Id_merge_request &merge,
 
 void
 complete_final_row(Maze::Maze &maze, Sliding_set_window &window) {
-    const int final_row = maze.row_size() - 2;
+    int const final_row = maze.row_size() - 2;
     for (int col = 1; col < maze.col_size() - 2; col += 2) {
-        const Maze::Point next = {final_row, col + 2};
-        const Set_id this_square_id
+        Maze::Point const next = {final_row, col + 2};
+        Set_id const this_square_id
             = window.sets[window.curr_row * window.width + col];
         if (this_square_id
             != window.sets[window.curr_row * window.width + col + 2]) {
             Butil::join_squares(maze, {final_row, col}, next);
-            const Set_id other_set_id
+            Set_id const other_set_id
                 = window.sets[window.curr_row * window.width + next.col];
             for (int set_elem = next.col; set_elem < maze.col_size() - 1;
                  set_elem += 2) {
@@ -88,16 +88,16 @@ complete_final_row(Maze::Maze &maze, Sliding_set_window &window) {
 void
 complete_final_row_animated(Maze::Maze &maze, Sliding_set_window &window,
                             Speed::Speed_unit animation) {
-    const int final_row = maze.row_size() - 2;
+    int const final_row = maze.row_size() - 2;
     for (int col = 1; col < maze.col_size() - 2; col += 2) {
-        const Maze::Point next = {final_row, col + 2};
-        const Set_id this_square_id
+        Maze::Point const next = {final_row, col + 2};
+        Set_id const this_square_id
             = window.sets[window.curr_row * window.width + col];
         if (this_square_id
             != window.sets[window.curr_row * window.width + col + 2]) {
             Butil::join_squares_animated(maze, {final_row, col}, next,
                                          animation);
-            const Set_id other_set_id
+            Set_id const other_set_id
                 = window.sets[window.curr_row * window.width + next.col];
             for (int set_elem = next.col; set_elem < maze.col_size() - 1;
                  set_elem += 2) {
@@ -134,15 +134,15 @@ generate_maze(Maze::Maze &maze) {
     Set_id unique_ids = maze.col_size();
     std::unordered_map<Set_id, std::vector<Maze::Point>> sets_in_this_row{};
     for (int row = 1; row < maze.row_size() - 2; row += 2) {
-        const uint64_t next_row = (window.curr_row + 1) % window_height;
+        uint64_t const next_row = (window.curr_row + 1) % window_height;
         std::span<Set_id> fill_sets(&window.sets[next_row * window.width],
                                     window.width);
         std::iota(std::begin(fill_sets), std::end(fill_sets), unique_ids);
         unique_ids += maze.col_size();
 
         for (int col = 1; col < maze.col_size() - 1; col += 2) {
-            const Maze::Point next = {row, col + 2};
-            const Set_id this_square_id
+            Maze::Point const next = {row, col + 2};
+            Set_id const this_square_id
                 = window.sets[window.curr_row * window.width + col];
             if (Butil::is_square_within_perimeter_walls(maze, next)
                 && this_square_id
@@ -158,19 +158,19 @@ generate_maze(Maze::Maze &maze) {
         }
 
         for (int col = 1; col < maze.col_size() - 1; col += 2) {
-            const Set_id this_square_id
+            Set_id const this_square_id
                 = window.sets[window.curr_row * window.width + col];
             sets_in_this_row[this_square_id].push_back({row, col});
         }
 
-        for (const auto &s : sets_in_this_row) {
+        for (auto const &s : sets_in_this_row) {
             std::uniform_int_distribution<uint64_t> num_drops(1,
                                                               s.second.size());
-            const uint64_t drops = num_drops(gen);
+            uint64_t const drops = num_drops(gen);
             for (uint64_t drop = 0; drop < drops; drop++) {
                 std::uniform_int_distribution<uint64_t> rand_drop(
                     0, s.second.size() - 1);
-                const Maze::Point chosen = s.second[rand_drop(gen)];
+                Maze::Point const chosen = s.second[rand_drop(gen)];
                 // We already linked this up and rondomness dropped us here
                 // again. More important for animated version.
                 if (!(maze[chosen.row + 2][chosen.col] & Maze::builder_bit)) {
@@ -191,7 +191,7 @@ void
 animate_maze(Maze::Maze &maze, Speed::Speed speed) {
     Butil::fill_maze_with_walls_animated(maze);
     Butil::clear_and_flush_grid(maze);
-    const Speed::Speed_unit animation
+    Speed::Speed_unit const animation
         = Butil::builder_speeds.at(static_cast<int>(speed));
     std::mt19937 gen(std::random_device{}());
     std::uniform_int_distribution<int> coin(0, horizontal_bias);
@@ -202,15 +202,15 @@ animate_maze(Maze::Maze &maze, Speed::Speed speed) {
     Set_id unique_ids = maze.col_size();
     std::unordered_map<Set_id, std::vector<Maze::Point>> sets_in_this_row{};
     for (int row = 1; row < maze.row_size() - 2; row += 2) {
-        const uint64_t next_row = (window.curr_row + 1) % window_height;
+        uint64_t const next_row = (window.curr_row + 1) % window_height;
         std::span<Set_id> fill_sets(&window.sets[next_row * window.width],
                                     window.width);
         std::iota(std::begin(fill_sets), std::end(fill_sets), unique_ids);
         unique_ids += maze.col_size();
 
         for (int col = 1; col < maze.col_size() - 1; col += 2) {
-            const Maze::Point next = {row, col + 2};
-            const Set_id this_square_id
+            Maze::Point const next = {row, col + 2};
+            Set_id const this_square_id
                 = window.sets[window.curr_row * window.width + col];
             if (Butil::is_square_within_perimeter_walls(maze, next)
                 && this_square_id
@@ -226,19 +226,19 @@ animate_maze(Maze::Maze &maze, Speed::Speed speed) {
         }
 
         for (int col = 1; col < maze.col_size() - 1; col += 2) {
-            const Set_id this_square_id
+            Set_id const this_square_id
                 = window.sets[window.curr_row * window.width + col];
             sets_in_this_row[this_square_id].push_back({row, col});
         }
 
-        for (const auto &s : sets_in_this_row) {
+        for (auto const &s : sets_in_this_row) {
             std::uniform_int_distribution<uint64_t> num_drops(1,
                                                               s.second.size());
-            const uint64_t drops = num_drops(gen);
+            uint64_t const drops = num_drops(gen);
             for (uint64_t drop = 0; drop < drops; drop++) {
                 std::uniform_int_distribution<uint64_t> rand_drop(
                     0, s.second.size() - 1);
-                const Maze::Point chosen = s.second[rand_drop(gen)];
+                Maze::Point const chosen = s.second[rand_drop(gen)];
                 // We already linked this up and rondomness dropped us here
                 // again. Save pointless cursor movements.
                 if (!(maze[chosen.row + 2][chosen.col] & Maze::builder_bit)) {

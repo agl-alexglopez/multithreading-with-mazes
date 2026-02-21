@@ -30,7 +30,7 @@ template <class Value_type> class My_queue {
     }
 
     void
-    push(const Value_type &elem) {
+    push(Value_type const &elem) {
         // Doubling allocations so we can't acheive ULLONG_MAX for our container
         // size. Slightly less.
         if (size_ == full_queue) {
@@ -55,7 +55,7 @@ template <class Value_type> class My_queue {
         size_--;
     }
 
-    const Value_type &
+    Value_type const &
     front() const {
         if (size_ == 0) {
             std::cerr << "My_queue is empty.\n";
@@ -95,7 +95,7 @@ template <class Value_type> class My_queue {
     void
     grow() {
         std::vector<Value_type> new_elems(capacity_ * 2);
-        const size_t first_chunk = std::min(size_, capacity_ - front_);
+        size_t const first_chunk = std::min(size_, capacity_ - front_);
         std::copy_n(&elems_[front_], first_chunk, new_elems.data());
         if (first_chunk < capacity_) {
             std::copy_n(elems_.data(), size_ - first_chunk,
